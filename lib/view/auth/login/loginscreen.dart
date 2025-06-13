@@ -1,7 +1,5 @@
 import 'package:expenser/core/constants/imageconstants.dart';
-import 'package:expenser/core/constants/strings.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
-import 'package:expenser/core/utils/theme/texttheme.dart';
 import 'package:expenser/view/auth/widget/loginText.widget.dart';
 import 'package:expenser/view/auth/widget/loginbtn.widget.dart';
 import 'package:flutter/material.dart';

@@ -48,6 +48,11 @@ class _SplashcreenPageState extends State<SplashcreenPage> {
                 ),
               ),
             ),
+            // Container(
+            //   decoration: BoxDecoration(
+            //     image: DecorationImage(image: AssetImage())
+            //   ),
+            // )
           ],
         ),
       ),
