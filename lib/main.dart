@@ -1,5 +1,5 @@
 import 'package:expenser/core/utils/theme/colors.dart';
-import 'package:expenser/view/auth/splashscreen/splashscreen.dart';
+import 'package:expenser/view/auth/unboarding/unborading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.BACKGROUND,
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.PRIMARY),
       ),
-      home: SplashcreenPage(),
+      home: OnboardingScreen(),
     );
   }
 }
