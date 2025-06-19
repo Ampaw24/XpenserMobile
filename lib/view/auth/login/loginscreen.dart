@@ -2,6 +2,8 @@ import 'package:expenser/core/constants/imageconstants.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/view/auth/widget/loginText.widget.dart';
 import 'package:expenser/view/auth/widget/loginbtn.widget.dart';
+import 'package:expenser/view/home/docking_navbar.dart';
+import 'package:expenser/view/home/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,8 +11,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
-  void _onGoogleLogin() {
+  void _onGoogleLogin({required BuildContext context}) {
     // Handle Google login
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const DockingBar()),
+    );
   }
 
   void _onFacebookLogin() {
@@ -76,7 +82,7 @@ class LoginScreen extends ConsumerWidget {
                               textColor: Colors.black,
                               width: buttonWidth,
                               height: buttonHeight,
-                              onPressed: _onGoogleLogin,
+                              onPressed:()=> _onGoogleLogin(context: context),
                             ),
 
                             SizedBox(height: verticalSpacing),

@@ -1,7 +1,9 @@
 import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/view/auth/login/loginscreen.dart';
 import 'package:expenser/view/auth/provider/unboarding.provider.dart';
 import 'package:expenser/view/auth/widget/dotindicator.widget.dart';
 import 'package:expenser/view/auth/widget/unboard_text.widget.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +16,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int currentPage = 0;
- 
+
   @override
   Widget build(BuildContext context) {
     final demoData = ref.watch(onboardingListProvider);
@@ -53,7 +55,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.PRIMARY,
                   foregroundColor: AppColors.WHITE,
@@ -72,4 +81,3 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 }
-
