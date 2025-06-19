@@ -19,7 +19,7 @@ class OnboardContent extends StatelessWidget {
         Expanded(
           child: AspectRatio(
             aspectRatio: 1,
-            child: Image.network(illustration!, fit: BoxFit.contain),
+            child: Image.asset(illustration!, fit: BoxFit.contain),
           ),
         ),
          SizedBox(height: size.height * 0.08),

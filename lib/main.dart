@@ -1,4 +1,4 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/utils/theme/themes.dart';
 import 'package:expenser/view/auth/unboarding/unborading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,10 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Expenser',
-      theme: ThemeData(
-        scaffoldBackgroundColor: AppColors.BACKGROUND,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.PRIMARY),
-      ),
+      theme: AppTheme.light,
       home: OnboardingScreen(),
     );
   }
