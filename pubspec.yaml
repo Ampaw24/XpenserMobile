@@ -42,6 +42,8 @@ dependencies:
   equatable: ^2.0.7
   flex_color_scheme: ^8.2.0
   svg_flutter: ^0.0.1
+  scroll_snap_list: ^0.9.1
+  syncfusion_flutter_gauges: ^29.2.11
 
 dev_dependencies:
   flutter_test:

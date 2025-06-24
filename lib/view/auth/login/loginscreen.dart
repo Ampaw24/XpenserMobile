@@ -15,7 +15,7 @@ class LoginScreen extends ConsumerWidget {
     // Handle Google login
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const DockingBar()),
+      MaterialPageRoute(builder: (context) => const HomeView()),
     );
   }
 
