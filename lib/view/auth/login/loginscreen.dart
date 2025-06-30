@@ -2,8 +2,7 @@ import 'package:expenser/core/constants/imageconstants.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/view/auth/widget/loginText.widget.dart';
 import 'package:expenser/view/auth/widget/loginbtn.widget.dart';
-import 'package:expenser/view/home/docking_navbar.dart';
-import 'package:expenser/view/home/homepage.dart';
+import 'package:expenser/view/home/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -15,7 +14,7 @@ class LoginScreen extends ConsumerWidget {
     // Handle Google login
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const HomeView()),
+      MaterialPageRoute(builder: (context) => const HomePage()),
     );
   }
 
