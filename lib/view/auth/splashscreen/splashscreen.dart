@@ -19,7 +19,7 @@ class _SplashcreenPageState extends State<SplashcreenPage> {
         if (!mounted) return;
         Navigator.push(
           context,
-          CupertinoPageRoute(builder: (context) => const LoginScreen()),
+          CupertinoPageRoute(builder: (context) => const Loginscreen()),
         );
       },
     );

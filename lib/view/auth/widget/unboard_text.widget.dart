@@ -22,19 +22,19 @@ class OnboardContent extends StatelessWidget {
             child: Image.asset(illustration!, fit: BoxFit.contain),
           ),
         ),
-         SizedBox(height: size.height * 0.08),
+        SizedBox(height: size.height * 0.08),
         Text(
           title!,
           style: Theme.of(
             context,
-          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
         ),
-         SizedBox(height: size.height * 0.01),
+        SizedBox(height: size.height * 0.01),
         Text(
           text!,
-            style: GoogleFonts.inter(
+          style: GoogleFonts.inter(
             textStyle: Theme.of(context).textTheme.bodyMedium,
-            ),
+          ),
           textAlign: TextAlign.center,
         ),
       ],

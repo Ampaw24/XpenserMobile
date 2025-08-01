@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// The [AppTheme] defines light and dark themes for the app.
 ///
@@ -24,6 +25,13 @@ abstract final class AppTheme {
     // Input color modifiers.
     useMaterial3ErrorColors: true,
     // Component theme configurations for light mode.
+    textTheme: GoogleFonts.interTextTheme(
+      const TextTheme(
+        headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+        bodyMedium: TextStyle(fontSize: 13, color: Colors.grey,fontWeight: FontWeight.w500),
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+      ),
+    ),
     subThemesData: const FlexSubThemesData(
       interactionEffects: true,
       tintedDisabledControls: true,

@@ -1,3 +1,4 @@
+import 'package:expenser/core/utils/theme/buttons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/view/auth/login/loginscreen.dart';
 import 'package:expenser/view/auth/provider/unboarding.provider.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
-  const   OnboardingScreen({super.key});
+  const OnboardingScreen({super.key});
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -20,6 +21,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final demoData = ref.watch(onboardingListProvider);
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -53,27 +55,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             const Spacer(flex: 2),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton(
+              padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
+              child: CustomisedElevatedButton(
+                text: "Get Started",
                 onPressed: () {
                   Navigator.push(
                     context,
                     CupertinoPageRoute(
-                      builder: (context) => const LoginScreen(),
+                      builder: (context) => const Loginscreen(),
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.PRIMARY,
-                  foregroundColor: AppColors.WHITE,
-                  minimumSize: const Size(double.infinity, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text("Get Started".toUpperCase()),
               ),
             ),
+
             const Spacer(),
           ],
         ),

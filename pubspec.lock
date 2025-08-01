@@ -175,10 +175,18 @@ packages:
     dependency: "direct main"
     description:
       name: google_fonts
-      sha256: b1ac0fe2832c9cc95e5e88b57d627c5e68c223b9657f4b96e1487aa9098c7b82
+      sha256: df9763500dadba0155373e9cb44e202ce21bd9ed5de6bdbd05c5854e86839cb8
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.1"
+    version: "6.3.0"
+  google_nav_bar:
+    dependency: "direct main"
+    description:
+      name: google_nav_bar
+      sha256: bb12dd21514ee1b041ab3127673e2fd85e693337df308f7f2b75cd1e8e92eaf4
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.7"
   http:
     dependency: transitive
     description:
@@ -243,6 +251,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  line_icons:
+    dependency: "direct main"
+    description:
+      name: line_icons
+      sha256: "249d781d922f5437ac763d9c8f5a02cf5b499a6dc3f85e4b92e074cff0a932ab"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.3"
   matcher:
     dependency: transitive
     description:
