@@ -4,12 +4,15 @@ import 'package:expenser/viewmodels/budget_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BudgetProgressSection extends ConsumerWidget {
   const BudgetProgressSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
     final budgetState = ref.watch(budgetProvider);
     final categoryRepo = ref.read(categoryRepositoryProvider);
     final now = DateTime.now();
@@ -23,83 +26,126 @@ class BudgetProgressSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Budget Overview',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            TextButton(
-              onPressed: () => context.go('/shell/budgets'),
-              child: const Text('See all',
-                  style: TextStyle(color: AppColors.PRIMARY)),
-            ),
-          ],
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: sw * 0.01),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Budget Overview',
+                style: GoogleFonts.montserrat(
+                  fontSize: sw * 0.042,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.go('/shell/budgets'),
+                child: Text(
+                  'See all',
+                  style: GoogleFonts.inter(
+                    fontSize: sw * 0.033,
+                    color: AppColors.ACCENT,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: sh * 0.014),
         ...currentBudgets.map((b) {
           final category = categoryRepo.getById(b.categoryId);
           final spent = budgetState.spent[b.categoryId] ?? 0;
           final pct = (spent / b.limitAmount).clamp(0.0, 1.0);
           final Color barColor;
           if (pct >= 1.0) {
-            barColor = Colors.red;
+            barColor = const Color(0xFFFF5252);
           } else if (pct >= b.alertThreshold) {
-            barColor = Colors.orange;
+            barColor = const Color(0xFFFFAB40);
           } else {
-            barColor = AppColors.PRIMARY;
+            barColor = AppColors.ACCENT;
           }
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(category?.name ?? 'Category',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
-                    Text(
-                      '${spent.toStringAsFixed(0)} / ${b.limitAmount.toStringAsFixed(0)}',
-                      style: TextStyle(
-                          color: barColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: pct,
-                    backgroundColor: Colors.grey.withValues(alpha: 0.15),
-                    valueColor: AlwaysStoppedAnimation(barColor),
-                    minHeight: 6,
-                  ),
-                ),
-              ],
-            ),
+          return _BudgetCard(
+            categoryName: category?.name ?? 'Category',
+            spent: spent,
+            limit: b.limitAmount,
+            progress: pct,
+            barColor: barColor,
+            sw: sw,
+            sh: sh,
           );
         }),
       ],
+    );
+  }
+}
+
+class _BudgetCard extends StatelessWidget {
+  const _BudgetCard({
+    required this.categoryName,
+    required this.spent,
+    required this.limit,
+    required this.progress,
+    required this.barColor,
+    required this.sw,
+    required this.sh,
+  });
+
+  final String categoryName;
+  final double spent, limit, progress;
+  final Color barColor;
+  final double sw, sh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: sh * 0.014),
+      padding: EdgeInsets.all(sw * 0.048),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(sw * 0.050),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.10),
+          width: 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                categoryName,
+                style: GoogleFonts.inter(
+                  fontSize: sw * 0.038,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                '${spent.toStringAsFixed(0)} / ${limit.toStringAsFixed(0)}',
+                style: GoogleFonts.montserrat(
+                  fontSize: sw * 0.033,
+                  fontWeight: FontWeight.w600,
+                  color: barColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: sh * 0.012),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(sw * 0.020),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: sh * 0.007,
+              backgroundColor: Colors.white.withValues(alpha: 0.10),
+              valueColor: AlwaysStoppedAnimation(barColor),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

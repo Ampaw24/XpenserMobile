@@ -32,8 +32,16 @@ class BudgetState {
 class BudgetNotifier extends Notifier<BudgetState> {
   @override
   BudgetState build() {
-    _load();
-    return const BudgetState();
+    final now = DateTime.now();
+    final budgets = ref.read(budgetRepositoryProvider).getAll();
+    final from = DateTime(now.year, now.month, 1);
+    final to = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    final txs = ref.read(transactionRepositoryProvider).getByDateRange(from, to);
+    final spent = <String, double>{};
+    for (final t in txs.where((t) => t.type == TransactionType.expense)) {
+      spent[t.categoryId] = (spent[t.categoryId] ?? 0) + t.amount;
+    }
+    return BudgetState(budgets: budgets, spent: spent);
   }
 
   void _load() {

@@ -1,10 +1,13 @@
+import 'dart:io' show Platform;
+import 'dart:ui';
+
 import 'package:expenser/core/constants/imageconstants.dart';
-import 'package:expenser/core/utils/theme/buttons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
-import 'package:expenser/viewmodels/auth_viewmodel.dart';
-import 'package:expenser/views/auth/widgets/social_card.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:svg_flutter/svg.dart';
@@ -16,180 +19,466 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  late final Animation<double> _bgFade;
+  late final Animation<double> _orb1Scale;
+  late final Animation<double> _orb2Scale;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _headerSlide;
+  late final Animation<double> _cardFade;
+  late final Animation<Offset> _cardSlide;
+  late final Animation<double> _btn1Fade;
+  late final Animation<double> _btn2Fade;
+  late final Animation<double> _btn3Fade;
+
+  bool _localLoading = false;
+
+  bool get _showAppleButton => !kIsWeb && Platform.isIOS;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    _bgFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.25, curve: Curves.easeIn),
+    );
+
+    _orb1Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.40, curve: Curves.elasticOut),
+      ),
+    );
+
+    _orb2Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.08, 0.45, curve: Curves.elasticOut),
+      ),
+    );
+
+    _headerFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
+    );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, -0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
+    ));
+
+    _cardFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
+    );
+    _cardSlide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
+    ));
+
+    _btn1Fade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.58, 0.76, curve: Curves.easeOut),
+    );
+    _btn2Fade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.68, 0.86, curve: Curves.easeOut),
+    );
+    _btn3Fade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.78, 0.96, curve: Curves.easeOut),
+    );
+
+    _ctrl.forward();
+  }
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _handleSocialLogin(String providerName) async {
+    setState(() => _localLoading = true);
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
     await ref
-        .read(authProvider.notifier)
-        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
-    if (mounted) {
-      final error = ref.read(authProvider).errorMessage;
-      if (error == null) context.go('/shell/dashboard');
-    }
+        .read(settingsProvider.notifier)
+        .setLoggedIn(true, userName: providerName);
+    if (mounted) setState(() => _localLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authProvider);
+    final size = MediaQuery.of(context).size;
+    final sw = size.width;
+    final sh = size.height;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Image.asset(
-                      Imageconstants.applogo,
-                      height: MediaQuery.of(context).size.height * 0.18,
-                    ),
-                    Text(
-                      "Welcome Back",
-                      style: GoogleFonts.inter(
-                        color: AppColors.PRIMARY,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      "Sign in to manage your finances",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF757575)),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                    TextFormField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        hintText: "Enter your email",
-                        labelText: "Email",
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        hintStyle: const TextStyle(color: Color(0xFF757575)),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 16),
-                        suffix: SvgPicture.string(_mailIcon),
-                        border: _border,
-                        enabledBorder: _border,
-                        focusedBorder: _border.copyWith(
-                          borderSide:
-                              const BorderSide(color: AppColors.PRIMARY),
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Email required';
-                        if (!v.contains('@')) return 'Enter valid email';
-                        return null;
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: TextFormField(
-                        controller: _passwordCtrl,
-                        obscureText: _obscure,
-                        decoration: InputDecoration(
-                          hintText: "Enter your password",
-                          labelText: "Password",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintStyle:
-                              const TextStyle(color: Color(0xFF757575)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 16),
-                          suffix: GestureDetector(
-                            onTap: () => setState(() => _obscure = !_obscure),
-                            child: Icon(
-                              _obscure
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ),
-                          border: _border,
-                          enabledBorder: _border,
-                          focusedBorder: _border.copyWith(
-                            borderSide:
-                                const BorderSide(color: AppColors.PRIMARY),
-                          ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Password required';
-                          if (v.length < 6) return 'Minimum 6 characters';
-                          return null;
-                        },
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () => context.push('/forgot-password'),
-                        child: Text(
-                          'Forgot Password?',
-                          style: GoogleFonts.inter(
-                              color: AppColors.PRIMARY, fontSize: 13),
-                        ),
-                      ),
-                    ),
-                    if (auth.errorMessage != null) ...[
-                      const SizedBox(height: 10),
-                      Text(auth.errorMessage!,
-                          style: const TextStyle(
-                              color: Colors.red, fontSize: 13)),
-                    ],
-                    const SizedBox(height: 16),
-                    auth.isLoading
-                        ? const CircularProgressIndicator()
-                        : CustomisedElevatedButton(
-                            text: "Sign In", onPressed: _submit),
-                    SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.06),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SocialCard(icon: SvgPicture.string(_googleIcon), press: () {}),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: SocialCard(
-                              icon: SvgPicture.string(_facebookIcon),
-                              press: () {}),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Don't have an account? ",
-                            style: GoogleFonts.inter(
-                                color: const Color(0xFF757575))),
-                        GestureDetector(
-                          onTap: () => context.push('/register'),
-                          child: Text("Sign Up",
-                              style: GoogleFonts.inter(
-                                  color: AppColors.PRIMARY,
-                                  fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
+      backgroundColor: const Color(0xFF0A0E21),
+      body: Stack(
+        children: [
+          // Background gradient
+          FadeTransition(
+            opacity: _bgFade,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0A0E21),
+                    Color(0xFF0D1B2A),
+                    Color(0xFF0A1628),
                   ],
+                ),
+              ),
+            ),
+          ),
+
+          // Top-left orb
+          Positioned(
+            top: -sh * 0.08,
+            left: -sw * 0.20,
+            child: ScaleTransition(
+              scale: _orb1Scale,
+              child: Container(
+                width: sw * 0.75,
+                height: sw * 0.75,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.PRIMARY.withValues(alpha: 0.55),
+                      AppColors.ACCENT.withValues(alpha: 0.25),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom-right orb
+          Positioned(
+            bottom: sh * 0.10,
+            right: -sw * 0.25,
+            child: ScaleTransition(
+              scale: _orb2Scale,
+              child: Container(
+                width: sw * 0.80,
+                height: sw * 0.80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF1DE9B6).withValues(alpha: 0.30),
+                      AppColors.ACCENT.withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.50, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Small accent orb center-right
+          Positioned(
+            top: sh * 0.30,
+            right: -sw * 0.10,
+            child: ScaleTransition(
+              scale: _orb1Scale,
+              child: Container(
+                width: sw * 0.40,
+                height: sw * 0.40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF7C4DFF).withValues(alpha: 0.30),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // Header: logo + branding
+                Expanded(
+                  flex: 4,
+                  child: FadeTransition(
+                    opacity: _headerFade,
+                    child: SlideTransition(
+                      position: _headerSlide,
+                      child: _buildHeader(sw, sh),
+                    ),
+                  ),
+                ),
+
+                // Glass card
+                Expanded(
+                  flex: 6,
+                  child: FadeTransition(
+                    opacity: _cardFade,
+                    child: SlideTransition(
+                      position: _cardSlide,
+                      child: _buildGlassCard(sw, sh),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Loading overlay
+          if (_localLoading) _buildLoadingOverlay(sw),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(double sw, double sh) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.08),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Glass logo container
+          ClipRRect(
+            borderRadius: BorderRadius.circular(sw * 0.06),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                width: sw * 0.22,
+                height: sw * 0.22,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(sw * 0.06),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.20),
+                    width: 1.2,
+                  ),
+                ),
+                padding: EdgeInsets.all(sw * 0.035),
+                child: Image.asset(Imageconstants.applogo),
+              ),
+            ),
+          ),
+          SizedBox(height: sh * 0.022),
+          Text(
+            'Xpenser',
+            style: GoogleFonts.montserrat(
+              fontSize: sw * 0.082,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: 1.5,
+            ),
+          ),
+          SizedBox(height: sh * 0.008),
+          Text(
+            'Smart money management',
+            style: GoogleFonts.inter(
+              fontSize: sw * 0.036,
+              color: Colors.white.withValues(alpha: 0.55),
+              fontWeight: FontWeight.w400,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassCard(double sw, double sh) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(sw * 0.06, 0, sw * 0.06, sh * 0.02),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(sw * 0.07),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(sw * 0.07),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.2,
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: sw * 0.07,
+                vertical: sh * 0.035,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Welcome back',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      fontSize: sw * 0.055,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: sh * 0.008),
+                  Text(
+                    'Sign in to continue',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: sw * 0.033,
+                      color: Colors.white.withValues(alpha: 0.50),
+                    ),
+                  ),
+                  SizedBox(height: sh * 0.032),
+
+                  // Google
+                  FadeTransition(
+                    opacity: _btn1Fade,
+                    child: _GlassButton(
+                      icon: SvgPicture.string(_googleIcon),
+                      label: 'Continue with Google',
+                      onTap: () => _handleSocialLogin('Google User'),
+                    ),
+                  ),
+                  SizedBox(height: sh * 0.016),
+
+                  // Facebook
+                  FadeTransition(
+                    opacity: _btn2Fade,
+                    child: _GlassButton(
+                      icon: SvgPicture.string(_facebookIcon),
+                      label: 'Continue with Facebook',
+                      onTap: () => _handleSocialLogin('Facebook User'),
+                    ),
+                  ),
+
+                  // Apple (iOS only)
+                  if (_showAppleButton) ...[
+                    SizedBox(height: sh * 0.016),
+                    FadeTransition(
+                      opacity: _btn3Fade,
+                      child: _GlassButton(
+                        icon: FittedBox(
+                          child: Icon(
+                            FontAwesomeIcons.apple,
+                            color: Colors.white,
+                            size: sw * 0.048,
+                          ),
+                        ),
+                        label: 'Continue with Apple',
+                        onTap: () => _handleSocialLogin('Apple User'),
+                      ),
+                    ),
+                  ],
+
+                  const Spacer(),
+
+                  // Divider row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          thickness: 0.8,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: sw * 0.03),
+                        child: Text(
+                          'New here?',
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.40),
+                            fontSize: sw * 0.031,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          thickness: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: sh * 0.016),
+
+                  // Sign up button — ghost style
+                  GestureDetector(
+                    onTap: () => context.push('/register'),
+                    child: Container(
+                      height: sh * 0.060,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(sw * 0.035),
+                        border: Border.all(
+                          color: AppColors.ACCENT.withValues(alpha: 0.60),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Create an account',
+                          style: GoogleFonts.inter(
+                            fontSize: sw * 0.038,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ACCENT,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay(double sw) {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.40),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(sw * 0.05),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: EdgeInsets.all(sw * 0.08),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(sw * 0.05),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.20),
+                  ),
+                ),
+                child: const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
                 ),
               ),
             ),
@@ -200,15 +489,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-const _border = OutlineInputBorder(
-  borderSide: BorderSide(color: Color(0xFF757575)),
-  borderRadius: BorderRadius.all(Radius.circular(100)),
-);
+// ─── Glass social button ───────────────────────────────────────────────────────
 
-const _mailIcon =
-    '''<svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M15.3576 3.39368C15.5215 3.62375 15.4697 3.94447 15.2404 4.10954L9.80876 8.03862C9.57272 8.21053 9.29421 8.29605 9.01656 8.29605C8.7406 8.29605 8.4638 8.21138 8.22775 8.04204L2.76041 4.11039C2.53201 3.94618 2.47851 3.62546 2.64154 3.39454C2.80542 3.16362 3.12383 3.10974 3.35223 3.27566L8.81872 7.20645C8.93674 7.29112 9.09552 7.29197 9.2144 7.20559L14.6469 3.27651C14.8753 3.10974 15.1937 3.16447 15.3576 3.39368ZM16.9819 10.7763C16.9819 11.4366 16.4479 11.9745 15.7932 11.9745H2.20765C1.55215 11.9745 1.01892 11.4366 1.01892 10.7763V2.22368C1.01892 1.56342 1.55215 1.02632 2.20765 1.02632H15.7932C16.4479 1.02632 16.9819 1.56342 16.9819 2.22368V10.7763ZM15.7932 0H2.20765C0.990047 0 0 0.998092 0 2.22368V10.7763C0 12.0028 0.990047 13 2.20765 13H15.7932C17.01 13 18 12.0028 18 10.7763V2.22368C18 0.998092 17.01 0 15.7932 0Z" fill="#757575"/>
-</svg>''';
+class _GlassButton extends StatefulWidget {
+  const _GlassButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_GlassButton> createState() => _GlassButtonState();
+}
+
+class _GlassButtonState extends State<_GlassButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(sw * 0.035),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: sh * 0.068,
+              decoration: BoxDecoration(
+                color: _pressed
+                    ? Colors.white.withValues(alpha: 0.18)
+                    : Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(sw * 0.035),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.20),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: sw * 0.052,
+                    height: sw * 0.052,
+                    child: widget.icon,
+                  ),
+                  SizedBox(width: sw * 0.038),
+                  Text(
+                    widget.label,
+                    style: GoogleFonts.inter(
+                      fontSize: sw * 0.038,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── SVG brand icons ───────────────────────────────────────────────────────────
 
 const _googleIcon =
     '''<svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -220,5 +579,5 @@ const _googleIcon =
 
 const _facebookIcon =
     '''<svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5.02224 14.8963V8.10133H7.30305L7.64452 5.45323H5.02224V3.7625C5.02224 2.99583 5.23517 2.4733 6.33467 2.4733L7.73695 2.47265V0.104232C7.49432 0.0720777 6.66197 0 5.6936 0C3.67183 0 2.28768 1.23402 2.28768 3.50037V5.4533H0.000976562V8.1014H2.28761V14.8963L5.02224 14.8963Z" fill="#3C5A9A"/>
+<path d="M5.02224 14.8963V8.10133H7.30305L7.64452 5.45323H5.02224V3.7625C5.02224 2.99583 5.23517 2.4733 6.33467 2.4733L7.73695 2.47265V0.104232C7.49432 0.0720777 6.66197 0 5.6936 0C3.67183 0 2.28768 1.23402 2.28768 3.50037V5.4533H0.000976562V8.1014H2.28761V14.8963L5.02224 14.8963Z" fill="#FFFFFF"/>
 </svg>''';

@@ -34,8 +34,8 @@ class TransactionState {
 class TransactionNotifier extends Notifier<TransactionState> {
   @override
   TransactionState build() {
-    _load();
-    return const TransactionState();
+    final all = ref.read(transactionRepositoryProvider).getAll();
+    return TransactionState(transactions: all);
   }
 
   void _load() {

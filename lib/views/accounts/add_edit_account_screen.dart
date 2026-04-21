@@ -5,6 +5,7 @@ import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditAccountScreen extends ConsumerStatefulWidget {
@@ -52,8 +53,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
 
   void _loadExisting() {
     final accounts = ref.read(accountProvider).accounts;
-    final account =
-        accounts.firstWhere((a) => a.id == widget.accountId);
+    final account = accounts.firstWhere((a) => a.id == widget.accountId);
     _nameCtrl.text = account.name;
     _balanceCtrl.text = account.initialBalance.toStringAsFixed(2);
     setState(() {
@@ -93,15 +93,47 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     if (mounted) context.pop();
   }
 
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        labelStyle:
+            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
+
     return Scaffold(
+      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Account' : 'New Account'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: Colors.white,
+        title: Text(
+          _isEditing ? 'Edit Account' : 'New Account',
+          style: GoogleFonts.montserrat(
+            fontSize: sw * 0.046,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -109,159 +141,217 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.010, sw * 0.06, sh * 0.06),
             children: [
               TextFormField(
                 controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Account Name',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.PRIMARY),
-                  ),
-                ),
+                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.038),
+                cursorColor: AppColors.ACCENT,
+                decoration: _inputDeco('Account Name'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Name required' : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh * 0.018),
               DropdownButtonFormField<AccountType>(
                 initialValue: _type,
-                decoration: InputDecoration(
-                  labelText: 'Account Type',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+                dropdownColor: const Color(0xFF1A2035),
+                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
+                iconEnabledColor: Colors.white.withValues(alpha: 0.50),
+                decoration: _inputDeco('Account Type'),
                 items: AccountType.values
                     .map((t) => DropdownMenuItem(
                         value: t,
                         child: Text(
-                            t.name[0].toUpperCase() + t.name.substring(1))))
+                          t.name[0].toUpperCase() + t.name.substring(1),
+                          style: GoogleFonts.inter(color: Colors.white),
+                        )))
                     .toList(),
                 onChanged: (v) => setState(() => _type = v!),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh * 0.018),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _balanceCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Initial Balance',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: AppColors.PRIMARY),
-                        ),
-                      ),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: sw * 0.038),
+                      cursorColor: AppColors.ACCENT,
+                      decoration: _inputDeco('Initial Balance'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: sw * 0.030),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: _currency,
-                      decoration: InputDecoration(
-                        labelText: 'Currency',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
+                      dropdownColor: const Color(0xFF1A2035),
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: sw * 0.036),
+                      iconEnabledColor: Colors.white.withValues(alpha: 0.50),
+                      decoration: _inputDeco('Currency'),
                       items: _currencies
-                          .map((c) =>
-                              DropdownMenuItem(value: c, child: Text(c)))
+                          .map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c,
+                                  style:
+                                      GoogleFonts.inter(color: Colors.white))))
                           .toList(),
                       onChanged: (v) => setState(() => _currency = v!),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              const Text('Color',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: Colors.grey)),
-              const SizedBox(height: 10),
+              SizedBox(height: sh * 0.024),
+              Text(
+                'Color',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: sw * 0.032,
+                  color: Colors.white.withValues(alpha: 0.50),
+                ),
+              ),
+              SizedBox(height: sh * 0.012),
               Wrap(
-                spacing: 12,
+                spacing: sw * 0.030,
+                runSpacing: sh * 0.012,
                 children: _colors.map((hex) {
                   final color = Color(int.parse(hex, radix: 16));
+                  final isSelected = _colorHex == hex;
                   return GestureDetector(
                     onTap: () => setState(() => _colorHex = hex),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: sw * 0.090,
+                      height: sw * 0.090,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
-                        border: _colorHex == hex
-                            ? Border.all(color: Colors.black, width: 3)
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : Border.all(
+                                color: Colors.white.withValues(alpha: 0.0),
+                                width: 3),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                    color: color.withValues(alpha: 0.55),
+                                    blurRadius: 10)
+                              ]
                             : null,
                       ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 20),
-              const Text('Icon',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: Colors.grey)),
-              const SizedBox(height: 10),
+              SizedBox(height: sh * 0.024),
+              Text(
+                'Icon',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: sw * 0.032,
+                  color: Colors.white.withValues(alpha: 0.50),
+                ),
+              ),
+              SizedBox(height: sh * 0.012),
               Wrap(
-                spacing: 12,
+                spacing: sw * 0.030,
+                runSpacing: sh * 0.012,
                 children: _icons.map((icon) {
                   final isSelected = icon.codePoint == _iconCodePoint;
                   return GestureDetector(
                     onTap: () =>
                         setState(() => _iconCodePoint = icon.codePoint),
                     child: Container(
-                      width: 48,
-                      height: 48,
+                      width: sw * 0.120,
+                      height: sw * 0.120,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.PRIMARY.withValues(alpha: 0.15)
-                            : Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: isSelected
-                            ? Border.all(color: AppColors.PRIMARY)
-                            : null,
-                      ),
-                      child: Icon(icon,
+                            ? AppColors.ACCENT.withValues(alpha: 0.20)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(sw * 0.030),
+                        border: Border.all(
                           color: isSelected
-                              ? AppColors.PRIMARY
-                              : Colors.grey[600]),
+                              ? AppColors.ACCENT
+                              : Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isSelected
+                            ? AppColors.ACCENT
+                            : Colors.white.withValues(alpha: 0.40),
+                        size: sw * 0.058,
+                      ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 32),
-              ElevatedButton(
+              SizedBox(height: sh * 0.036),
+              _GradientButton(
+                label: _isEditing ? 'Update Account' : 'Create Account',
+                isLoading: _isLoading,
                 onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.PRIMARY,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : Text(_isEditing ? 'Update Account' : 'Create Account',
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                sw: sw,
+                sh: sh,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GradientButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+  final double sw, sh;
+  const _GradientButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+    required this.sw,
+    required this.sh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: sh * 0.065,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.PRIMARY, AppColors.ACCENT],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(sw * 0.042),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ACCENT.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }

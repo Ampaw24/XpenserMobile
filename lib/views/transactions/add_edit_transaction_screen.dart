@@ -8,6 +8,7 @@ import 'package:expenser/viewmodels/transaction_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditTransactionScreen extends ConsumerStatefulWidget {
@@ -68,6 +69,16 @@ class _AddEditTransactionScreenState
       initialDate: _date,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: AppColors.ACCENT,
+            onPrimary: Colors.white,
+            surface: Color(0xFF1A2035),
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null) setState(() => _date = picked);
   }
@@ -75,21 +86,22 @@ class _AddEditTransactionScreenState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Select a category')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        _darkSnack('Select a category'),
+      );
       return;
     }
     if (_selectedAccountId == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Select an account')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        _darkSnack('Select an account'),
+      );
       return;
     }
 
     setState(() => _isLoading = true);
-    final amount = double.parse(_amountCtrl.text);
     final tx = TransactionModel(
       id: _isEditing ? widget.transactionId! : const Uuid().v4(),
-      amount: amount,
+      amount: double.parse(_amountCtrl.text),
       type: _type,
       categoryId: _selectedCategoryId!,
       accountId: _selectedAccountId!,
@@ -109,27 +121,81 @@ class _AddEditTransactionScreenState
     if (mounted) context.pop();
   }
 
+  SnackBar _darkSnack(String msg) => SnackBar(
+        backgroundColor: const Color(0xFF1A2035),
+        content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
+      );
+
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        labelStyle:
+            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              const BorderSide(color: AppColors.ACCENT, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              const BorderSide(color: Color(0xFFFF5252)),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              const BorderSide(color: Color(0xFFFF5252), width: 1.5),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
     final categoryRepo = ref.read(categoryRepositoryProvider);
     final categories = categoryRepo.getByType(_type);
     final accounts = ref.watch(accountProvider).accounts;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Transaction' : 'Add Transaction'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: Colors.white,
+        title: Text(
+          _isEditing ? 'Edit Transaction' : 'Add Transaction',
+          style: GoogleFonts.montserrat(
+            fontSize: sw * 0.046,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => context.pop(),
         ),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _submit,
-            child: const Text('Save',
-                style: TextStyle(
-                    color: AppColors.PRIMARY, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Save',
+              style: GoogleFonts.inter(
+                color: AppColors.ACCENT,
+                fontWeight: FontWeight.w700,
+                fontSize: sw * 0.038,
+              ),
+            ),
           ),
         ],
       ),
@@ -137,57 +203,56 @@ class _AddEditTransactionScreenState
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.010, sw * 0.06, sh * 0.06),
             children: [
-              _TypeSelector(
-                selected: _type,
-                onChanged: (t) => setState(() {
+              _TypeSelector(selected: _type, onChanged: (t) {
+                setState(() {
                   _type = t;
                   _selectedCategoryId = null;
-                }),
-              ),
-              const SizedBox(height: 24),
+                });
+              }),
+              SizedBox(height: sh * 0.024),
               TextFormField(
                 controller: _amountCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  labelText: 'Amount',
-                  prefixText: '  ',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.PRIMARY),
-                  ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.montserrat(
+                  fontSize: sw * 0.060,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
+                cursorColor: AppColors.ACCENT,
+                decoration: _inputDeco('Amount'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Enter amount';
                   if (double.tryParse(v) == null) return 'Enter a valid number';
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              _SectionLabel('Category'),
-              const SizedBox(height: 8),
+              SizedBox(height: sh * 0.020),
+              _Label('Category', sw),
+              SizedBox(height: sh * 0.010),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: sw * 0.022,
+                runSpacing: sh * 0.010,
                 children: categories.map((c) {
                   final isSelected = c.id == _selectedCategoryId;
                   final color = _hexToColor(c.colorHex);
                   return GestureDetector(
                     onTap: () => setState(() => _selectedCategoryId = c.id),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: sw * 0.034, vertical: sh * 0.010),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? color.withValues(alpha: 0.2)
-                            : Colors.grey.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
+                            ? color.withValues(alpha: 0.20)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(sw * 0.055),
                         border: Border.all(
-                            color: isSelected ? color : Colors.transparent),
+                          color: isSelected
+                              ? color
+                              : Colors.white.withValues(alpha: 0.12),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -195,104 +260,109 @@ class _AddEditTransactionScreenState
                           Icon(
                             IconData(c.iconCodePoint,
                                 fontFamily: 'MaterialIcons'),
-                            size: 16,
-                            color: isSelected ? color : Colors.grey,
+                            size: sw * 0.040,
+                            color: isSelected
+                                ? color
+                                : Colors.white.withValues(alpha: 0.40),
                           ),
-                          const SizedBox(width: 6),
-                          Text(c.name,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: isSelected ? color : Colors.grey[700],
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal)),
+                          SizedBox(width: sw * 0.016),
+                          Text(
+                            c.name,
+                            style: GoogleFonts.inter(
+                              fontSize: sw * 0.030,
+                              color: isSelected
+                                  ? color
+                                  : Colors.white.withValues(alpha: 0.55),
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
-              _SectionLabel('Account'),
-              const SizedBox(height: 8),
+              SizedBox(height: sh * 0.020),
+              _Label('Account', sw),
+              SizedBox(height: sh * 0.010),
               if (accounts.isEmpty)
-                const Text('No accounts yet. Create one first.',
-                    style: TextStyle(color: Colors.grey))
+                Text(
+                  'No accounts yet — create one first.',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withValues(alpha: 0.40),
+                    fontSize: sw * 0.034,
+                  ),
+                )
               else
                 DropdownButtonFormField<String>(
-                  initialValue: accounts.any((a) => a.id == _selectedAccountId) ? _selectedAccountId : null,
-                  hint: const Text('Select account'),
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.PRIMARY),
-                    ),
+                  initialValue: accounts.any((a) => a.id == _selectedAccountId)
+                      ? _selectedAccountId
+                      : null,
+                  hint: Text(
+                    'Select account',
+                    style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.35)),
                   ),
+                  dropdownColor: const Color(0xFF1A2035),
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
+                  iconEnabledColor: Colors.white.withValues(alpha: 0.50),
+                  decoration: _inputDeco(''),
                   items: accounts
                       .map((a) => DropdownMenuItem(
-                          value: a.id, child: Text(a.name)))
+                          value: a.id,
+                          child: Text(a.name,
+                              style: GoogleFonts.inter(color: Colors.white))))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedAccountId = v),
                 ),
-              const SizedBox(height: 16),
-              _SectionLabel('Date'),
-              const SizedBox(height: 8),
+              SizedBox(height: sh * 0.020),
+              _Label('Date', sw),
+              SizedBox(height: sh * 0.010),
               GestureDetector(
                 onTap: _pickDate,
                 child: Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: sw * 0.042, vertical: sh * 0.016),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_rounded,
-                          color: Colors.grey, size: 18),
-                      const SizedBox(width: 10),
+                      Icon(Icons.calendar_today_rounded,
+                          color: Colors.white.withValues(alpha: 0.45),
+                          size: sw * 0.045),
+                      SizedBox(width: sw * 0.026),
                       Text(
                         '${_date.day}/${_date.month}/${_date.year}',
-                        style: const TextStyle(fontSize: 15),
+                        style: GoogleFonts.inter(
+                          fontSize: sw * 0.038,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh * 0.020),
               TextFormField(
                 controller: _notesCtrl,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Notes (optional)',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.PRIMARY),
-                  ),
-                ),
+                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
+                cursorColor: AppColors.ACCENT,
+                decoration: _inputDeco('Notes (optional)'),
               ),
-              const SizedBox(height: 32),
-              ElevatedButton(
+              SizedBox(height: sh * 0.036),
+              _GradientButton(
+                label: _isEditing ? 'Update' : 'Add Transaction',
+                isLoading: _isLoading,
                 onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.PRIMARY,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : Text(_isEditing ? 'Update' : 'Add Transaction',
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                sw: sw,
+                sh: sh,
               ),
             ],
           ),
@@ -313,16 +383,18 @@ class _AddEditTransactionScreenState
 class _TypeSelector extends StatelessWidget {
   final TransactionType selected;
   final ValueChanged<TransactionType> onChanged;
-
   const _TypeSelector({required this.selected, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(sw * 0.040),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: TransactionType.values.map((t) {
@@ -332,18 +404,26 @@ class _TypeSelector extends StatelessWidget {
               onTap: () => onChanged(t),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: sh * 0.012),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.PRIMARY : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          colors: [AppColors.PRIMARY, AppColors.ACCENT],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(sw * 0.036),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   t.name[0].toUpperCase() + t.name.substring(1),
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey[600],
+                  style: GoogleFonts.inter(
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.40),
                     fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                    fontSize: sw * 0.034,
                   ),
                 ),
               ),
@@ -355,14 +435,72 @@ class _TypeSelector extends StatelessWidget {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
+class _Label extends StatelessWidget {
   final String text;
-  const _SectionLabel(this.text);
+  final double sw;
+  const _Label(this.text, this.sw);
 
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: const TextStyle(
-            fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey),
+        style: GoogleFonts.inter(
+          fontSize: sw * 0.032,
+          fontWeight: FontWeight.w600,
+          color: Colors.white.withValues(alpha: 0.50),
+        ),
       );
+}
+
+class _GradientButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+  final double sw, sh;
+  const _GradientButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+    required this.sw,
+    required this.sh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: sh * 0.065,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.PRIMARY, AppColors.ACCENT],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(sw * 0.042),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ACCENT.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+      ),
+    );
+  }
 }

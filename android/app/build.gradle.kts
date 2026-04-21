@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.expenser"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     
 
     compileOptions {

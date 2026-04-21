@@ -4,6 +4,7 @@ import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditSavingsGoalScreen extends ConsumerStatefulWidget {
@@ -36,8 +37,8 @@ class _AddEditSavingsGoalScreenState
 
   static const _icons = [
     Icons.savings_rounded, Icons.home_rounded, Icons.flight_rounded,
-    Icons.directions_car_rounded, Icons.school_rounded, Icons.phone_iphone_rounded,
-    Icons.favorite_rounded, Icons.star_rounded,
+    Icons.directions_car_rounded, Icons.school_rounded,
+    Icons.phone_iphone_rounded, Icons.favorite_rounded, Icons.star_rounded,
   ];
 
   @override
@@ -75,6 +76,16 @@ class _AddEditSavingsGoalScreenState
       initialDate: _targetDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: AppColors.ACCENT,
+            onPrimary: Colors.white,
+            surface: Color(0xFF1A2035),
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null) setState(() => _targetDate = picked);
   }
@@ -101,15 +112,47 @@ class _AddEditSavingsGoalScreenState
     if (mounted) context.pop();
   }
 
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        labelStyle:
+            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
+
     return Scaffold(
+      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Goal' : 'New Savings Goal'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: Colors.white,
+        title: Text(
+          _isEditing ? 'Edit Goal' : 'New Savings Goal',
+          style: GoogleFonts.montserrat(
+            fontSize: sw * 0.046,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -117,131 +160,225 @@ class _AddEditSavingsGoalScreenState
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.010, sw * 0.06, sh * 0.06),
             children: [
               TextFormField(
                 controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Goal Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.PRIMARY),
-                  ),
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Name required' : null,
+                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.038),
+                cursorColor: AppColors.ACCENT,
+                decoration: _inputDeco('Goal Name'),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name required' : null,
               ),
-              const SizedBox(height: 16),
-              Row(children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _targetCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Target Amount',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.PRIMARY),
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Required';
-                      if (double.tryParse(v) == null) return 'Invalid';
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _savedCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Already Saved',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.PRIMARY),
-                      ),
+              SizedBox(height: sh * 0.018),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _targetCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: sw * 0.038),
+                      cursorColor: AppColors.ACCENT,
+                      decoration: _inputDeco('Target Amount'),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Required';
+                        if (double.tryParse(v) == null) return 'Invalid';
+                        return null;
+                      },
                     ),
                   ),
-                ),
-              ]),
-              const SizedBox(height: 16),
+                  SizedBox(width: sw * 0.030),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _savedCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontSize: sw * 0.038),
+                      cursorColor: AppColors.ACCENT,
+                      decoration: _inputDeco('Already Saved'),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: sh * 0.018),
               GestureDetector(
                 onTap: _pickDate,
                 child: Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: sw * 0.042, vertical: sh * 0.016),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12)),
                   ),
-                  child: Row(children: [
-                    const Icon(Icons.calendar_today_rounded, color: Colors.grey, size: 18),
-                    const SizedBox(width: 10),
-                    Text('Target: ${_targetDate.day}/${_targetDate.month}/${_targetDate.year}'),
-                  ]),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded,
+                          color: Colors.white.withValues(alpha: 0.45),
+                          size: sw * 0.045),
+                      SizedBox(width: sw * 0.026),
+                      Text(
+                        'Target: ${_targetDate.day}/${_targetDate.month}/${_targetDate.year}',
+                        style: GoogleFonts.inter(
+                          fontSize: sw * 0.036,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text('Color', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey)),
-              const SizedBox(height: 10),
+              SizedBox(height: sh * 0.024),
+              Text(
+                'Color',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: sw * 0.032,
+                  color: Colors.white.withValues(alpha: 0.50),
+                ),
+              ),
+              SizedBox(height: sh * 0.012),
               Wrap(
-                spacing: 12,
+                spacing: sw * 0.030,
+                runSpacing: sh * 0.012,
                 children: _colors.map((hex) {
                   final color = Color(int.parse(hex, radix: 16));
+                  final isSelected = _colorHex == hex;
                   return GestureDetector(
                     onTap: () => setState(() => _colorHex = hex),
                     child: Container(
-                      width: 36, height: 36,
+                      width: sw * 0.090,
+                      height: sw * 0.090,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
-                        border: _colorHex == hex ? Border.all(color: Colors.black, width: 3) : null,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                    color: color.withValues(alpha: 0.55),
+                                    blurRadius: 10)
+                              ]
+                            : null,
                       ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 20),
-              const Text('Icon', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey)),
-              const SizedBox(height: 10),
+              SizedBox(height: sh * 0.024),
+              Text(
+                'Icon',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: sw * 0.032,
+                  color: Colors.white.withValues(alpha: 0.50),
+                ),
+              ),
+              SizedBox(height: sh * 0.012),
               Wrap(
-                spacing: 12,
+                spacing: sw * 0.030,
+                runSpacing: sh * 0.012,
                 children: _icons.map((icon) {
                   final isSelected = icon.codePoint == _iconCodePoint;
                   return GestureDetector(
-                    onTap: () => setState(() => _iconCodePoint = icon.codePoint),
+                    onTap: () =>
+                        setState(() => _iconCodePoint = icon.codePoint),
                     child: Container(
-                      width: 48, height: 48,
+                      width: sw * 0.120,
+                      height: sw * 0.120,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.PRIMARY.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: isSelected ? Border.all(color: AppColors.PRIMARY) : null,
+                        color: isSelected
+                            ? AppColors.ACCENT.withValues(alpha: 0.20)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(sw * 0.030),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.ACCENT
+                              : Colors.white.withValues(alpha: 0.12),
+                        ),
                       ),
-                      child: Icon(icon, color: isSelected ? AppColors.PRIMARY : Colors.grey[600]),
+                      child: Icon(
+                        icon,
+                        color: isSelected
+                            ? AppColors.ACCENT
+                            : Colors.white.withValues(alpha: 0.40),
+                        size: sw * 0.058,
+                      ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 32),
-              ElevatedButton(
+              SizedBox(height: sh * 0.036),
+              _GradientButton(
+                label: _isEditing ? 'Update Goal' : 'Create Goal',
+                isLoading: _isLoading,
                 onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.PRIMARY,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(_isEditing ? 'Update Goal' : 'Create Goal',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                sw: sw,
+                sh: sh,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GradientButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+  final double sw, sh;
+  const _GradientButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+    required this.sw,
+    required this.sh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: sh * 0.065,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.PRIMARY, AppColors.ACCENT],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(sw * 0.042),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ACCENT.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }
