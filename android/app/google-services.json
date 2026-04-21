@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "824715451215",
+    "project_id": "xpensermobile-cbde1",
+    "storage_bucket": "xpensermobile-cbde1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824715451215:android:2301721fb8031841dfc33a",
+        "android_client_info": {
+          "package_name": "com.example.expenser"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzejTdrq1IZnTXlXRN9MI9VrpwxO_fHdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

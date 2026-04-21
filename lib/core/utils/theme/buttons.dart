@@ -12,7 +12,6 @@ class CustomisedElevatedButton extends StatelessWidget {
   final VoidCallback? onPressed;
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(

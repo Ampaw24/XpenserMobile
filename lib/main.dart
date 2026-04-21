@@ -1,21 +1,31 @@
+import 'package:expenser/core/router/app_router.dart';
 import 'package:expenser/core/utils/theme/themes.dart';
-import 'package:expenser/view/auth/unboarding/unborading_screen.dart';
+import 'package:expenser/data/datasources/hive_service.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() {
-  runApp(ProviderScope(child: const MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await HiveService.init();
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+    final isDark = ref.watch(settingsProvider.select((s) => s.isDarkMode));
+
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Expenser',
+      title: 'Xpenser',
       theme: AppTheme.light,
-      home: OnboardingScreen(),
+      darkTheme: AppTheme.dark,
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      routerConfig: router,
     );
   }
 }
