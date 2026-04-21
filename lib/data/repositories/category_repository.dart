@@ -1,4 +1,5 @@
 import 'package:expenser/data/datasources/hive_service.dart';
+import 'package:expenser/data/repositories/interfaces/i_category_repository.dart';
 import 'package:expenser/models/category_model.dart';
 import 'package:expenser/models/transaction_type.dart';
 import 'package:flutter/material.dart';
@@ -6,25 +7,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-class CategoryRepository {
+class CategoryRepository implements ICategoryRepository {
   Box<CategoryModel> get _box =>
       HiveService.box<CategoryModel>(HiveService.categories);
 
+  @override
   List<CategoryModel> getAll() => _box.values.toList();
 
+  @override
   List<CategoryModel> getByType(TransactionType type) =>
       _box.values.where((c) => c.transactionType == type).toList();
 
+  @override
   CategoryModel? getById(String id) => _box.get(id);
 
-  Future<void> add(CategoryModel c) => _box.put(c.id, c);
+  @override
+  Future<void> add(CategoryModel category) => _box.put(category.id, category);
 
-  Future<void> update(CategoryModel c) => _box.put(c.id, c);
+  @override
+  Future<void> update(CategoryModel category) =>
+      _box.put(category.id, category);
 
+  @override
   Future<void> delete(String id) => _box.delete(id);
 
+  @override
   bool get isEmpty => _box.isEmpty;
 
+  @override
   Future<void> seedDefaults() async {
     const uuid = Uuid();
     final expenseCategories = [
@@ -68,4 +78,4 @@ class CategoryRepository {
 }
 
 final categoryRepositoryProvider =
-    Provider<CategoryRepository>((ref) => CategoryRepository());
+    Provider<ICategoryRepository>((ref) => CategoryRepository());

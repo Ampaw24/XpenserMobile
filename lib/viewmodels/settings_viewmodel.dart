@@ -1,21 +1,19 @@
-import 'package:expenser/data/repositories/account_repository.dart';
-import 'package:expenser/data/repositories/category_repository.dart';
+import 'package:expenser/data/repositories/interfaces/i_settings_repository.dart';
 import 'package:expenser/data/repositories/settings_repository.dart';
-import 'package:expenser/models/account_model.dart';
-import 'package:expenser/models/account_type.dart';
 import 'package:expenser/models/app_settings_model.dart';
-import 'package:flutter/material.dart';
+import 'package:expenser/services/data_bootstrap_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 class SettingsNotifier extends Notifier<AppSettingsModel> {
+  late ISettingsRepository _repo;
+
   @override
   AppSettingsModel build() {
-    return ref.read(settingsRepositoryProvider).get();
+    _repo = ref.read(settingsRepositoryProvider);
+    return _repo.get();
   }
 
-  Future<void> _save() =>
-      ref.read(settingsRepositoryProvider).save(state);
+  Future<void> _save() => _repo.save(state);
 
   void toggleDarkMode() {
     state = state.copyWith(isDarkMode: !state.isDarkMode);
@@ -55,27 +53,9 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
     await _save();
 
     if (value) {
-      await _seedFirstTimeData();
-    }
-  }
-
-  Future<void> _seedFirstTimeData() async {
-    final categoryRepo = ref.read(categoryRepositoryProvider);
-    if (categoryRepo.isEmpty) {
-      await categoryRepo.seedDefaults();
-    }
-    final accountRepo = ref.read(accountRepositoryProvider);
-    if (accountRepo.getAll().isEmpty) {
-      await accountRepo.add(AccountModel(
-        id: const Uuid().v4(),
-        name: 'Cash',
-        type: AccountType.cash,
-        initialBalance: 0.0,
-        currencyCode: state.preferredCurrency,
-        colorHex: 'FF4CAF50',
-        iconCodePoint: Icons.wallet_rounded.codePoint,
-        createdAt: DateTime.now(),
-      ));
+      await ref
+          .read(dataBootstrapServiceProvider)
+          .seedIfNeeded(state.preferredCurrency);
     }
   }
 }

@@ -1,3 +1,5 @@
+import 'package:expenser/services/auth/firebase_auth_service.dart';
+import 'package:expenser/services/auth/i_auth_service.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,57 +15,88 @@ class AuthState {
       );
 }
 
+final authServiceProvider = Provider<IAuthService>(
+  (ref) => FirebaseAuthService(),
+);
+
 class AuthNotifier extends Notifier<AuthState> {
+  late IAuthService _authService;
+
   @override
-  AuthState build() => const AuthState();
+  AuthState build() {
+    _authService = ref.read(authServiceProvider);
+    return const AuthState();
+  }
+
+  Future<void> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authService.signInWithGoogle();
+    if (result.cancelled) {
+      state = state.copyWith(isLoading: false);
+      return;
+    }
+    if (!result.isSuccess) {
+      state = state.copyWith(isLoading: false, errorMessage: result.error);
+      return;
+    }
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(true, userName: result.userName!);
+    state = const AuthState();
+  }
 
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (email.isEmpty || !email.contains('@')) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Enter a valid email');
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result =
+        await _authService.signInWithEmailPassword(email, password);
+    if (!result.isSuccess) {
+      state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    if (password.length < 6) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Password too short');
-      return;
-    }
-    final name = email.split('@').first;
-    await ref.read(settingsProvider.notifier).setLoggedIn(true, userName: name);
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(true, userName: result.userName!);
     state = const AuthState();
   }
 
   Future<void> register(String name, String email, String password) async {
-    state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 400));
     if (name.trim().isEmpty) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Name is required');
+      state = state.copyWith(errorMessage: 'Name is required');
       return;
     }
-    if (!email.contains('@')) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Enter a valid email');
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authService.register(name, email, password);
+    if (!result.isSuccess) {
+      state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    if (password.length < 6) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Password too short');
-      return;
-    }
-    await ref.read(settingsProvider.notifier).setLoggedIn(true, userName: name.trim());
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(true, userName: result.userName!);
     state = const AuthState();
   }
 
   Future<void> logout() async {
+    await _authService.signOut();
     await ref.read(settingsProvider.notifier).setLoggedIn(false);
     state = const AuthState();
   }
 
-  void forgotPassword(String email) {
-    state = state.copyWith(
-      errorMessage: email.contains('@')
-          ? null
-          : 'Enter a valid email address',
-    );
+  Future<void> forgotPassword(String email) async {
+    if (!email.contains('@')) {
+      state = state.copyWith(errorMessage: 'Enter a valid email address');
+      return;
+    }
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await _authService.sendPasswordReset(email);
+      state = const AuthState();
+    } catch (_) {
+      state = state.copyWith(
+          isLoading: false, errorMessage: 'Failed to send reset email.');
+    }
   }
 }
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider =
+    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

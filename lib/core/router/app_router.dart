@@ -1,3 +1,4 @@
+import 'package:expenser/core/router/route_guard.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:expenser/views/auth/forgot_password_screen.dart';
 import 'package:expenser/views/auth/login_screen.dart';
@@ -42,20 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final settings = ref.read(settingsProvider);
-      final isFirstLaunch = settings.isFirstLaunch;
-      final isLoggedIn = settings.isLoggedIn;
-      final path = state.uri.path;
-
-      if (path == '/splash') return null;
-
-      if (isFirstLaunch && path != '/onboarding') return '/onboarding';
-
-      const authPaths = ['/login', '/register', '/forgot-password', '/onboarding'];
-      if (!isLoggedIn && !authPaths.contains(path)) return '/login';
-
-      if (isLoggedIn && authPaths.contains(path)) return '/shell/dashboard';
-
-      return null;
+      return RouteGuard(settings).redirect(state.uri.path);
     },
     routes: [
       GoRoute(
