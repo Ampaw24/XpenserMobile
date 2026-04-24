@@ -1,3 +1,4 @@
+import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditSavingsGoalScreen extends ConsumerStatefulWidget {
@@ -25,7 +27,7 @@ class _AddEditSavingsGoalScreenState
 
   DateTime _targetDate = DateTime.now().add(const Duration(days: 30));
   String _colorHex = 'FF4CAF50';
-  int _iconCodePoint = Icons.savings_rounded.codePoint;
+  int _iconCodePoint = HugeIcons.strokeRoundedSavings.codePoint;
   bool _isLoading = false;
 
   bool get _isEditing => widget.goalId != null;
@@ -36,9 +38,10 @@ class _AddEditSavingsGoalScreenState
   ];
 
   static const _icons = [
-    Icons.savings_rounded, Icons.home_rounded, Icons.flight_rounded,
-    Icons.directions_car_rounded, Icons.school_rounded,
-    Icons.phone_iphone_rounded, Icons.favorite_rounded, Icons.star_rounded,
+    HugeIcons.strokeRoundedSavings,    HugeIcons.strokeRoundedHome01,
+    HugeIcons.strokeRoundedAirplane01, HugeIcons.strokeRoundedCar01,
+    HugeIcons.strokeRoundedSchool01,   HugeIcons.strokeRoundedSmartPhone01,
+    HugeIcons.strokeRoundedFavourite,  HugeIcons.strokeRoundedStar,
   ];
 
   @override
@@ -152,7 +155,7 @@ class _AddEditSavingsGoalScreenState
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          icon: const Icon(AppIcons.arrowLeft, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -217,7 +220,7 @@ class _AddEditSavingsGoalScreenState
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded,
+                      Icon(AppIcons.calendar,
                           color: Colors.white.withValues(alpha: 0.45),
                           size: sw * 0.045),
                       SizedBox(width: sw * 0.026),

@@ -6,6 +6,7 @@ class UserProfileModel {
   final String provider;
   final String dateAccountCreated;
   final String lastSignInAt;
+  final String? fcmToken;
 
   const UserProfileModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserProfileModel {
     required this.provider,
     required this.dateAccountCreated,
     required this.lastSignInAt,
+    this.fcmToken,
   });
 
   Map<String, dynamic> toMap() {
@@ -27,6 +29,7 @@ class UserProfileModel {
       'lastSignInAt': lastSignInAt,
     };
     if (photoUrl != null) map['photoUrl'] = photoUrl;
+    if (fcmToken != null) map['fcmToken'] = fcmToken;
     return map;
   }
 
@@ -42,5 +45,6 @@ class UserProfileModel {
             map['createdAt'] as String? ??
             '',
         lastSignInAt: map['lastSignInAt'] as String? ?? '',
+        fcmToken: map['fcmToken'] as String?,
       );
 }

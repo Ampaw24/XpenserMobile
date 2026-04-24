@@ -1,6 +1,9 @@
+import 'package:expenser/core/providers/firebase_balance_provider.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:expenser/views/converters/currency_converter_screen.dart';
 import 'package:expenser/views/converters/tax_calculator_screen.dart';
 import 'package:expenser/views/settings/widgets/setting_item.dart';
@@ -17,6 +20,10 @@ class SettingsScreen extends ConsumerWidget {
     final sw = MediaQuery.of(context).size.width;
     final sh = MediaQuery.of(context).size.height;
     final settings = ref.watch(settingsProvider);
+    final balanceAsync = ref.watch(firebaseTotalBalanceProvider);
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final userEmail = firebaseUser?.email ?? '';
+    final isVerified = firebaseUser?.emailVerified ?? false;
 
     return SafeArea(
       bottom: false,
@@ -57,14 +64,26 @@ class SettingsScreen extends ConsumerWidget {
                   CircleAvatar(
                     radius: sw * 0.070,
                     backgroundColor: Colors.white.withValues(alpha: 0.20),
-                    child: Text(
-                      settings.userName.isNotEmpty
-                          ? settings.userName[0].toUpperCase()
-                          : 'U',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: sw * 0.055,
+                    child: ClipOval(
+                      child: Image.network(
+                        settings.userAvatarPath!,
+                        width: sw * 0.140,
+                        height: sw * 0.140,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) {
+                          final initial =
+                              settings.userName.isNotEmpty
+                                  ? settings.userName[0].toUpperCase()
+                                  : 'U';
+                          return Text(
+                            initial,
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: sw * 0.042,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -83,12 +102,114 @@ class SettingsScreen extends ConsumerWidget {
                             fontSize: sw * 0.042,
                           ),
                         ),
+                        SizedBox(height: sh * 0.005),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                userEmail,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white.withValues(alpha: 0.70),
+                                  fontSize: sw * 0.028,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: sw * 0.016),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: sw * 0.018,
+                                vertical: sh * 0.003,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isVerified
+                                        ? const Color(
+                                          0xFF1DB954,
+                                        ).withValues(alpha: 0.22)
+                                        : Colors.amber.withValues(alpha: 0.20),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color:
+                                      isVerified
+                                          ? const Color(
+                                            0xFF1DB954,
+                                          ).withValues(alpha: 0.55)
+                                          : Colors.amber.withValues(
+                                            alpha: 0.50,
+                                          ),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isVerified
+                                        ? Icons.verified_rounded
+                                        : Icons.warning_amber_rounded,
+                                    size: sw * 0.028,
+                                    color:
+                                        isVerified
+                                            ? const Color(0xFF1DB954)
+                                            : Colors.amber,
+                                  ),
+                                  SizedBox(width: sw * 0.008),
+                                  Text(
+                                    isVerified ? 'Verified' : 'Unverified',
+                                    style: GoogleFonts.inter(
+                                      fontSize: sw * 0.022,
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          isVerified
+                                              ? const Color(0xFF1DB954)
+                                              : Colors.amber,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: sh * 0.008),
+                        balanceAsync.when(
+                          data:
+                              (total) => Text(
+                                NumberFormat.currency(
+                                  symbol: '${settings.preferredCurrency} ',
+                                  decimalDigits: 2,
+                                ).format(total),
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: sw * 0.038,
+                                ),
+                              ),
+                          loading:
+                              () => Container(
+                                width: sw * 0.30,
+                                height: sh * 0.016,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                          error:
+                              (_, __) => Text(
+                                '—',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white.withValues(alpha: 0.50),
+                                  fontSize: sw * 0.036,
+                                ),
+                              ),
+                        ),
                         SizedBox(height: sh * 0.004),
                         Text(
-                          settings.preferredCurrency,
+                          '${settings.preferredCurrency} · Total Balance',
                           style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.70),
-                            fontSize: sw * 0.032,
+                            color: Colors.white.withValues(alpha: 0.55),
+                            fontSize: sw * 0.026,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ],
@@ -104,17 +225,23 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   // Dark mode toggle
                   GestureDetector(
-                    onTap: () =>
-                        ref.read(settingsProvider.notifier).toggleDarkMode(),
+                    onTap:
+                        () =>
+                            ref
+                                .read(settingsProvider.notifier)
+                                .toggleDarkMode(),
                     child: Container(
                       margin: EdgeInsets.only(bottom: sh * 0.012),
                       padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.042, vertical: sh * 0.014),
+                        horizontal: sw * 0.042,
+                        vertical: sh * 0.014,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(sw * 0.042),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.10)),
+                          color: Colors.white.withValues(alpha: 0.10),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -122,11 +249,13 @@ class SettingsScreen extends ConsumerWidget {
                             padding: EdgeInsets.all(sw * 0.022),
                             decoration: BoxDecoration(
                               color: AppColors.ACCENT.withValues(alpha: 0.15),
-                              borderRadius:
-                                  BorderRadius.circular(sw * 0.024),
+                              borderRadius: BorderRadius.circular(sw * 0.024),
                             ),
-                            child: Icon(Icons.dark_mode_rounded,
-                                color: AppColors.ACCENT, size: sw * 0.052),
+                            child: Icon(
+                              Icons.dark_mode_rounded,
+                              color: AppColors.ACCENT,
+                              size: sw * 0.052,
+                            ),
                           ),
                           SizedBox(width: sw * 0.036),
                           Expanded(
@@ -148,8 +277,7 @@ class SettingsScreen extends ConsumerWidget {
                                       : 'Light theme on',
                                   style: GoogleFonts.inter(
                                     fontSize: sw * 0.030,
-                                    color:
-                                        Colors.white.withValues(alpha: 0.45),
+                                    color: Colors.white.withValues(alpha: 0.45),
                                   ),
                                 ),
                               ],
@@ -158,15 +286,20 @@ class SettingsScreen extends ConsumerWidget {
                           Switch(
                             value: settings.isDarkMode,
                             activeThumbColor: AppColors.ACCENT,
-                            activeTrackColor:
-                                AppColors.ACCENT.withValues(alpha: 0.35),
-                            inactiveThumbColor:
-                                Colors.white.withValues(alpha: 0.40),
-                            inactiveTrackColor:
-                                Colors.white.withValues(alpha: 0.12),
-                            onChanged: (_) => ref
-                                .read(settingsProvider.notifier)
-                                .toggleDarkMode(),
+                            activeTrackColor: AppColors.ACCENT.withValues(
+                              alpha: 0.35,
+                            ),
+                            inactiveThumbColor: Colors.white.withValues(
+                              alpha: 0.40,
+                            ),
+                            inactiveTrackColor: Colors.white.withValues(
+                              alpha: 0.12,
+                            ),
+                            onChanged:
+                                (_) =>
+                                    ref
+                                        .read(settingsProvider.notifier)
+                                        .toggleDarkMode(),
                           ),
                         ],
                       ),
@@ -201,12 +334,13 @@ class SettingsScreen extends ConsumerWidget {
                   SettingItem(
                     icon: Icons.notifications_rounded,
                     title: 'Notifications',
-                    subtitle: settings.notificationsEnabled
-                        ? 'Enabled'
-                        : 'Disabled',
-                    onTap: () => ref
-                        .read(settingsProvider.notifier)
-                        .toggleNotifications(),
+                    subtitle:
+                        settings.notificationsEnabled ? 'Enabled' : 'Disabled',
+                    onTap:
+                        () =>
+                            ref
+                                .read(settingsProvider.notifier)
+                                .toggleNotifications(),
                   ),
                   SettingItem(
                     icon: Icons.help_rounded,
@@ -232,14 +366,13 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showCurrencyPicker(BuildContext context, WidgetRef ref) {
-    const currencies = [
-      'GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR', 'JPY'
-    ];
+    const currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR', 'JPY'];
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF111827),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         final sw = MediaQuery.of(ctx).size.width;
         return ListView(
@@ -255,15 +388,21 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...currencies.map((c) => ListTile(
-                  title: Text(c,
-                      style: GoogleFonts.inter(
-                          color: Colors.white, fontSize: sw * 0.038)),
-                  onTap: () {
-                    ref.read(settingsProvider.notifier).setCurrency(c);
-                    Navigator.pop(ctx);
-                  },
-                )),
+            ...currencies.map(
+              (c) => ListTile(
+                title: Text(
+                  c,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.038,
+                  ),
+                ),
+                onTap: () {
+                  ref.read(settingsProvider.notifier).setCurrency(c);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
           ],
         );
       },
@@ -276,7 +415,8 @@ class SettingsScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF111827),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => const CurrencyConverterScreen(),
     );
   }
@@ -287,7 +427,8 @@ class SettingsScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF111827),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => const TaxCalculatorScreen(),
     );
   }
@@ -295,44 +436,52 @@ class SettingsScreen extends ConsumerWidget {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2035),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Sign Out',
-          style: GoogleFonts.montserrat(
-              color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Are you sure you want to sign out?',
-          style: GoogleFonts.inter(
-              color: Colors.white.withValues(alpha: 0.70)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.60)),
+      builder:
+          (dialogContext) => AlertDialog(
+            backgroundColor: const Color(0xFF1A2035),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ref.read(authProvider.notifier).logout();
-              });
-            },
-            child: Text(
+            title: Text(
               'Sign Out',
-              style: GoogleFonts.inter(
-                  color: const Color(0xFFFF5252),
-                  fontWeight: FontWeight.w600),
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            content: Text(
+              'Are you sure you want to sign out?',
+              style: GoogleFonts.inter(
+                color: Colors.white.withValues(alpha: 0.70),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withValues(alpha: 0.60),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ref.read(authProvider.notifier).logout();
+                  });
+                },
+                child: Text(
+                  'Sign Out',
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFFFF5252),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
@@ -344,15 +493,15 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(bottom: sh * 0.010, top: sh * 0.006),
-        child: Text(
-          text.toUpperCase(),
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            fontSize: sw * 0.028,
-            color: Colors.white.withValues(alpha: 0.35),
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: EdgeInsets.only(bottom: sh * 0.010, top: sh * 0.006),
+    child: Text(
+      text.toUpperCase(),
+      style: GoogleFonts.inter(
+        fontWeight: FontWeight.w700,
+        fontSize: sw * 0.028,
+        color: Colors.white.withValues(alpha: 0.35),
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 }

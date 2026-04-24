@@ -17,6 +17,8 @@ class AppIcons {
   static const IconData transfer        = HugeIcons.strokeRoundedExchange01;
   static const IconData analytics       = HugeIcons.strokeRoundedAnalytics01;
   static const IconData savings         = HugeIcons.strokeRoundedSavings;
+  static const IconData calendar        = HugeIcons.strokeRoundedCalendar01;
+  static const IconData arrowLeft       = HugeIcons.strokeRoundedArrowLeft01;
 
   // ── Status / Indicators ───────────────────────────────────────────────────
   static const IconData arrowUp         = HugeIcons.strokeRoundedArrowUp01;

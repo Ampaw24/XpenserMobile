@@ -1,5 +1,6 @@
 import 'package:expenser/services/auth/firebase_auth_service.dart';
 import 'package:expenser/services/auth/i_auth_service.dart';
+import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,6 +47,7 @@ class AuthNotifier extends Notifier<AuthState> {
           photoUrl: result.photoUrl,
           isNewUser: result.isNewUser,
         );
+    await ref.read(fcmServiceProvider).initialize(result.uid!);
     state = const AuthState();
   }
 
@@ -62,6 +64,7 @@ class AuthNotifier extends Notifier<AuthState> {
           uid: result.uid,
           isNewUser: result.isNewUser,
         );
+    await ref.read(fcmServiceProvider).initialize(result.uid!);
     state = const AuthState();
   }
 
@@ -82,12 +85,14 @@ class AuthNotifier extends Notifier<AuthState> {
           uid: result.uid,
           isNewUser: result.isNewUser,
         );
+    await ref.read(fcmServiceProvider).initialize(result.uid!);
     state = const AuthState();
   }
 
   Future<void> logout() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      ref.read(fcmServiceProvider).dispose();
       await _authService.signOut();
       await ref.read(settingsProvider.notifier).setLoggedIn(false);
       state = const AuthState();

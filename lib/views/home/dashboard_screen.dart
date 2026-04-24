@@ -104,7 +104,7 @@ class DashboardScreen extends ConsumerWidget {
                     onAddExpense: () => context.push('/transactions/add'),
                     onAddIncome: () => context.push('/transactions/add'),
                     onTransfer: () => context.push('/transactions/add'),
-                    onSavings: () => context.go('/savings'),
+                    onSavings: () => context.push('/savings'),
                   ),
                 ),
 

@@ -1,3 +1,4 @@
+import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -29,16 +30,17 @@ class SavingsScreen extends ConsumerWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          icon: const Icon(AppIcons.arrowLeft, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
-      body: goals.isEmpty
+      body: SafeArea(
+        child: goals.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.savings_outlined,
+                  Icon(AppIcons.savings,
                       size: sw * 0.155,
                       color: Colors.white.withValues(alpha: 0.20)),
                   SizedBox(height: sh * 0.016),
@@ -79,7 +81,7 @@ class SavingsScreen extends ConsumerWidget {
                       color: const Color(0xFFFF5252).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(sw * 0.050),
                     ),
-                    child: const Icon(Icons.delete_rounded, color: Colors.white),
+                    child: Icon(AppIcons.delete, color: Colors.white, size: sw * 0.060),
                   ),
                   onDismissed: (_) =>
                       ref.read(savingsGoalProvider.notifier).deleteGoal(g.id),
@@ -107,7 +109,8 @@ class SavingsScreen extends ConsumerWidget {
                                 ),
                                 child: Icon(
                                   IconData(g.iconCodePoint,
-                                      fontFamily: 'MaterialIcons'),
+                                      fontFamily: 'HgiStrokeRounded',
+                                      fontPackage: 'hugeicons'),
                                   color: color,
                                   size: sw * 0.055,
                                 ),
@@ -188,11 +191,12 @@ class SavingsScreen extends ConsumerWidget {
                 );
               },
             ),
+      ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_savings',
         backgroundColor: AppColors.PRIMARY,
         onPressed: () => context.push('/savings/add'),
-        child: const Icon(Icons.add_rounded, color: Colors.white),
+        child: const Icon(AppIcons.add, color: Colors.white),
       ),
     );
   }

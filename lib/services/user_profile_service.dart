@@ -30,6 +30,10 @@ class UserProfileService {
     }
   }
 
+  Future<void> updateFcmToken(String uid, String token) async {
+    await _profileRef(uid).update({'fcmToken': token});
+  }
+
   Future<UserProfileModel?> get(String uid) async {
     final snap = await _profileRef(uid).get();
     if (!snap.exists || snap.value == null) return null;
