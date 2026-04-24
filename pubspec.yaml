@@ -55,6 +55,7 @@ dependencies:
   hugeicons: ^0.0.7
   firebase_core: ^3.13.0
   firebase_auth: ^5.5.2
+  firebase_database: ^11.3.4
   google_sign_in: ^6.2.2
 
 dev_dependencies:

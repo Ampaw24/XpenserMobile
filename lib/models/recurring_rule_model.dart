@@ -28,6 +28,32 @@ class RecurringRuleModel extends HiveObject {
     required this.lastGeneratedDate,
   });
 
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'id': id,
+      'frequency': frequency.name,
+      'startDate': startDate.toIso8601String(),
+      'lastGeneratedDate': lastGeneratedDate.toIso8601String(),
+    };
+    if (endDate != null) map['endDate'] = endDate!.toIso8601String();
+    return map;
+  }
+
+  factory RecurringRuleModel.fromMap(Map<String, dynamic> map) =>
+      RecurringRuleModel(
+        id: map['id'] as String,
+        frequency: RecurringFrequency.values.firstWhere(
+          (e) => e.name == map['frequency'],
+          orElse: () => RecurringFrequency.monthly,
+        ),
+        startDate: DateTime.parse(map['startDate'] as String),
+        endDate: map['endDate'] != null
+            ? DateTime.parse(map['endDate'] as String)
+            : null,
+        lastGeneratedDate:
+            DateTime.parse(map['lastGeneratedDate'] as String),
+      );
+
   RecurringRuleModel copyWith({
     String? id,
     RecurringFrequency? frequency,

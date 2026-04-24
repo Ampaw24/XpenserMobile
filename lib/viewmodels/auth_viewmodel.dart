@@ -39,23 +39,29 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(true, userName: result.userName!);
+    await ref.read(settingsProvider.notifier).setLoggedIn(
+          true,
+          userName: result.userName!,
+          uid: result.uid,
+          photoUrl: result.photoUrl,
+          isNewUser: result.isNewUser,
+        );
     state = const AuthState();
   }
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final result =
-        await _authService.signInWithEmailPassword(email, password);
+    final result = await _authService.signInWithEmailPassword(email, password);
     if (!result.isSuccess) {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(true, userName: result.userName!);
+    await ref.read(settingsProvider.notifier).setLoggedIn(
+          true,
+          userName: result.userName!,
+          uid: result.uid,
+          isNewUser: result.isNewUser,
+        );
     state = const AuthState();
   }
 
@@ -70,16 +76,25 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(true, userName: result.userName!);
+    await ref.read(settingsProvider.notifier).setLoggedIn(
+          true,
+          userName: result.userName!,
+          uid: result.uid,
+          isNewUser: result.isNewUser,
+        );
     state = const AuthState();
   }
 
   Future<void> logout() async {
-    await _authService.signOut();
-    await ref.read(settingsProvider.notifier).setLoggedIn(false);
-    state = const AuthState();
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await _authService.signOut();
+      await ref.read(settingsProvider.notifier).setLoggedIn(false);
+      state = const AuthState();
+    } catch (e) {
+      state = state.copyWith(
+          isLoading: false, errorMessage: 'Sign out failed. Please try again.');
+    }
   }
 
   Future<void> forgotPassword(String email) async {

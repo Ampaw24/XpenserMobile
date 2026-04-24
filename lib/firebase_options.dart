@@ -49,12 +49,17 @@ class DefaultFirebaseOptions {
     }
   }
 
+  // Verify this URL in Firebase console → Realtime Database → Data tab
+  static const _databaseUrl =
+      'https://xpensermobile-cbde1-default-rtdb.firebaseio.com';
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBzejTdrq1IZnTXlXRN9MI9VrpwxO_fHdM',
     appId: '1:824715451215:android:2301721fb8031841dfc33a',
     messagingSenderId: '824715451215',
     projectId: 'xpensermobile-cbde1',
     storageBucket: 'xpensermobile-cbde1.firebasestorage.app',
+    databaseURL: _databaseUrl,
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -65,5 +70,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'xpensermobile-cbde1.firebasestorage.app',
     iosClientId: '824715451215-guulec7mcs6i9t2vau8ai0ie12dak57p.apps.googleusercontent.com',
     iosBundleId: 'com.example.expenser',
+    databaseURL: _databaseUrl,
   );
 }

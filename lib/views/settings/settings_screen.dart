@@ -295,7 +295,7 @@ class SettingsScreen extends ConsumerWidget {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A2035),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -310,7 +310,7 @@ class SettingsScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
               style: GoogleFonts.inter(
@@ -319,8 +319,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
+              Navigator.pop(dialogContext);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(authProvider.notifier).logout();
+              });
             },
             child: Text(
               'Sign Out',

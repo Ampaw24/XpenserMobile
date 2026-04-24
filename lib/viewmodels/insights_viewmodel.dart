@@ -1,3 +1,4 @@
+import 'package:expenser/core/providers/sync_version_provider.dart';
 import 'package:expenser/data/repositories/transaction_repository.dart';
 import 'package:expenser/models/transaction_type.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,7 @@ class InsightsState {
 class InsightsNotifier extends Notifier<InsightsState> {
   @override
   InsightsState build() {
+    ref.watch(syncVersionProvider);
     refresh();
     return const InsightsState();
   }

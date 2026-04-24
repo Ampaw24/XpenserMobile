@@ -35,6 +35,26 @@ class BudgetModel extends HiveObject {
     required this.createdAt,
   });
 
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'categoryId': categoryId,
+        'limitAmount': limitAmount,
+        'month': month,
+        'year': year,
+        'alertThreshold': alertThreshold,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory BudgetModel.fromMap(Map<String, dynamic> map) => BudgetModel(
+        id: map['id'] as String,
+        categoryId: map['categoryId'] as String,
+        limitAmount: (map['limitAmount'] as num).toDouble(),
+        month: map['month'] as int,
+        year: map['year'] as int,
+        alertThreshold: (map['alertThreshold'] as num?)?.toDouble() ?? 0.8,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+      );
+
   BudgetModel copyWith({
     String? id,
     String? categoryId,

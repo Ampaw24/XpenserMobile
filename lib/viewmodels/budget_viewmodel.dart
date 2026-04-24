@@ -1,7 +1,11 @@
+import 'package:expenser/core/providers/sync_version_provider.dart';
 import 'package:expenser/data/repositories/budget_repository.dart';
 import 'package:expenser/data/repositories/transaction_repository.dart';
 import 'package:expenser/models/budget_model.dart';
 import 'package:expenser/models/transaction_type.dart';
+import 'package:expenser/services/firebase_user_data_service.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BudgetState {
@@ -32,6 +36,7 @@ class BudgetState {
 class BudgetNotifier extends Notifier<BudgetState> {
   @override
   BudgetState build() {
+    ref.watch(syncVersionProvider);
     final now = DateTime.now();
     final budgets = ref.read(budgetRepositoryProvider).getAll();
     final from = DateTime(now.year, now.month, 1);
@@ -69,16 +74,27 @@ class BudgetNotifier extends Notifier<BudgetState> {
   Future<void> addBudget(BudgetModel b) async {
     await ref.read(budgetRepositoryProvider).add(b);
     _load();
+    _mirror((svc, uid) => svc.saveBudget(uid, b));
   }
 
   Future<void> updateBudget(BudgetModel b) async {
     await ref.read(budgetRepositoryProvider).update(b);
     _load();
+    _mirror((svc, uid) => svc.saveBudget(uid, b));
   }
 
   Future<void> deleteBudget(String id) async {
     await ref.read(budgetRepositoryProvider).delete(id);
     _load();
+    _mirror((svc, uid) => svc.deleteBudget(uid, id));
+  }
+
+  void _mirror(
+      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    final uid = ref.read(settingsProvider).uid;
+    if (uid == null) return;
+    fn(ref.read(firebaseUserDataServiceProvider), uid)
+        .catchError((e) => debugPrint('RTDB budget: $e'));
   }
 }
 

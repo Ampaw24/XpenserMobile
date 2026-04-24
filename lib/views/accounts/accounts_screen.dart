@@ -22,7 +22,12 @@ class AccountsScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.024, sw * 0.06, sh * 0.020),
+              padding: EdgeInsets.fromLTRB(
+                sw * 0.06,
+                sh * 0.024,
+                sw * 0.06,
+                sh * 0.020,
+              ),
               child: Text(
                 'Accounts',
                 style: GoogleFonts.montserrat(
@@ -34,35 +39,43 @@ class AccountsScreen extends ConsumerWidget {
             ),
             if (state.accounts.isEmpty)
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.account_balance_wallet_outlined,
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
                         size: sw * 0.155,
-                        color: Colors.white.withValues(alpha: 0.20)),
-                    SizedBox(height: sh * 0.016),
-                    Text(
-                      'No accounts yet',
-                      style: GoogleFonts.inter(
-                        fontSize: sw * 0.040,
-                        color: Colors.white.withValues(alpha: 0.40),
+                        color: Colors.white.withValues(alpha: 0.20),
                       ),
-                    ),
-                    SizedBox(height: sh * 0.008),
-                    Text(
-                      'Tap + to add an account',
-                      style: GoogleFonts.inter(
-                        fontSize: sw * 0.032,
-                        color: Colors.white.withValues(alpha: 0.25),
+                      SizedBox(height: sh * 0.016),
+                      Text(
+                        'No accounts yet',
+                        style: GoogleFonts.inter(
+                          fontSize: sw * 0.040,
+                          color: Colors.white.withValues(alpha: 0.40),
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: sh * 0.008),
+                      Text(
+                        'Tap + to add an account',
+                        style: GoogleFonts.inter(
+                          fontSize: sw * 0.032,
+                          color: Colors.white.withValues(alpha: 0.25),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else
               Expanded(
                 child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(sw * 0.06, 0, sw * 0.06, sh * 0.12),
+                  padding: EdgeInsets.fromLTRB(
+                    sw * 0.06,
+                    0,
+                    sw * 0.06,
+                    sh * 0.12,
+                  ),
                   itemCount: state.accounts.length,
                   separatorBuilder: (_, __) => SizedBox(height: sh * 0.014),
                   itemBuilder: (context, i) {
@@ -76,13 +89,20 @@ class AccountsScreen extends ConsumerWidget {
                         alignment: Alignment.centerRight,
                         padding: EdgeInsets.only(right: sw * 0.050),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF5252).withValues(alpha: 0.85),
+                          color: const Color(
+                            0xFFFF5252,
+                          ).withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(sw * 0.050),
                         ),
-                        child: const Icon(Icons.delete_rounded, color: Colors.white),
+                        child: const Icon(
+                          Icons.delete_rounded,
+                          color: Colors.white,
+                        ),
                       ),
-                      onDismissed: (_) =>
-                          ref.read(accountProvider.notifier).deleteAccount(a.id),
+                      onDismissed:
+                          (_) => ref
+                              .read(accountProvider.notifier)
+                              .deleteAccount(a.id),
                       child: GestureDetector(
                         onTap: () => context.push('/accounts/${a.id}/edit'),
                         child: Container(
@@ -108,10 +128,15 @@ class AccountsScreen extends ConsumerWidget {
                                 padding: EdgeInsets.all(sw * 0.026),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.20),
-                                  borderRadius: BorderRadius.circular(sw * 0.028),
+                                  borderRadius: BorderRadius.circular(
+                                    sw * 0.028,
+                                  ),
                                 ),
                                 child: Icon(
-                                  IconData(a.iconCodePoint, fontFamily: 'MaterialIcons'),
+                                  IconData(
+                                    a.iconCodePoint,
+                                    fontFamily: 'MaterialIcons',
+                                  ),
                                   color: Colors.white,
                                   size: sw * 0.056,
                                 ),
@@ -131,9 +156,12 @@ class AccountsScreen extends ConsumerWidget {
                                     ),
                                     SizedBox(height: sh * 0.003),
                                     Text(
-                                      a.type.name[0].toUpperCase() + a.type.name.substring(1),
+                                      a.type.name[0].toUpperCase() +
+                                          a.type.name.substring(1),
                                       style: GoogleFonts.inter(
-                                        color: Colors.white.withValues(alpha: 0.70),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.70,
+                                        ),
                                         fontSize: sw * 0.030,
                                       ),
                                     ),
@@ -155,7 +183,9 @@ class AccountsScreen extends ConsumerWidget {
                                   Text(
                                     'Balance',
                                     style: GoogleFonts.inter(
-                                      color: Colors.white.withValues(alpha: 0.70),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.70,
+                                      ),
                                       fontSize: sw * 0.028,
                                     ),
                                   ),

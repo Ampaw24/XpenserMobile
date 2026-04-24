@@ -39,6 +39,28 @@ class SavingsGoalModel extends HiveObject {
     required this.createdAt,
   });
 
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'targetAmount': targetAmount,
+        'savedAmount': savedAmount,
+        'targetDate': targetDate.toIso8601String(),
+        'colorHex': colorHex,
+        'iconCodePoint': iconCodePoint,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory SavingsGoalModel.fromMap(Map<String, dynamic> map) => SavingsGoalModel(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        targetAmount: (map['targetAmount'] as num).toDouble(),
+        savedAmount: (map['savedAmount'] as num).toDouble(),
+        targetDate: DateTime.parse(map['targetDate'] as String),
+        colorHex: map['colorHex'] as String,
+        iconCodePoint: map['iconCodePoint'] as int,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+      );
+
   double get progressPercent =>
       targetAmount > 0 ? (savedAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
 

@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'package:expenser/models/user_profile_model.dart';
+import 'package:expenser/services/user_profile_service.dart';
 import 'auth_result.dart';
 import 'i_auth_service.dart';
 
@@ -8,11 +10,14 @@ class FirebaseAuthService implements IAuthService {
   FirebaseAuthService({
     FirebaseAuth? auth,
     GoogleSignIn? googleSignIn,
+    UserProfileService? userProfileService,
   })  : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _profileService = userProfileService ?? UserProfileService();
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
+  final UserProfileService _profileService;
 
   @override
   Future<AuthResult> signInWithGoogle() async {
@@ -26,10 +31,18 @@ class FirebaseAuthService implements IAuthService {
         idToken: googleAuth.idToken,
       );
       final result = await _auth.signInWithCredential(credential);
-      final name = result.user?.displayName ??
-          result.user?.email?.split('@').first ??
-          'User';
-      return AuthResult.success(name);
+      final user = result.user!;
+
+      final candidate = _buildProfile(user, 'google');
+      final checked = await _profileService.checkOrCreate(candidate);
+
+      return AuthResult.success(
+        uid: user.uid,
+        userName: checked.profile.displayName,
+        email: checked.profile.email,
+        photoUrl: checked.profile.photoUrl,
+        isNewUser: checked.isNewUser,
+      );
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(e.message ?? 'Google sign-in failed');
     } catch (_) {
@@ -45,9 +58,17 @@ class FirebaseAuthService implements IAuthService {
         email: email.trim(),
         password: password,
       );
-      final name =
-          result.user?.displayName ?? email.split('@').first;
-      return AuthResult.success(name);
+      final user = result.user!;
+
+      final candidate = _buildProfile(user, 'email');
+      final checked = await _profileService.checkOrCreate(candidate);
+
+      return AuthResult.success(
+        uid: user.uid,
+        userName: checked.profile.displayName,
+        email: checked.profile.email,
+        isNewUser: checked.isNewUser,
+      );
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(e.message ?? 'Login failed');
     } catch (_) {
@@ -64,7 +85,18 @@ class FirebaseAuthService implements IAuthService {
         password: password,
       );
       await result.user?.updateDisplayName(name.trim());
-      return AuthResult.success(name.trim());
+      await result.user?.reload();
+      final user = _auth.currentUser!;
+
+      final candidate = _buildProfile(user, 'email', overrideName: name.trim());
+      final checked = await _profileService.checkOrCreate(candidate);
+
+      return AuthResult.success(
+        uid: user.uid,
+        userName: checked.profile.displayName,
+        email: checked.profile.email,
+        isNewUser: checked.isNewUser,
+      );
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(e.message ?? 'Registration failed');
     } catch (_) {
@@ -81,5 +113,27 @@ class FirebaseAuthService implements IAuthService {
   @override
   Future<void> sendPasswordReset(String email) async {
     await _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  UserProfileModel _buildProfile(
+    User user,
+    String provider, {
+    String? overrideName,
+  }) {
+    final now = DateTime.now().toIso8601String();
+    return UserProfileModel(
+      uid: user.uid,
+      displayName: overrideName ??
+          user.displayName ??
+          user.email?.split('@').first ??
+          'User',
+      email: user.email ?? '',
+      photoUrl: user.photoURL,
+      provider: provider,
+      dateAccountCreated:
+          user.metadata.creationTime?.toIso8601String() ?? now,
+      lastSignInAt:
+          user.metadata.lastSignInTime?.toIso8601String() ?? now,
+    );
   }
 }

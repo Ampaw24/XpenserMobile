@@ -1,6 +1,10 @@
+import 'package:expenser/core/providers/sync_version_provider.dart';
 import 'package:expenser/data/repositories/transaction_repository.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/transaction_type.dart';
+import 'package:expenser/services/firebase_user_data_service.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -34,6 +38,7 @@ class TransactionState {
 class TransactionNotifier extends Notifier<TransactionState> {
   @override
   TransactionState build() {
+    ref.watch(syncVersionProvider);
     final all = ref.read(transactionRepositoryProvider).getAll();
     return TransactionState(transactions: all);
   }
@@ -61,11 +66,13 @@ class TransactionNotifier extends Notifier<TransactionState> {
   Future<void> addTransaction(TransactionModel t) async {
     await ref.read(transactionRepositoryProvider).add(t);
     _load();
+    _mirror((svc, uid) => svc.saveTransaction(uid, t));
   }
 
   Future<void> updateTransaction(TransactionModel t) async {
     await ref.read(transactionRepositoryProvider).update(t);
     _load();
+    _mirror((svc, uid) => svc.saveTransaction(uid, t));
   }
 
   Future<TransactionModel?> deleteTransaction(String id) async {
@@ -73,7 +80,16 @@ class TransactionNotifier extends Notifier<TransactionState> {
     final deleted = repo.getById(id);
     await repo.delete(id);
     _load();
+    _mirror((svc, uid) => svc.deleteTransaction(uid, id));
     return deleted;
+  }
+
+  void _mirror(
+      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    final uid = ref.read(settingsProvider).uid;
+    if (uid == null) return;
+    fn(ref.read(firebaseUserDataServiceProvider), uid)
+        .catchError((e) => debugPrint('RTDB transaction: $e'));
   }
 
   void setAccountFilter(String? id) {

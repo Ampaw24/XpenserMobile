@@ -27,8 +27,7 @@ class DashboardScreen extends ConsumerWidget {
 
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountProvider);
-    final totalBalance =
-        accounts.balances.values.fold(0.0, (a, b) => a + b);
+    final totalBalance = accounts.balances.values.fold(0.0, (a, b) => a + b);
     final insights = ref.watch(insightsProvider);
 
     return Scaffold(
@@ -79,7 +78,10 @@ class DashboardScreen extends ConsumerWidget {
               slivers: [
                 // ── Header ──────────────────────────────────────────────────
                 SliverToBoxAdapter(
-                  child: DashboardHeader(userName: settings.userName),
+                  child: DashboardHeader(
+                    userName: settings.userName,
+                    profilePicUrl: settings.userAvatarPath ?? 's',
+                  ),
                 ),
 
                 SliverToBoxAdapter(child: SizedBox(height: sh * 0.022)),
@@ -100,9 +102,9 @@ class DashboardScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: QuickActionsRow(
                     onAddExpense: () => context.push('/transactions/add'),
-                    onAddIncome:  () => context.push('/transactions/add'),
-                    onTransfer:   () => context.push('/transactions/add'),
-                    onSavings:    () => context.go('/savings'),
+                    onAddIncome: () => context.push('/transactions/add'),
+                    onTransfer: () => context.push('/transactions/add'),
+                    onSavings: () => context.go('/savings'),
                   ),
                 ),
 
@@ -112,10 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: _SectionHeader(
-                      title: 'Spending (7 days)',
-                      sw: sw,
-                    ),
+                    child: _SectionHeader(title: 'Spending (7 days)', sw: sw),
                   ),
                 ),
                 SliverToBoxAdapter(child: SizedBox(height: sh * 0.014)),
@@ -246,9 +245,7 @@ class _AddFab extends StatelessWidget {
                   offset: const Offset(0, 6),
                 ),
               ],
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.20),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
             ),
             child: Center(
               child: HugeIcon(

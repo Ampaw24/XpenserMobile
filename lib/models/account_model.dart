@@ -40,6 +40,31 @@ class AccountModel extends HiveObject {
     required this.createdAt,
   });
 
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'type': type.name,
+        'initialBalance': initialBalance,
+        'currencyCode': currencyCode,
+        'colorHex': colorHex,
+        'iconCodePoint': iconCodePoint,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory AccountModel.fromMap(Map<String, dynamic> map) => AccountModel(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        type: AccountType.values.firstWhere(
+          (e) => e.name == map['type'],
+          orElse: () => AccountType.cash,
+        ),
+        initialBalance: (map['initialBalance'] as num).toDouble(),
+        currencyCode: map['currencyCode'] as String,
+        colorHex: map['colorHex'] as String,
+        iconCodePoint: map['iconCodePoint'] as int,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+      );
+
   AccountModel copyWith({
     String? id,
     String? name,

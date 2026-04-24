@@ -32,6 +32,27 @@ class CategoryModel extends HiveObject {
     this.isDefault = false,
   });
 
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'iconCodePoint': iconCodePoint,
+        'colorHex': colorHex,
+        'transactionType': transactionType.name,
+        'isDefault': isDefault,
+      };
+
+  factory CategoryModel.fromMap(Map<String, dynamic> map) => CategoryModel(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        iconCodePoint: map['iconCodePoint'] as int,
+        colorHex: map['colorHex'] as String,
+        transactionType: TransactionType.values.firstWhere(
+          (e) => e.name == map['transactionType'],
+          orElse: () => TransactionType.expense,
+        ),
+        isDefault: map['isDefault'] as bool? ?? false,
+      );
+
   CategoryModel copyWith({
     String? id,
     String? name,

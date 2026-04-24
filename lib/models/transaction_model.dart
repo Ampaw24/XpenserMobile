@@ -56,6 +56,42 @@ class TransactionModel extends HiveObject {
     required this.createdAt,
   });
 
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'id': id,
+      'amount': amount,
+      'type': type.name,
+      'categoryId': categoryId,
+      'accountId': accountId,
+      'date': date.toIso8601String(),
+      'isRecurring': isRecurring,
+      'createdAt': createdAt.toIso8601String(),
+    };
+    if (toAccountId != null) map['toAccountId'] = toAccountId;
+    if (notes != null) map['notes'] = notes;
+    if (tags != null) map['tags'] = tags;
+    if (recurringRuleId != null) map['recurringRuleId'] = recurringRuleId;
+    return map;
+  }
+
+  factory TransactionModel.fromMap(Map<String, dynamic> map) => TransactionModel(
+        id: map['id'] as String,
+        amount: (map['amount'] as num).toDouble(),
+        type: TransactionType.values.firstWhere(
+          (e) => e.name == map['type'],
+          orElse: () => TransactionType.expense,
+        ),
+        categoryId: map['categoryId'] as String,
+        accountId: map['accountId'] as String,
+        toAccountId: map['toAccountId'] as String?,
+        date: DateTime.parse(map['date'] as String),
+        notes: map['notes'] as String?,
+        tags: map['tags'] as String?,
+        isRecurring: map['isRecurring'] as bool? ?? false,
+        recurringRuleId: map['recurringRuleId'] as String?,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+      );
+
   TransactionModel copyWith({
     String? id,
     double? amount,
