@@ -7,8 +7,8 @@ class SavingsGoalRepository {
   Box<SavingsGoalModel> get _box =>
       HiveService.box<SavingsGoalModel>(HiveService.savingsGoals);
 
-  List<SavingsGoalModel> getAll() => _box.values.toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  List<SavingsGoalModel> getAll() =>
+      _box.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   SavingsGoalModel? getById(String id) => _box.get(id);
 
@@ -19,5 +19,6 @@ class SavingsGoalRepository {
   Future<void> delete(String id) => _box.delete(id);
 }
 
-final savingsGoalRepositoryProvider =
-    Provider<SavingsGoalRepository>((ref) => SavingsGoalRepository());
+final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>(
+  (ref) => SavingsGoalRepository(),
+);

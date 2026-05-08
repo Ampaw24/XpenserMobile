@@ -38,11 +38,7 @@ class SocialCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              width: sw * 0.055,
-              height: sw * 0.055,
-              child: icon,
-            ),
+            SizedBox(width: sw * 0.055, height: sw * 0.055, child: icon),
             SizedBox(width: sw * 0.04),
             Text(
               label,

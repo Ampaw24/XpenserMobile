@@ -9,8 +9,8 @@ class AccountRepository implements IAccountRepository {
       HiveService.box<AccountModel>(HiveService.accounts);
 
   @override
-  List<AccountModel> getAll() => _box.values.toList()
-    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  List<AccountModel> getAll() =>
+      _box.values.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
   @override
   AccountModel? getById(String id) => _box.get(id);
@@ -25,5 +25,6 @@ class AccountRepository implements IAccountRepository {
   Future<void> delete(String id) => _box.delete(id);
 }
 
-final accountRepositoryProvider =
-    Provider<IAccountRepository>((ref) => AccountRepository());
+final accountRepositoryProvider = Provider<IAccountRepository>(
+  (ref) => AccountRepository(),
+);

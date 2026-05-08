@@ -21,19 +21,22 @@ class RecentTransactionsSection extends ConsumerWidget {
 
     if (recent.isNotEmpty) {
       return Column(
-        children: recent.map((t) {
-          final category = categoryRepo.getById(t.categoryId);
-          return TransactionTile(
-            transaction: t,
-            categoryName: category?.name ?? 'Unknown',
-            categoryColor: category?.colorHex ?? 'FF78909C',
-            categoryIconCode:
-                category?.iconCodePoint ?? Icons.category_rounded.codePoint,
-            onEdit: () => context.push('/transactions/${t.id}/edit'),
-            onDelete: () =>
-                ref.read(transactionProvider.notifier).deleteTransaction(t.id),
-          );
-        }).toList(),
+        children:
+            recent.map((t) {
+              final category = categoryRepo.getById(t.categoryId);
+              return TransactionTile(
+                transaction: t,
+                categoryName: category?.name ?? 'Unknown',
+                categoryColor: category?.colorHex ?? 'FF78909C',
+                categoryIconCode:
+                    category?.iconCodePoint ?? Icons.category_rounded.codePoint,
+                onEdit: () => context.push('/transactions/${t.id}/edit'),
+                onDelete:
+                    () => ref
+                        .read(transactionProvider.notifier)
+                        .deleteTransaction(t.id),
+              );
+            }).toList(),
       );
     }
 
@@ -43,9 +46,7 @@ class RecentTransactionsSection extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(sw * 0.050),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.10),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
         children: [

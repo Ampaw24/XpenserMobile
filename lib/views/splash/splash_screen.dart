@@ -94,10 +94,12 @@ class _SplashScreenState extends State<SplashScreen>
     _nameSlide = Tween<Offset>(
       begin: const Offset(0, 0.6),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainCtrl,
-      curve: const Interval(0.42, 0.68, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _mainCtrl,
+        curve: const Interval(0.42, 0.68, curve: Curves.easeOut),
+      ),
+    );
 
     // Tagline
     _tagFade = CurvedAnimation(
@@ -312,16 +314,17 @@ class _SplashScreenState extends State<SplashScreen>
                   opacity: _dotsFade,
                   child: AnimatedBuilder(
                     animation: _pulseCtrl,
-                    builder: (_, __) => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _Dot(opacity: _dot1Opacity.value, sw: sw),
-                        SizedBox(width: sw * 0.025),
-                        _Dot(opacity: _dot2Opacity.value, sw: sw),
-                        SizedBox(width: sw * 0.025),
-                        _Dot(opacity: _dot3Opacity.value, sw: sw),
-                      ],
-                    ),
+                    builder:
+                        (_, __) => Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _Dot(opacity: _dot1Opacity.value, sw: sw),
+                            SizedBox(width: sw * 0.025),
+                            _Dot(opacity: _dot2Opacity.value, sw: sw),
+                            SizedBox(width: sw * 0.025),
+                            _Dot(opacity: _dot3Opacity.value, sw: sw),
+                          ],
+                        ),
                   ),
                 ),
               ],

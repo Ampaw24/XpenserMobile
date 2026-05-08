@@ -94,16 +94,18 @@ class _NavItem extends StatelessWidget {
                 vertical: sh * 0.008,
               ),
               decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.ACCENT.withValues(alpha: 0.18)
-                    : Colors.transparent,
+                color:
+                    isActive
+                        ? AppColors.ACCENT.withValues(alpha: 0.18)
+                        : Colors.transparent,
                 borderRadius: BorderRadius.circular(sw * 0.035),
               ),
               child: HugeIcon(
                 icon: item.icon,
-                color: isActive
-                    ? AppColors.ACCENT
-                    : Colors.white.withValues(alpha: 0.38),
+                color:
+                    isActive
+                        ? AppColors.ACCENT
+                        : Colors.white.withValues(alpha: 0.38),
                 size: sw * 0.056,
               ),
             ),
@@ -112,11 +114,11 @@ class _NavItem extends StatelessWidget {
               duration: const Duration(milliseconds: 250),
               style: GoogleFonts.inter(
                 fontSize: sw * 0.026,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive
-                    ? AppColors.ACCENT
-                    : Colors.white.withValues(alpha: 0.35),
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color:
+                    isActive
+                        ? AppColors.ACCENT
+                        : Colors.white.withValues(alpha: 0.35),
               ),
               child: Text(item.label),
             ),

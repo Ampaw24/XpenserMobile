@@ -74,7 +74,8 @@ class TransactionModel extends HiveObject {
     return map;
   }
 
-  factory TransactionModel.fromMap(Map<String, dynamic> map) => TransactionModel(
+  factory TransactionModel.fromMap(Map<String, dynamic> map) =>
+      TransactionModel(
         id: map['id'] as String,
         amount: (map['amount'] as num).toDouble(),
         type: TransactionType.values.firstWhere(

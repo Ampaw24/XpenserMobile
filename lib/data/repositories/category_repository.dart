@@ -77,5 +77,6 @@ class CategoryRepository implements ICategoryRepository {
   }
 }
 
-final categoryRepositoryProvider =
-    Provider<ICategoryRepository>((ref) => CategoryRepository());
+final categoryRepositoryProvider = Provider<ICategoryRepository>(
+  (ref) => CategoryRepository(),
+);

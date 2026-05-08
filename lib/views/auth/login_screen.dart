@@ -34,7 +34,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   late final Animation<double> _btn2Fade;
   late final Animation<double> _btn3Fade;
 
-
   bool get _showAppleButton => !kIsWeb && Platform.isIOS;
 
   @override
@@ -71,10 +70,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _headerSlide = Tween<Offset>(
       begin: const Offset(0, -0.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
+      ),
+    );
 
     _cardFade = CurvedAnimation(
       parent: _ctrl,
@@ -83,10 +84,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _cardSlide = Tween<Offset>(
       begin: const Offset(0, 0.25),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
+      ),
+    );
 
     _btn1Fade = CurvedAnimation(
       parent: _ctrl,
@@ -531,9 +534,10 @@ class _GlassButtonState extends State<_GlassButton> {
             child: Container(
               height: sh * 0.068,
               decoration: BoxDecoration(
-                color: _pressed
-                    ? Colors.white.withValues(alpha: 0.18)
-                    : Colors.white.withValues(alpha: 0.10),
+                color:
+                    _pressed
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(sw * 0.035),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.20),

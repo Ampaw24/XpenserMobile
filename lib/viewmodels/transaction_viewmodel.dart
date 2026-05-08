@@ -26,13 +26,12 @@ class TransactionState {
     String? activeAccountFilter,
     String? activeCategoryFilter,
     String? searchQuery,
-  }) =>
-      TransactionState(
-        transactions: transactions ?? this.transactions,
-        activeAccountFilter: activeAccountFilter ?? this.activeAccountFilter,
-        activeCategoryFilter: activeCategoryFilter ?? this.activeCategoryFilter,
-        searchQuery: searchQuery ?? this.searchQuery,
-      );
+  }) => TransactionState(
+    transactions: transactions ?? this.transactions,
+    activeAccountFilter: activeAccountFilter ?? this.activeAccountFilter,
+    activeCategoryFilter: activeCategoryFilter ?? this.activeCategoryFilter,
+    searchQuery: searchQuery ?? this.searchQuery,
+  );
 }
 
 class TransactionNotifier extends Notifier<TransactionState> {
@@ -51,12 +50,18 @@ class TransactionNotifier extends Notifier<TransactionState> {
   List<TransactionModel> _applyFilters(List<TransactionModel> all) {
     return all.where((t) {
       if (state.activeAccountFilter != null &&
-          t.accountId != state.activeAccountFilter) { return false; }
+          t.accountId != state.activeAccountFilter) {
+        return false;
+      }
       if (state.activeCategoryFilter != null &&
-          t.categoryId != state.activeCategoryFilter) { return false; }
+          t.categoryId != state.activeCategoryFilter) {
+        return false;
+      }
       if (state.searchQuery.isNotEmpty &&
           !(t.notes?.toLowerCase().contains(state.searchQuery.toLowerCase()) ??
-              false)) { return false; }
+              false)) {
+        return false;
+      }
       return true;
     }).toList();
   }
@@ -85,11 +90,14 @@ class TransactionNotifier extends Notifier<TransactionState> {
   }
 
   void _mirror(
-      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    Future<void> Function(FirebaseUserDataService svc, String uid) fn,
+  ) {
     final uid = ref.read(settingsProvider).uid;
     if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB transaction: $e'));
+    fn(
+      ref.read(firebaseUserDataServiceProvider),
+      uid,
+    ).catchError((e) => debugPrint('RTDB transaction: $e'));
   }
 
   void setAccountFilter(String? id) {
@@ -134,14 +142,17 @@ class TransactionNotifier extends Notifier<TransactionState> {
   double getTotalByType(TransactionType type, {DateTime? from, DateTime? to}) {
     final all = ref.read(transactionRepositoryProvider).getAll();
     return all
-        .where((t) =>
-            t.type == type &&
-            (from == null || !t.date.isBefore(from)) &&
-            (to == null || !t.date.isAfter(to)))
+        .where(
+          (t) =>
+              t.type == type &&
+              (from == null || !t.date.isBefore(from)) &&
+              (to == null || !t.date.isAfter(to)),
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 }
 
 final transactionProvider =
     NotifierProvider<TransactionNotifier, TransactionState>(
-        TransactionNotifier.new);
+      TransactionNotifier.new,
+    );

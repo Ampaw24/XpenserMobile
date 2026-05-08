@@ -23,14 +23,13 @@ class AuthResult {
     required String email,
     String? photoUrl,
     bool isNewUser = false,
-  }) =>
-      AuthResult._(
-        uid: uid,
-        userName: userName,
-        email: email,
-        photoUrl: photoUrl,
-        isNewUser: isNewUser,
-      );
+  }) => AuthResult._(
+    uid: uid,
+    userName: userName,
+    email: email,
+    photoUrl: photoUrl,
+    isNewUser: isNewUser,
+  );
 
   factory AuthResult.failure(String error) => AuthResult._(error: error);
 

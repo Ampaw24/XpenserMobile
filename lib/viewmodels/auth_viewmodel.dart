@@ -11,9 +11,9 @@ class AuthState {
   const AuthState({this.isLoading = false, this.errorMessage});
 
   AuthState copyWith({bool? isLoading, String? errorMessage}) => AuthState(
-        isLoading: isLoading ?? this.isLoading,
-        errorMessage: errorMessage,
-      );
+    isLoading: isLoading ?? this.isLoading,
+    errorMessage: errorMessage,
+  );
 }
 
 final authServiceProvider = Provider<IAuthService>(
@@ -40,7 +40,9 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref.read(settingsProvider.notifier).setLoggedIn(
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(
           true,
           userName: result.userName!,
           uid: result.uid,
@@ -58,7 +60,9 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref.read(settingsProvider.notifier).setLoggedIn(
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(
           true,
           userName: result.userName!,
           uid: result.uid,
@@ -79,7 +83,9 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref.read(settingsProvider.notifier).setLoggedIn(
+    await ref
+        .read(settingsProvider.notifier)
+        .setLoggedIn(
           true,
           userName: result.userName!,
           uid: result.uid,
@@ -98,7 +104,9 @@ class AuthNotifier extends Notifier<AuthState> {
       state = const AuthState();
     } catch (e) {
       state = state.copyWith(
-          isLoading: false, errorMessage: 'Sign out failed. Please try again.');
+        isLoading: false,
+        errorMessage: 'Sign out failed. Please try again.',
+      );
     }
   }
 
@@ -113,10 +121,13 @@ class AuthNotifier extends Notifier<AuthState> {
       state = const AuthState();
     } catch (_) {
       state = state.copyWith(
-          isLoading: false, errorMessage: 'Failed to send reset email.');
+        isLoading: false,
+        errorMessage: 'Failed to send reset email.',
+      );
     }
   }
 }
 
-final authProvider =
-    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

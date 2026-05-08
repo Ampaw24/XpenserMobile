@@ -5,19 +5,27 @@ enum TaxCountry { ghana, usa, uk, canada }
 extension TaxCountryExt on TaxCountry {
   String get label {
     switch (this) {
-      case TaxCountry.ghana: return 'Ghana';
-      case TaxCountry.usa: return 'United States';
-      case TaxCountry.uk: return 'United Kingdom';
-      case TaxCountry.canada: return 'Canada';
+      case TaxCountry.ghana:
+        return 'Ghana';
+      case TaxCountry.usa:
+        return 'United States';
+      case TaxCountry.uk:
+        return 'United Kingdom';
+      case TaxCountry.canada:
+        return 'Canada';
     }
   }
 
   String get currency {
     switch (this) {
-      case TaxCountry.ghana: return 'GHS';
-      case TaxCountry.usa: return 'USD';
-      case TaxCountry.uk: return 'GBP';
-      case TaxCountry.canada: return 'CAD';
+      case TaxCountry.ghana:
+        return 'GHS';
+      case TaxCountry.usa:
+        return 'USD';
+      case TaxCountry.uk:
+        return 'GBP';
+      case TaxCountry.canada:
+        return 'CAD';
     }
   }
 }
@@ -168,5 +176,4 @@ class TaxNotifier extends Notifier<TaxState> {
   }
 }
 
-final taxProvider =
-    NotifierProvider<TaxNotifier, TaxState>(TaxNotifier.new);
+final taxProvider = NotifierProvider<TaxNotifier, TaxState>(TaxNotifier.new);

@@ -25,10 +25,9 @@ class OnboardContent extends StatelessWidget {
         SizedBox(height: size.height * 0.08),
         Text(
           title!,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge!
-              .copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
         ),
         SizedBox(height: size.height * 0.01),
         Text(

@@ -53,10 +53,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _illustrationSlide = Tween<Offset>(
       begin: const Offset(0, -0.12),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0.20, 0.60, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceCtrl,
+        curve: const Interval(0.20, 0.60, curve: Curves.easeOut),
+      ),
+    );
 
     _cardFade = CurvedAnimation(
       parent: _entranceCtrl,
@@ -65,10 +67,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _cardSlide = Tween<Offset>(
       begin: const Offset(0, 0.20),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0.42, 0.78, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceCtrl,
+        curve: const Interval(0.42, 0.78, curve: Curves.easeOut),
+      ),
+    );
 
     _entranceCtrl.forward();
   }
@@ -186,11 +190,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   controller: _pageCtrl,
                   itemCount: pages.length,
                   onPageChanged: _onPageChanged,
-                  itemBuilder: (_, i) => _IllustrationPage(
-                    imagePath: pages[i].imagePath,
-                    sw: sw,
-                    sh: sh,
-                  ),
+                  itemBuilder:
+                      (_, i) => _IllustrationPage(
+                        imagePath: pages[i].imagePath,
+                        sw: sw,
+                        sh: sh,
+                      ),
                 ),
               ),
             ),
@@ -277,12 +282,7 @@ class _IllustrationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        sw * 0.08,
-        sh * 0.10,
-        sw * 0.08,
-        sh * 0.02,
-      ),
+      padding: EdgeInsets.fromLTRB(sw * 0.08, sh * 0.10, sw * 0.08, sh * 0.02),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -300,10 +300,7 @@ class _IllustrationPage extends StatelessWidget {
               ),
             ),
           ),
-          Image.asset(
-            imagePath,
-            fit: BoxFit.contain,
-          ),
+          Image.asset(imagePath, fit: BoxFit.contain),
         ],
       ),
     );
@@ -370,19 +367,22 @@ class _BottomCard extends StatelessWidget {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 380),
                       transitionBuilder: (child, anim) {
-                        final offset = isAnimatingForward
-                            ? const Offset(0.18, 0)
-                            : const Offset(-0.18, 0);
+                        final offset =
+                            isAnimatingForward
+                                ? const Offset(0.18, 0)
+                                : const Offset(-0.18, 0);
                         return FadeTransition(
                           opacity: anim,
                           child: SlideTransition(
                             position: Tween<Offset>(
                               begin: offset,
                               end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: anim,
-                              curve: Curves.easeOut,
-                            )),
+                            ).animate(
+                              CurvedAnimation(
+                                parent: anim,
+                                curve: Curves.easeOut,
+                              ),
+                            ),
                             child: child,
                           ),
                         );
@@ -441,9 +441,10 @@ class _PillIndicator extends StatelessWidget {
           width: isActive ? sw * 0.080 : sw * 0.022,
           height: sh * 0.008,
           decoration: BoxDecoration(
-            color: isActive
-                ? AppColors.ACCENT
-                : Colors.white.withValues(alpha: 0.25),
+            color:
+                isActive
+                    ? AppColors.ACCENT
+                    : Colors.white.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(sh * 0.004),
           ),
         );
@@ -532,15 +533,14 @@ class _CtaButtonState extends State<_CtaButton> {
           height: widget.sh * 0.065,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                AppColors.PRIMARY,
-                AppColors.ACCENT,
-              ],
+              colors: [AppColors.PRIMARY, AppColors.ACCENT],
             ),
             borderRadius: BorderRadius.circular(widget.sw * 0.035),
             boxShadow: [
               BoxShadow(
-                color: AppColors.ACCENT.withValues(alpha: _pressed ? 0.20 : 0.35),
+                color: AppColors.ACCENT.withValues(
+                  alpha: _pressed ? 0.20 : 0.35,
+                ),
                 blurRadius: _pressed ? 8 : 16,
                 offset: const Offset(0, 4),
               ),

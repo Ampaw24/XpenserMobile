@@ -9,8 +9,8 @@ class TransactionRepository implements ITransactionRepository {
       HiveService.box<TransactionModel>(HiveService.transactions);
 
   @override
-  List<TransactionModel> getAll() => _box.values.toList()
-    ..sort((a, b) => b.date.compareTo(a.date));
+  List<TransactionModel> getAll() =>
+      _box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
 
   @override
   TransactionModel? getById(String id) => _box.get(id);
@@ -27,17 +27,20 @@ class TransactionRepository implements ITransactionRepository {
   Future<void> delete(String id) => _box.delete(id);
 
   @override
-  List<TransactionModel> getByAccount(String accountId) => _box.values
-      .where((t) => t.accountId == accountId || t.toAccountId == accountId)
-      .toList()
-    ..sort((a, b) => b.date.compareTo(a.date));
+  List<TransactionModel> getByAccount(String accountId) =>
+      _box.values
+          .where((t) => t.accountId == accountId || t.toAccountId == accountId)
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
 
   @override
   List<TransactionModel> getByDateRange(DateTime from, DateTime to) =>
       _box.values
-          .where((t) =>
-              t.date.isAfter(from.subtract(const Duration(seconds: 1))) &&
-              t.date.isBefore(to.add(const Duration(seconds: 1))))
+          .where(
+            (t) =>
+                t.date.isAfter(from.subtract(const Duration(seconds: 1))) &&
+                t.date.isBefore(to.add(const Duration(seconds: 1))),
+          )
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
 
@@ -46,5 +49,6 @@ class TransactionRepository implements ITransactionRepository {
       _box.values.where((t) => t.categoryId == categoryId).toList();
 }
 
-final transactionRepositoryProvider =
-    Provider<ITransactionRepository>((ref) => TransactionRepository());
+final transactionRepositoryProvider = Provider<ITransactionRepository>(
+  (ref) => TransactionRepository(),
+);

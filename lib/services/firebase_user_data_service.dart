@@ -38,18 +38,15 @@ class FirebaseUserDataService {
   // ─── Bulk fetch (single round trip) ──────────────────────────────────────
 
   Future<SyncPayload> fetchAll(String uid) async {
-    final snap =
-        await FirebaseDatabase.instance.ref('users/$uid').get();
+    final snap = await FirebaseDatabase.instance.ref('users/$uid').get();
     if (!snap.exists || snap.value == null) return SyncPayload.empty();
 
     final data = Map<String, dynamic>.from(snap.value as Map);
 
-    List<T> parse<T>(
-        String key, T Function(Map<String, dynamic>) fromMap) {
+    List<T> parse<T>(String key, T Function(Map<String, dynamic>) fromMap) {
       final node = data[key];
       if (node == null) return [];
-      return (node as Map)
-          .values
+      return (node as Map).values
           .map((v) => fromMap(Map<String, dynamic>.from(v as Map)))
           .toList();
     }
@@ -60,8 +57,7 @@ class FirebaseUserDataService {
       categories: parse('categories', CategoryModel.fromMap),
       budgets: parse('budgets', BudgetModel.fromMap),
       savingsGoals: parse('savings_goals', SavingsGoalModel.fromMap),
-      recurringRules:
-          parse('recurring_rules', RecurringRuleModel.fromMap),
+      recurringRules: parse('recurring_rules', RecurringRuleModel.fromMap),
     );
   }
 
@@ -133,5 +129,6 @@ class FirebaseUserDataService {
       _col(uid, 'recurring_rules').child(id).remove();
 }
 
-final firebaseUserDataServiceProvider =
-    Provider<FirebaseUserDataService>((ref) => FirebaseUserDataService());
+final firebaseUserDataServiceProvider = Provider<FirebaseUserDataService>(
+  (ref) => FirebaseUserDataService(),
+);

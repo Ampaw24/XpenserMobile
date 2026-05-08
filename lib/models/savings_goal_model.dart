@@ -40,17 +40,18 @@ class SavingsGoalModel extends HiveObject {
   });
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'targetAmount': targetAmount,
-        'savedAmount': savedAmount,
-        'targetDate': targetDate.toIso8601String(),
-        'colorHex': colorHex,
-        'iconCodePoint': iconCodePoint,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'targetAmount': targetAmount,
+    'savedAmount': savedAmount,
+    'targetDate': targetDate.toIso8601String(),
+    'colorHex': colorHex,
+    'iconCodePoint': iconCodePoint,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
-  factory SavingsGoalModel.fromMap(Map<String, dynamic> map) => SavingsGoalModel(
+  factory SavingsGoalModel.fromMap(Map<String, dynamic> map) =>
+      SavingsGoalModel(
         id: map['id'] as String,
         name: map['name'] as String,
         targetAmount: (map['targetAmount'] as num).toDouble(),

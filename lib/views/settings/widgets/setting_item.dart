@@ -31,7 +31,9 @@ class SettingItem extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: sh * 0.012),
         padding: EdgeInsets.symmetric(
-            horizontal: sw * 0.042, vertical: sh * 0.016),
+          horizontal: sw * 0.042,
+          vertical: sh * 0.016,
+        ),
         decoration: BoxDecoration(
           color: backgroundColor ?? Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(sw * 0.042),
@@ -45,11 +47,7 @@ class SettingItem extends StatelessWidget {
                 color: effectiveIconColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(sw * 0.024),
               ),
-              child: Icon(
-                icon,
-                color: effectiveIconColor,
-                size: sw * 0.052,
-              ),
+              child: Icon(icon, color: effectiveIconColor, size: sw * 0.052),
             ),
             SizedBox(width: sw * 0.036),
             Expanded(

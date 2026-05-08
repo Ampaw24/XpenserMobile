@@ -12,19 +12,15 @@ class AccountState {
   final List<AccountModel> accounts;
   final Map<String, double> balances;
 
-  const AccountState({
-    this.accounts = const [],
-    this.balances = const {},
-  });
+  const AccountState({this.accounts = const [], this.balances = const {}});
 
   AccountState copyWith({
     List<AccountModel>? accounts,
     Map<String, double>? balances,
-  }) =>
-      AccountState(
-        accounts: accounts ?? this.accounts,
-        balances: balances ?? this.balances,
-      );
+  }) => AccountState(
+    accounts: accounts ?? this.accounts,
+    balances: balances ?? this.balances,
+  );
 }
 
 class AccountNotifier extends Notifier<AccountState> {
@@ -84,17 +80,20 @@ class AccountNotifier extends Notifier<AccountState> {
     _mirror((svc, uid) => svc.deleteAccount(uid, id));
   }
 
-  double get totalBalance =>
-      state.balances.values.fold(0.0, (a, b) => a + b);
+  double get totalBalance => state.balances.values.fold(0.0, (a, b) => a + b);
 
   void _mirror(
-      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    Future<void> Function(FirebaseUserDataService svc, String uid) fn,
+  ) {
     final uid = ref.read(settingsProvider).uid;
     if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB account: $e'));
+    fn(
+      ref.read(firebaseUserDataServiceProvider),
+      uid,
+    ).catchError((e) => debugPrint('RTDB account: $e'));
   }
 }
 
-final accountProvider =
-    NotifierProvider<AccountNotifier, AccountState>(AccountNotifier.new);
+final accountProvider = NotifierProvider<AccountNotifier, AccountState>(
+  AccountNotifier.new,
+);

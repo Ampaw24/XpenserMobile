@@ -32,7 +32,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     await ref
         .read(authProvider.notifier)
-        .register(_nameCtrl.text.trim(), _emailCtrl.text.trim(), _passwordCtrl.text);
+        .register(
+          _nameCtrl.text.trim(),
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
     if (mounted) {
       final error = ref.read(authProvider).errorMessage;
       if (error == null) context.go('/shell/dashboard');
@@ -61,21 +65,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                Text('Create Account',
-                    style: GoogleFonts.inter(
-                        fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(
+                  'Create Account',
+                  style: GoogleFonts.inter(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('Start managing your finances today',
-                    style: GoogleFonts.inter(
-                        fontSize: 14, color: Colors.grey[600])),
+                Text(
+                  'Start managing your finances today',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
                 const SizedBox(height: 32),
                 _Field(
                   controller: _nameCtrl,
                   label: 'Full Name',
                   hint: 'John Doe',
                   icon: Icons.person_outline_rounded,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                  validator:
+                      (v) =>
+                          (v == null || v.trim().isEmpty)
+                              ? 'Name is required'
+                              : null,
                 ),
                 const SizedBox(height: 16),
                 _Field(
@@ -99,8 +114,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   obscureText: _obscure,
                   suffixIcon: IconButton(
                     icon: Icon(
-                        _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: Colors.grey),
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.grey,
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                   validator: (v) {
@@ -111,26 +129,35 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 if (auth.errorMessage != null) ...[
                   const SizedBox(height: 12),
-                  Text(auth.errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  Text(
+                    auth.errorMessage!,
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
                 ],
                 const SizedBox(height: 32),
                 auth.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : CustomisedElevatedButton(
-                        text: 'Create Account', onPressed: _submit),
+                      text: 'Create Account',
+                      onPressed: _submit,
+                    ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account? ',
-                        style: GoogleFonts.inter(color: Colors.grey[600])),
+                    Text(
+                      'Already have an account? ',
+                      style: GoogleFonts.inter(color: Colors.grey[600]),
+                    ),
                     GestureDetector(
                       onTap: () => context.go('/login'),
-                      child: Text('Sign In',
-                          style: GoogleFonts.inter(
-                              color: AppColors.PRIMARY,
-                              fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Sign In',
+                        style: GoogleFonts.inter(
+                          color: AppColors.PRIMARY,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),

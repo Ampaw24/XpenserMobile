@@ -106,11 +106,7 @@ class _ActionButton extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: HugeIcon(
-                icon: icon,
-                color: iconColor,
-                size: sw * 0.058,
-              ),
+              child: HugeIcon(icon: icon, color: iconColor, size: sw * 0.058),
             ),
           ),
           SizedBox(height: sh * 0.008),

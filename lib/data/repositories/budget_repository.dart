@@ -15,9 +15,8 @@ class BudgetRepository implements IBudgetRepository {
   BudgetModel? getById(String id) => _box.get(id);
 
   @override
-  List<BudgetModel> getForMonth(int month, int year) => _box.values
-      .where((b) => b.month == month && b.year == year)
-      .toList();
+  List<BudgetModel> getForMonth(int month, int year) =>
+      _box.values.where((b) => b.month == month && b.year == year).toList();
 
   @override
   Future<void> add(BudgetModel budget) => _box.put(budget.id, budget);
@@ -29,5 +28,6 @@ class BudgetRepository implements IBudgetRepository {
   Future<void> delete(String id) => _box.delete(id);
 }
 
-final budgetRepositoryProvider =
-    Provider<IBudgetRepository>((ref) => BudgetRepository());
+final budgetRepositoryProvider = Provider<IBudgetRepository>(
+  (ref) => BudgetRepository(),
+);

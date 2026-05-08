@@ -18,7 +18,8 @@ class BudgetState {
     final result = <String, double>{};
     for (final b in budgets) {
       final s = spent[b.categoryId] ?? 0;
-      result[b.categoryId] = b.limitAmount > 0 ? (s / b.limitAmount).clamp(0.0, 1.0) : 0;
+      result[b.categoryId] =
+          b.limitAmount > 0 ? (s / b.limitAmount).clamp(0.0, 1.0) : 0;
     }
     return result;
   }
@@ -27,10 +28,7 @@ class BudgetState {
     List<BudgetModel>? budgets,
     Map<String, double>? spent,
   }) =>
-      BudgetState(
-        budgets: budgets ?? this.budgets,
-        spent: spent ?? this.spent,
-      );
+      BudgetState(budgets: budgets ?? this.budgets, spent: spent ?? this.spent);
 }
 
 class BudgetNotifier extends Notifier<BudgetState> {
@@ -41,7 +39,9 @@ class BudgetNotifier extends Notifier<BudgetState> {
     final budgets = ref.read(budgetRepositoryProvider).getAll();
     final from = DateTime(now.year, now.month, 1);
     final to = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-    final txs = ref.read(transactionRepositoryProvider).getByDateRange(from, to);
+    final txs = ref
+        .read(transactionRepositoryProvider)
+        .getByDateRange(from, to);
     final spent = <String, double>{};
     for (final t in txs.where((t) => t.type == TransactionType.expense)) {
       spent[t.categoryId] = (spent[t.categoryId] ?? 0) + t.amount;
@@ -90,13 +90,17 @@ class BudgetNotifier extends Notifier<BudgetState> {
   }
 
   void _mirror(
-      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    Future<void> Function(FirebaseUserDataService svc, String uid) fn,
+  ) {
     final uid = ref.read(settingsProvider).uid;
     if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB budget: $e'));
+    fn(
+      ref.read(firebaseUserDataServiceProvider),
+      uid,
+    ).catchError((e) => debugPrint('RTDB budget: $e'));
   }
 }
 
-final budgetProvider =
-    NotifierProvider<BudgetNotifier, BudgetState>(BudgetNotifier.new);
+final budgetProvider = NotifierProvider<BudgetNotifier, BudgetState>(
+  BudgetNotifier.new,
+);

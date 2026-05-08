@@ -46,22 +46,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return RouteGuard(settings).redirect(state.uri.path);
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (_, __) => const SplashScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(
         path: '/onboarding',
         builder: (_, __) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (_, __) => const RegisterScreen(),
-      ),
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(
         path: '/forgot-password',
         builder: (_, __) => const ForgotPasswordScreen(),
@@ -69,36 +60,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/shell/dashboard',
-              builder: (_, __) => const DashboardScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/shell/transactions',
-              builder: (_, __) => const TransactionListScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/shell/budgets',
-              builder: (_, __) => const BudgetsScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/shell/accounts',
-              builder: (_, __) => const AccountsScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/shell/settings',
-              builder: (_, __) => const SettingsScreen(),
-            ),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/shell/dashboard',
+                builder: (_, __) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/shell/transactions',
+                builder: (_, __) => const TransactionListScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/shell/budgets',
+                builder: (_, __) => const BudgetsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/shell/accounts',
+                builder: (_, __) => const AccountsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/shell/settings',
+                builder: (_, __) => const SettingsScreen(),
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(
@@ -107,8 +108,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/transactions/:id/edit',
-        builder: (_, state) =>
-            AddEditTransactionScreen(transactionId: state.pathParameters['id']),
+        builder:
+            (_, state) => AddEditTransactionScreen(
+              transactionId: state.pathParameters['id'],
+            ),
       ),
       GoRoute(
         path: '/accounts/add',
@@ -116,8 +119,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/accounts/:id/edit',
-        builder: (_, state) =>
-            AddEditAccountScreen(accountId: state.pathParameters['id']),
+        builder:
+            (_, state) =>
+                AddEditAccountScreen(accountId: state.pathParameters['id']),
       ),
       GoRoute(
         path: '/budgets/add',
@@ -125,21 +129,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/budgets/:id/edit',
-        builder: (_, state) =>
-            AddEditBudgetScreen(budgetId: state.pathParameters['id']),
+        builder:
+            (_, state) =>
+                AddEditBudgetScreen(budgetId: state.pathParameters['id']),
       ),
-      GoRoute(
-        path: '/savings',
-        builder: (_, __) => const SavingsScreen(),
-      ),
+      GoRoute(path: '/savings', builder: (_, __) => const SavingsScreen()),
       GoRoute(
         path: '/savings/add',
         builder: (_, __) => const AddEditSavingsGoalScreen(),
       ),
       GoRoute(
         path: '/savings/:id/edit',
-        builder: (_, state) =>
-            AddEditSavingsGoalScreen(goalId: state.pathParameters['id']),
+        builder:
+            (_, state) =>
+                AddEditSavingsGoalScreen(goalId: state.pathParameters['id']),
       ),
     ],
   );

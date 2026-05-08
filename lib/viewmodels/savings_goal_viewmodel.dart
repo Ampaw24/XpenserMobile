@@ -46,14 +46,18 @@ class SavingsGoalNotifier extends Notifier<List<SavingsGoalModel>> {
   }
 
   void _mirror(
-      Future<void> Function(FirebaseUserDataService svc, String uid) fn) {
+    Future<void> Function(FirebaseUserDataService svc, String uid) fn,
+  ) {
     final uid = ref.read(settingsProvider).uid;
     if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB savings: $e'));
+    fn(
+      ref.read(firebaseUserDataServiceProvider),
+      uid,
+    ).catchError((e) => debugPrint('RTDB savings: $e'));
   }
 }
 
 final savingsGoalProvider =
     NotifierProvider<SavingsGoalNotifier, List<SavingsGoalModel>>(
-        SavingsGoalNotifier.new);
+      SavingsGoalNotifier.new,
+    );

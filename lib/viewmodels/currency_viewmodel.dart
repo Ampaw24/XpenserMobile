@@ -54,9 +54,26 @@ class CurrencyNotifier extends Notifier<CurrencyState> {
   };
 
   static const currencies = [
-    'USD', 'GHS', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD',
-    'CHF', 'CNY', 'NGN', 'KES', 'ZAR', 'INR', 'BRL',
-    'MXN', 'SGD', 'AED', 'SAR', 'EGP', 'XOF',
+    'USD',
+    'GHS',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'CNY',
+    'NGN',
+    'KES',
+    'ZAR',
+    'INR',
+    'BRL',
+    'MXN',
+    'SGD',
+    'AED',
+    'SAR',
+    'EGP',
+    'XOF',
   ];
 
   @override
@@ -102,5 +119,6 @@ class CurrencyNotifier extends Notifier<CurrencyState> {
   }
 }
 
-final currencyProvider =
-    NotifierProvider<CurrencyNotifier, CurrencyState>(CurrencyNotifier.new);
+final currencyProvider = NotifierProvider<CurrencyNotifier, CurrencyState>(
+  CurrencyNotifier.new,
+);

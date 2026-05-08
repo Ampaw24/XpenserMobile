@@ -41,7 +41,8 @@ class UserProfileModel {
         photoUrl: map['photoUrl'] as String?,
         provider: map['provider'] as String? ?? 'email',
         // Support both the new key and the old 'createdAt' key for compat
-        dateAccountCreated: map['date_account_created'] as String? ??
+        dateAccountCreated:
+            map['date_account_created'] as String? ??
             map['createdAt'] as String? ??
             '',
         lastSignInAt: map['lastSignInAt'] as String? ?? '',

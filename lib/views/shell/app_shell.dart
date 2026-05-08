@@ -10,11 +10,11 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell shell;
 
   static const _tabs = [
-    NavTabItem(icon: AppIcons.navHome,         label: 'Home'),
+    NavTabItem(icon: AppIcons.navHome, label: 'Home'),
     NavTabItem(icon: AppIcons.navTransactions, label: 'Txns'),
-    NavTabItem(icon: AppIcons.navBudgets,      label: 'Budgets'),
-    NavTabItem(icon: AppIcons.navAccounts,     label: 'Accounts'),
-    NavTabItem(icon: AppIcons.navSettings,     label: 'Settings'),
+    NavTabItem(icon: AppIcons.navBudgets, label: 'Budgets'),
+    NavTabItem(icon: AppIcons.navAccounts, label: 'Accounts'),
+    NavTabItem(icon: AppIcons.navSettings, label: 'Settings'),
   ];
 
   @override
@@ -25,7 +25,8 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: BottomNavBar(
         tabs: _tabs,
         currentIndex: shell.currentIndex,
-        onTap: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        onTap:
+            (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
       ),
     );
   }

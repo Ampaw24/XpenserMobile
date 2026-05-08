@@ -17,17 +17,24 @@ final firebaseTotalBalanceProvider = StreamProvider.autoDispose<double>((ref) {
     final accountsNode = data['accounts'] as Map?;
     if (accountsNode == null) return 0.0;
 
-    final accounts = accountsNode.values
-        .map((v) => AccountModel.fromMap(Map<String, dynamic>.from(v as Map)))
-        .toList();
+    final accounts =
+        accountsNode.values
+            .map(
+              (v) => AccountModel.fromMap(Map<String, dynamic>.from(v as Map)),
+            )
+            .toList();
 
     final txNode = data['transactions'] as Map?;
-    final transactions = txNode == null
-        ? <TransactionModel>[]
-        : txNode.values
-            .map((v) =>
-                TransactionModel.fromMap(Map<String, dynamic>.from(v as Map)))
-            .toList();
+    final transactions =
+        txNode == null
+            ? <TransactionModel>[]
+            : txNode.values
+                .map(
+                  (v) => TransactionModel.fromMap(
+                    Map<String, dynamic>.from(v as Map),
+                  ),
+                )
+                .toList();
 
     double total = 0.0;
     for (final account in accounts) {

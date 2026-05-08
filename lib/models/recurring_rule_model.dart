@@ -47,11 +47,11 @@ class RecurringRuleModel extends HiveObject {
           orElse: () => RecurringFrequency.monthly,
         ),
         startDate: DateTime.parse(map['startDate'] as String),
-        endDate: map['endDate'] != null
-            ? DateTime.parse(map['endDate'] as String)
-            : null,
-        lastGeneratedDate:
-            DateTime.parse(map['lastGeneratedDate'] as String),
+        endDate:
+            map['endDate'] != null
+                ? DateTime.parse(map['endDate'] as String)
+                : null,
+        lastGeneratedDate: DateTime.parse(map['lastGeneratedDate'] as String),
       );
 
   RecurringRuleModel copyWith({

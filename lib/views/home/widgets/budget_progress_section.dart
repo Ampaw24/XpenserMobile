@@ -16,10 +16,11 @@ class BudgetProgressSection extends ConsumerWidget {
     final budgetState = ref.watch(budgetProvider);
     final categoryRepo = ref.read(categoryRepositoryProvider);
     final now = DateTime.now();
-    final currentBudgets = budgetState.budgets
-        .where((b) => b.month == now.month && b.year == now.year)
-        .take(3)
-        .toList();
+    final currentBudgets =
+        budgetState.budgets
+            .where((b) => b.month == now.month && b.year == now.year)
+            .take(3)
+            .toList();
 
     if (currentBudgets.isEmpty) return const SizedBox.shrink();
 

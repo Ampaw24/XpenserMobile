@@ -32,7 +32,6 @@ class FcmService {
 
   /// Call once after a successful login.
   Future<void> initialize(String uid) async {
-
     await _initLocalNotifications();
     await _requestPermission();
     await _registerToken(uid);
@@ -77,7 +76,8 @@ class FcmService {
     // Create the Android channel (no-op if it already exists).
     await _localNotif
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_channel);
   }
 

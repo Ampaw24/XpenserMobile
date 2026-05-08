@@ -22,9 +22,12 @@ class InsightsState {
     this.suggestedCategory,
   });
 
-  double get trendPercentage => previousMonthExpense > 0
-      ? ((monthlyExpense - previousMonthExpense) / previousMonthExpense * 100)
-      : 0;
+  double get trendPercentage =>
+      previousMonthExpense > 0
+          ? ((monthlyExpense - previousMonthExpense) /
+              previousMonthExpense *
+              100)
+          : 0;
 }
 
 class InsightsNotifier extends Notifier<InsightsState> {
@@ -58,16 +61,19 @@ class InsightsNotifier extends Notifier<InsightsState> {
         .fold(0.0, (s, t) => s + t.amount);
 
     final spendingByCategory = <String, double>{};
-    for (final t in thisMonthTxs.where((t) => t.type == TransactionType.expense)) {
+    for (final t in thisMonthTxs.where(
+      (t) => t.type == TransactionType.expense,
+    )) {
       spendingByCategory[t.categoryId] =
           (spendingByCategory[t.categoryId] ?? 0) + t.amount;
     }
 
     String? topCategory;
     if (spendingByCategory.isNotEmpty) {
-      topCategory = spendingByCategory.entries
-          .reduce((a, b) => a.value > b.value ? a : b)
-          .key;
+      topCategory =
+          spendingByCategory.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key;
     }
 
     final weeklyTotals = List<double>.filled(7, 0.0);
@@ -92,30 +98,48 @@ class InsightsNotifier extends Notifier<InsightsState> {
 
   String? suggestCategory(String notes) {
     final lower = notes.toLowerCase();
-    if (lower.contains('food') || lower.contains('restaurant') || lower.contains('lunch') || lower.contains('dinner')) {
+    if (lower.contains('food') ||
+        lower.contains('restaurant') ||
+        lower.contains('lunch') ||
+        lower.contains('dinner')) {
       return 'Food & Dining';
     }
-    if (lower.contains('uber') || lower.contains('taxi') || lower.contains('bus') || lower.contains('fuel')) {
+    if (lower.contains('uber') ||
+        lower.contains('taxi') ||
+        lower.contains('bus') ||
+        lower.contains('fuel')) {
       return 'Transport';
     }
-    if (lower.contains('shop') || lower.contains('buy') || lower.contains('purchase')) {
+    if (lower.contains('shop') ||
+        lower.contains('buy') ||
+        lower.contains('purchase')) {
       return 'Shopping';
     }
-    if (lower.contains('electricity') || lower.contains('water') || lower.contains('bill') || lower.contains('internet')) {
+    if (lower.contains('electricity') ||
+        lower.contains('water') ||
+        lower.contains('bill') ||
+        lower.contains('internet')) {
       return 'Bills & Utilities';
     }
-    if (lower.contains('doctor') || lower.contains('hospital') || lower.contains('pharmacy')) {
+    if (lower.contains('doctor') ||
+        lower.contains('hospital') ||
+        lower.contains('pharmacy')) {
       return 'Health';
     }
-    if (lower.contains('movie') || lower.contains('netflix') || lower.contains('game')) {
+    if (lower.contains('movie') ||
+        lower.contains('netflix') ||
+        lower.contains('game')) {
       return 'Entertainment';
     }
-    if (lower.contains('salary') || lower.contains('wage') || lower.contains('paycheck')) {
+    if (lower.contains('salary') ||
+        lower.contains('wage') ||
+        lower.contains('paycheck')) {
       return 'Salary';
     }
     return null;
   }
 }
 
-final insightsProvider =
-    NotifierProvider<InsightsNotifier, InsightsState>(InsightsNotifier.new);
+final insightsProvider = NotifierProvider<InsightsNotifier, InsightsState>(
+  InsightsNotifier.new,
+);

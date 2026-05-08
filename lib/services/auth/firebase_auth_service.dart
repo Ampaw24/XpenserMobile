@@ -11,9 +11,9 @@ class FirebaseAuthService implements IAuthService {
     FirebaseAuth? auth,
     GoogleSignIn? googleSignIn,
     UserProfileService? userProfileService,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(),
-        _profileService = userProfileService ?? UserProfileService();
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _profileService = userProfileService ?? UserProfileService();
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
@@ -52,7 +52,9 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<AuthResult> signInWithEmailPassword(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     try {
       final result = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
@@ -78,7 +80,10 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<AuthResult> register(
-      String name, String email, String password) async {
+    String name,
+    String email,
+    String password,
+  ) async {
     try {
       final result = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
@@ -123,17 +128,16 @@ class FirebaseAuthService implements IAuthService {
     final now = DateTime.now().toIso8601String();
     return UserProfileModel(
       uid: user.uid,
-      displayName: overrideName ??
+      displayName:
+          overrideName ??
           user.displayName ??
           user.email?.split('@').first ??
           'User',
       email: user.email ?? '',
       photoUrl: user.photoURL,
       provider: provider,
-      dateAccountCreated:
-          user.metadata.creationTime?.toIso8601String() ?? now,
-      lastSignInAt:
-          user.metadata.lastSignInTime?.toIso8601String() ?? now,
+      dateAccountCreated: user.metadata.creationTime?.toIso8601String() ?? now,
+      lastSignInAt: user.metadata.lastSignInTime?.toIso8601String() ?? now,
     );
   }
 }

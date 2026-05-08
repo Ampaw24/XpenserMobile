@@ -68,7 +68,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '824715451215',
     projectId: 'xpensermobile-cbde1',
     storageBucket: 'xpensermobile-cbde1.firebasestorage.app',
-    iosClientId: '824715451215-guulec7mcs6i9t2vau8ai0ie12dak57p.apps.googleusercontent.com',
+    iosClientId:
+        '824715451215-guulec7mcs6i9t2vau8ai0ie12dak57p.apps.googleusercontent.com',
     iosBundleId: 'com.example.expenser',
     databaseURL: _databaseUrl,
   );

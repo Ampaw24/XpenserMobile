@@ -17,5 +17,6 @@ class SettingsRepository implements ISettingsRepository {
   Future<void> save(AppSettingsModel settings) => _box.put(_key, settings);
 }
 
-final settingsRepositoryProvider =
-    Provider<ISettingsRepository>((ref) => SettingsRepository());
+final settingsRepositoryProvider = Provider<ISettingsRepository>(
+  (ref) => SettingsRepository(),
+);

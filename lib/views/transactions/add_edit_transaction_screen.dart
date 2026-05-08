@@ -44,8 +44,10 @@ class _AddEditTransactionScreenState
 
   void _loadExisting() {
     final all = ref.read(transactionProvider.notifier).getAll();
-    final tx = all.firstWhere((t) => t.id == widget.transactionId,
-        orElse: () => throw Exception('Not found'));
+    final tx = all.firstWhere(
+      (t) => t.id == widget.transactionId,
+      orElse: () => throw Exception('Not found'),
+    );
     _amountCtrl.text = tx.amount.toStringAsFixed(2);
     _notesCtrl.text = tx.notes ?? '';
     setState(() {
@@ -69,16 +71,17 @@ class _AddEditTransactionScreenState
       initialDate: _date,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.ACCENT,
-            onPrimary: Colors.white,
-            surface: Color(0xFF1A2035),
+      builder:
+          (ctx, child) => Theme(
+            data: ThemeData.dark().copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: AppColors.ACCENT,
+                onPrimary: Colors.white,
+                surface: Color(0xFF1A2035),
+              ),
+            ),
+            child: child!,
           ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) setState(() => _date = picked);
   }
@@ -86,15 +89,15 @@ class _AddEditTransactionScreenState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        _darkSnack('Select a category'),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(_darkSnack('Select a category'));
       return;
     }
     if (_selectedAccountId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        _darkSnack('Select an account'),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(_darkSnack('Select an account'));
       return;
     }
 
@@ -122,42 +125,36 @@ class _AddEditTransactionScreenState
   }
 
   SnackBar _darkSnack(String msg) => SnackBar(
-        backgroundColor: const Color(0xFF1A2035),
-        content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
-      );
+    backgroundColor: const Color(0xFF1A2035),
+    content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
+  );
 
   InputDecoration _inputDeco(String label) => InputDecoration(
-        labelText: label,
-        labelStyle:
-            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.ACCENT, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: Color(0xFFFF5252)),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: Color(0xFFFF5252), width: 1.5),
-        ),
-      );
+    labelText: label,
+    labelStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+    filled: true,
+    fillColor: Colors.white.withValues(alpha: 0.06),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Color(0xFFFF5252)),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Color(0xFFFF5252), width: 1.5),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -203,19 +200,28 @@ class _AddEditTransactionScreenState
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.010, sw * 0.06, sh * 0.06),
+            padding: EdgeInsets.fromLTRB(
+              sw * 0.06,
+              sh * 0.010,
+              sw * 0.06,
+              sh * 0.06,
+            ),
             children: [
-              _TypeSelector(selected: _type, onChanged: (t) {
-                setState(() {
-                  _type = t;
-                  _selectedCategoryId = null;
-                });
-              }),
+              _TypeSelector(
+                selected: _type,
+                onChanged: (t) {
+                  setState(() {
+                    _type = t;
+                    _selectedCategoryId = null;
+                  });
+                },
+              ),
               SizedBox(height: sh * 0.024),
               TextFormField(
                 controller: _amountCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 style: GoogleFonts.montserrat(
                   fontSize: sw * 0.060,
                   fontWeight: FontWeight.w700,
@@ -235,54 +241,66 @@ class _AddEditTransactionScreenState
               Wrap(
                 spacing: sw * 0.022,
                 runSpacing: sh * 0.010,
-                children: categories.map((c) {
-                  final isSelected = c.id == _selectedCategoryId;
-                  final color = _hexToColor(c.colorHex);
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedCategoryId = c.id),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.034, vertical: sh * 0.010),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withValues(alpha: 0.20)
-                            : Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(sw * 0.055),
-                        border: Border.all(
-                          color: isSelected
-                              ? color
-                              : Colors.white.withValues(alpha: 0.12),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            IconData(c.iconCodePoint,
-                                fontFamily: 'MaterialIcons'),
-                            size: sw * 0.040,
-                            color: isSelected
-                                ? color
-                                : Colors.white.withValues(alpha: 0.40),
+                children:
+                    categories.map((c) {
+                      final isSelected = c.id == _selectedCategoryId;
+                      final color = _hexToColor(c.colorHex);
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedCategoryId = c.id),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: sw * 0.034,
+                            vertical: sh * 0.010,
                           ),
-                          SizedBox(width: sw * 0.016),
-                          Text(
-                            c.name,
-                            style: GoogleFonts.inter(
-                              fontSize: sw * 0.030,
-                              color: isSelected
-                                  ? color
-                                  : Colors.white.withValues(alpha: 0.55),
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected
+                                    ? color.withValues(alpha: 0.20)
+                                    : Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(sw * 0.055),
+                            border: Border.all(
+                              color:
+                                  isSelected
+                                      ? color
+                                      : Colors.white.withValues(alpha: 0.12),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                IconData(
+                                  c.iconCodePoint,
+                                  fontFamily: 'MaterialIcons',
+                                ),
+                                size: sw * 0.040,
+                                color:
+                                    isSelected
+                                        ? color
+                                        : Colors.white.withValues(alpha: 0.40),
+                              ),
+                              SizedBox(width: sw * 0.016),
+                              Text(
+                                c.name,
+                                style: GoogleFonts.inter(
+                                  fontSize: sw * 0.030,
+                                  color:
+                                      isSelected
+                                          ? color
+                                          : Colors.white.withValues(
+                                            alpha: 0.55,
+                                          ),
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
               ),
               SizedBox(height: sh * 0.020),
               _Label('Account', sw),
@@ -297,24 +315,35 @@ class _AddEditTransactionScreenState
                 )
               else
                 DropdownButtonFormField<String>(
-                  initialValue: accounts.any((a) => a.id == _selectedAccountId)
-                      ? _selectedAccountId
-                      : null,
+                  initialValue:
+                      accounts.any((a) => a.id == _selectedAccountId)
+                          ? _selectedAccountId
+                          : null,
                   hint: Text(
                     'Select account',
                     style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.35)),
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
                   ),
                   dropdownColor: const Color(0xFF1A2035),
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.036,
+                  ),
                   iconEnabledColor: Colors.white.withValues(alpha: 0.50),
                   decoration: _inputDeco(''),
-                  items: accounts
-                      .map((a) => DropdownMenuItem(
-                          value: a.id,
-                          child: Text(a.name,
-                              style: GoogleFonts.inter(color: Colors.white))))
-                      .toList(),
+                  items:
+                      accounts
+                          .map(
+                            (a) => DropdownMenuItem(
+                              value: a.id,
+                              child: Text(
+                                a.name,
+                                style: GoogleFonts.inter(color: Colors.white),
+                              ),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (v) => setState(() => _selectedAccountId = v),
                 ),
               SizedBox(height: sh * 0.020),
@@ -324,18 +353,23 @@ class _AddEditTransactionScreenState
                 onTap: _pickDate,
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                      horizontal: sw * 0.042, vertical: sh * 0.016),
+                    horizontal: sw * 0.042,
+                    vertical: sh * 0.016,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12)),
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded,
-                          color: Colors.white.withValues(alpha: 0.45),
-                          size: sw * 0.045),
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        color: Colors.white.withValues(alpha: 0.45),
+                        size: sw * 0.045,
+                      ),
                       SizedBox(width: sw * 0.026),
                       Text(
                         '${_date.day}/${_date.month}/${_date.year}',
@@ -352,7 +386,10 @@ class _AddEditTransactionScreenState
               TextFormField(
                 controller: _notesCtrl,
                 maxLines: 3,
-                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: sw * 0.036,
+                ),
                 cursorColor: AppColors.ACCENT,
                 decoration: _inputDeco('Notes (optional)'),
               ),
@@ -397,39 +434,42 @@ class _TypeSelector extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
-        children: TransactionType.values.map((t) {
-          final isSelected = t == selected;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(t),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: sh * 0.012),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? const LinearGradient(
-                          colors: [AppColors.PRIMARY, AppColors.ACCENT],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(sw * 0.036),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  t.name[0].toUpperCase() + t.name.substring(1),
-                  style: GoogleFonts.inter(
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.40),
-                    fontWeight: FontWeight.w600,
-                    fontSize: sw * 0.034,
+        children:
+            TransactionType.values.map((t) {
+              final isSelected = t == selected;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onChanged(t),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(vertical: sh * 0.012),
+                    decoration: BoxDecoration(
+                      gradient:
+                          isSelected
+                              ? const LinearGradient(
+                                colors: [AppColors.PRIMARY, AppColors.ACCENT],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                              : null,
+                      borderRadius: BorderRadius.circular(sw * 0.036),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      t.name[0].toUpperCase() + t.name.substring(1),
+                      style: GoogleFonts.inter(
+                        color:
+                            isSelected
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.40),
+                        fontWeight: FontWeight.w600,
+                        fontSize: sw * 0.034,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -442,13 +482,13 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: sw * 0.032,
-          fontWeight: FontWeight.w600,
-          color: Colors.white.withValues(alpha: 0.50),
-        ),
-      );
+    text,
+    style: GoogleFonts.inter(
+      fontSize: sw * 0.032,
+      fontWeight: FontWeight.w600,
+      color: Colors.white.withValues(alpha: 0.50),
+    ),
+  );
 }
 
 class _GradientButton extends StatelessWidget {
@@ -486,20 +526,24 @@ class _GradientButton extends StatelessWidget {
           ],
         ),
         alignment: Alignment.center,
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
-            : Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: sw * 0.040,
-                  fontWeight: FontWeight.w700,
+        child:
+            isLoading
+                ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.040,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
       ),
     );
   }

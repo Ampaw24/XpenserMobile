@@ -124,7 +124,9 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
     await HiveService.box<CategoryModel>(HiveService.categories).clear();
     await HiveService.box<BudgetModel>(HiveService.budgets).clear();
     await HiveService.box<SavingsGoalModel>(HiveService.savingsGoals).clear();
-    await HiveService.box<RecurringRuleModel>(HiveService.recurringRules).clear();
+    await HiveService.box<RecurringRuleModel>(
+      HiveService.recurringRules,
+    ).clear();
   }
 
   void _bumpSyncVersion() {
@@ -133,56 +135,47 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
 
   /// Clears all 6 Hive data boxes and repopulates them from the RTDB payload.
   Future<void> _applySync(SyncPayload payload) async {
-    final txBox =
-        HiveService.box<TransactionModel>(HiveService.transactions);
-    final accBox =
-        HiveService.box<AccountModel>(HiveService.accounts);
-    final catBox =
-        HiveService.box<CategoryModel>(HiveService.categories);
-    final budBox =
-        HiveService.box<BudgetModel>(HiveService.budgets);
-    final sgBox =
-        HiveService.box<SavingsGoalModel>(HiveService.savingsGoals);
-    final rrBox =
-        HiveService.box<RecurringRuleModel>(HiveService.recurringRules);
+    final txBox = HiveService.box<TransactionModel>(HiveService.transactions);
+    final accBox = HiveService.box<AccountModel>(HiveService.accounts);
+    final catBox = HiveService.box<CategoryModel>(HiveService.categories);
+    final budBox = HiveService.box<BudgetModel>(HiveService.budgets);
+    final sgBox = HiveService.box<SavingsGoalModel>(HiveService.savingsGoals);
+    final rrBox = HiveService.box<RecurringRuleModel>(
+      HiveService.recurringRules,
+    );
 
     await txBox.clear();
     if (payload.transactions.isNotEmpty) {
-      await txBox.putAll(
-          {for (final t in payload.transactions) t.id: t});
+      await txBox.putAll({for (final t in payload.transactions) t.id: t});
     }
 
     await accBox.clear();
     if (payload.accounts.isNotEmpty) {
-      await accBox
-          .putAll({for (final a in payload.accounts) a.id: a});
+      await accBox.putAll({for (final a in payload.accounts) a.id: a});
     }
 
     await catBox.clear();
     if (payload.categories.isNotEmpty) {
-      await catBox
-          .putAll({for (final c in payload.categories) c.id: c});
+      await catBox.putAll({for (final c in payload.categories) c.id: c});
     }
 
     await budBox.clear();
     if (payload.budgets.isNotEmpty) {
-      await budBox
-          .putAll({for (final b in payload.budgets) b.id: b});
+      await budBox.putAll({for (final b in payload.budgets) b.id: b});
     }
 
     await sgBox.clear();
     if (payload.savingsGoals.isNotEmpty) {
-      await sgBox
-          .putAll({for (final g in payload.savingsGoals) g.id: g});
+      await sgBox.putAll({for (final g in payload.savingsGoals) g.id: g});
     }
 
     await rrBox.clear();
     if (payload.recurringRules.isNotEmpty) {
-      await rrBox
-          .putAll({for (final r in payload.recurringRules) r.id: r});
+      await rrBox.putAll({for (final r in payload.recurringRules) r.id: r});
     }
   }
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsNotifier, AppSettingsModel>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettingsModel>(
+  SettingsNotifier.new,
+);

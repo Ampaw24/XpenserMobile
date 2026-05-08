@@ -14,20 +14,21 @@ class CustomElevatedButton extends StatelessWidget {
   final Widget? trailingIcon;
   final MainAxisSize? mainAxisSize;
 
-  const CustomElevatedButton(
-      {super.key,
-      required this.text,
-      required this.onPressed,
-      this.backgroundColor,
-      this.textStyle,
-      this.textColor,
-      this.textFontWeight,
-      this.fontSize,
-      this.borderRadius,
-      this.padding,
-      this.leadingIcon,
-      this.trailingIcon,
-      this.mainAxisSize});
+  const CustomElevatedButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.backgroundColor,
+    this.textStyle,
+    this.textColor,
+    this.textFontWeight,
+    this.fontSize,
+    this.borderRadius,
+    this.padding,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.mainAxisSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,8 @@ class CustomElevatedButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         overlayColor: Colors.black,
         backgroundColor: backgroundColor ?? Colors.amber,
-        padding: padding ??
+        padding:
+            padding ??
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
@@ -52,7 +54,8 @@ class CustomElevatedButton extends StatelessWidget {
           ],
           Text(
             text,
-            style: textStyle ??
+            style:
+                textStyle ??
                 TextStyle(
                   color: textColor ?? Colors.black,
                   fontSize: fontSize ?? 18.0,

@@ -39,7 +39,12 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.024, sw * 0.06, sh * 0.014),
+              padding: EdgeInsets.fromLTRB(
+                sw * 0.06,
+                sh * 0.024,
+                sw * 0.06,
+                sh * 0.014,
+              ),
               child: Text(
                 'Transactions',
                 style: GoogleFonts.montserrat(
@@ -55,11 +60,16 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(sw * 0.038),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: TextField(
                   controller: _searchCtrl,
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.038),
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.038,
+                  ),
                   onChanged: (v) {
                     setState(() {});
                     ref.read(transactionProvider.notifier).setSearch(v);
@@ -70,20 +80,28 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                       color: Colors.white.withValues(alpha: 0.30),
                       fontSize: sw * 0.038,
                     ),
-                    prefixIcon: Icon(Icons.search_rounded,
-                        color: Colors.white.withValues(alpha: 0.35), size: sw * 0.052),
-                    suffixIcon: _searchCtrl.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear_rounded,
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: Colors.white.withValues(alpha: 0.35),
+                      size: sw * 0.052,
+                    ),
+                    suffixIcon:
+                        _searchCtrl.text.isNotEmpty
+                            ? IconButton(
+                              icon: Icon(
+                                Icons.clear_rounded,
                                 color: Colors.white.withValues(alpha: 0.35),
-                                size: sw * 0.048),
-                            onPressed: () {
-                              _searchCtrl.clear();
-                              setState(() {});
-                              ref.read(transactionProvider.notifier).setSearch('');
-                            },
-                          )
-                        : null,
+                                size: sw * 0.048,
+                              ),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                setState(() {});
+                                ref
+                                    .read(transactionProvider.notifier)
+                                    .setSearch('');
+                              },
+                            )
+                            : null,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(vertical: sh * 0.016),
                   ),
@@ -96,9 +114,11 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: sw * 0.155,
-                        color: Colors.white.withValues(alpha: 0.20)),
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: sw * 0.155,
+                      color: Colors.white.withValues(alpha: 0.20),
+                    ),
                     SizedBox(height: sh * 0.016),
                     Text(
                       'No transactions yet',
@@ -121,59 +141,81 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
             else
               Expanded(
                 child: ListView(
-                  padding: EdgeInsets.fromLTRB(sw * 0.06, 0, sw * 0.06, sh * 0.12),
-                  children: grouped.entries.map((entry) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: sh * 0.010),
-                          child: Text(
-                            entry.key,
-                            style: GoogleFonts.inter(
-                              fontSize: sw * 0.030,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.40),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        ...entry.value.map((t) {
-                          final category = categoryRepo.getById(t.categoryId);
-                          return TransactionTile(
-                            transaction: t,
-                            categoryName: category?.name ?? 'Unknown',
-                            categoryColor: category?.colorHex ?? 'FF78909C',
-                            categoryIconCode: category?.iconCodePoint ??
-                                Icons.category_rounded.codePoint,
-                            onEdit: () =>
-                                context.push('/transactions/${t.id}/edit'),
-                            onDelete: () async {
-                              final messenger = ScaffoldMessenger.of(context);
-                              final deleted = await ref
-                                  .read(transactionProvider.notifier)
-                                  .deleteTransaction(t.id);
-                              if (deleted == null) return;
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  backgroundColor: const Color(0xFF1A2035),
-                                  content: Text('Transaction deleted',
-                                      style: GoogleFonts.inter(color: Colors.white)),
-                                  action: SnackBarAction(
-                                    label: 'Undo',
-                                    textColor: AppColors.ACCENT,
-                                    onPressed: () => ref
-                                        .read(transactionProvider.notifier)
-                                        .addTransaction(deleted),
-                                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    sw * 0.06,
+                    0,
+                    sw * 0.06,
+                    sh * 0.12,
+                  ),
+                  children:
+                      grouped.entries.map((entry) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: sh * 0.010,
+                              ),
+                              child: Text(
+                                entry.key,
+                                style: GoogleFonts.inter(
+                                  fontSize: sw * 0.030,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withValues(alpha: 0.40),
+                                  letterSpacing: 0.5,
                                 ),
+                              ),
+                            ),
+                            ...entry.value.map((t) {
+                              final category = categoryRepo.getById(
+                                t.categoryId,
                               );
-                            },
-                          );
-                        }),
-                      ],
-                    );
-                  }).toList(),
+                              return TransactionTile(
+                                transaction: t,
+                                categoryName: category?.name ?? 'Unknown',
+                                categoryColor: category?.colorHex ?? 'FF78909C',
+                                categoryIconCode:
+                                    category?.iconCodePoint ??
+                                    Icons.category_rounded.codePoint,
+                                onEdit:
+                                    () => context.push(
+                                      '/transactions/${t.id}/edit',
+                                    ),
+                                onDelete: () async {
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+                                  final deleted = await ref
+                                      .read(transactionProvider.notifier)
+                                      .deleteTransaction(t.id);
+                                  if (deleted == null) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: const Color(0xFF1A2035),
+                                      content: Text(
+                                        'Transaction deleted',
+                                        style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      action: SnackBarAction(
+                                        label: 'Undo',
+                                        textColor: AppColors.ACCENT,
+                                        onPressed:
+                                            () => ref
+                                                .read(
+                                                  transactionProvider.notifier,
+                                                )
+                                                .addTransaction(deleted),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }),
+                          ],
+                        );
+                      }).toList(),
                 ),
               ),
           ],
