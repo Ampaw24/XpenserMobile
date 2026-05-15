@@ -17,13 +17,11 @@ void main() async {
     );
   } on FirebaseException catch (e) {
     if (e.code != 'duplicate-app') rethrow;
-  }
-  // Must be registered before runApp so the isolate is ready for background messages.
+  } // Must be registered before runApp so the isolate is ready for background messages.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await HiveService.init();
   runApp(const ProviderScope(child: MyApp()));
 }
-
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
   @override

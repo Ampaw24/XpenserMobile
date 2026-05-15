@@ -4,6 +4,7 @@ import 'package:expenser/models/account_type.dart';
 import 'package:expenser/models/app_settings_model.dart';
 import 'package:expenser/models/budget_model.dart';
 import 'package:expenser/models/category_model.dart';
+import 'package:expenser/models/notification_record.dart';
 import 'package:expenser/models/recurring_frequency.dart';
 import 'package:expenser/models/recurring_rule_model.dart';
 import 'package:expenser/models/savings_goal_model.dart';
@@ -18,6 +19,7 @@ class HiveService {
   static const String savingsGoals = 'savings_goals';
   static const String recurringRules = 'recurring_rules';
   static const String settings = 'settings';
+  static const String notifications = 'notifications';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -32,6 +34,7 @@ class HiveService {
     Hive.registerAdapter(SavingsGoalModelAdapter());
     Hive.registerAdapter(RecurringRuleModelAdapter());
     Hive.registerAdapter(AppSettingsModelAdapter());
+    Hive.registerAdapter(NotificationRecordAdapter());
 
     await Hive.openBox<TransactionModel>(transactions);
     await Hive.openBox<AccountModel>(accounts);
@@ -40,6 +43,7 @@ class HiveService {
     await Hive.openBox<SavingsGoalModel>(savingsGoals);
     await Hive.openBox<RecurringRuleModel>(recurringRules);
     await Hive.openBox<AppSettingsModel>(settings);
+    await Hive.openBox<NotificationRecord>(notifications);
   }
 
   static Box<T> box<T>(String name) => Hive.box<T>(name);

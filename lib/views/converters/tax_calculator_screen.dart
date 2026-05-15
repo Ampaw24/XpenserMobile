@@ -91,11 +91,11 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: 'Annual Income (${state.country.currency})',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+              focusedBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 borderSide: const BorderSide(color: AppColors.PRIMARY),
               ),
               prefixIcon: const Icon(Icons.attach_money_rounded),
@@ -107,8 +107,8 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
             InputDecorator(
               decoration: InputDecoration(
                 labelText: 'Filing Status',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 prefixIcon: const Icon(Icons.person_rounded),
               ),

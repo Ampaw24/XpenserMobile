@@ -1,6 +1,7 @@
 import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/models/savings_goal_model.dart';
+import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,6 +123,12 @@ class _AddEditSavingsGoalScreenState
       await notifier.updateGoal(goal);
     } else {
       await notifier.addGoal(goal);
+      await ref.read(fcmServiceProvider).showLocalNotification(
+        title: 'Savings Goal Created',
+        body: '"${goal.name}" savings goal has been created.',
+        type: 'savings',
+        route: '/savings',
+      );
     }
     if (mounted) context.pop();
   }
@@ -131,16 +138,16 @@ class _AddEditSavingsGoalScreenState
     labelStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
     filled: true,
     fillColor: Colors.white.withValues(alpha: 0.06),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+    border: UnderlineInputBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
     ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+    enabledBorder: UnderlineInputBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
     ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+    focusedBorder: UnderlineInputBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
     ),
   );

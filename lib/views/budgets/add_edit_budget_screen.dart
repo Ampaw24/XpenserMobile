@@ -194,20 +194,20 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
                     borderSide: BorderSide(
                       color: Colors.white.withValues(alpha: 0.12),
                     ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
                     borderSide: BorderSide(
                       color: Colors.white.withValues(alpha: 0.12),
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  focusedBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
                     borderSide: const BorderSide(
                       color: AppColors.ACCENT,
                       width: 1.5,

@@ -1,6 +1,7 @@
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/account_type.dart';
+import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,13 +99,17 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
       await notifier.updateAccount(account);
     } else {
       await notifier.addAccount(account);
+      await ref.read(fcmServiceProvider).showLocalNotification(
+        title: 'Account Added',
+        body: '"${account.name}" has been added to your accounts.',
+        type: 'account',
+        route: '/shell/accounts',
+      );
     }
     if (mounted) context.pop();
   }
 
-  InputDecoration _inputDeco(String label) => InputDecoration(
-    labelText: label,
-    labelStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+  InputDecoration _inputDeco() => InputDecoration(
     filled: true,
     fillColor: Colors.white.withValues(alpha: 0.06),
     border: OutlineInputBorder(
@@ -119,7 +124,44 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
       borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
     ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+    ),
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: MediaQuery.of(context).size.width * 0.040,
+      vertical: MediaQuery.of(context).size.height * 0.020,
+    ),
   );
+
+  Widget _labeledField(String label, Widget field) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: sw * 0.010),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: sw * 0.030,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.55),
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        SizedBox(height: sh * 0.007),
+        field,
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +174,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
+        centerTitle: true,
         title: Text(
           _isEditing ? 'Edit Account' : 'New Account',
           style: GoogleFonts.montserrat(
@@ -156,19 +199,22 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
               sh * 0.06,
             ),
             children: [
-              TextFormField(
-                controller: _nameCtrl,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: sw * 0.038,
+              _labeledField(
+                'Account Name',
+                TextFormField(
+                  controller: _nameCtrl,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.038,
+                  ),
+                  cursorColor: AppColors.ACCENT,
+                  decoration: _inputDeco(),
+                  validator:
+                      (v) =>
+                          (v == null || v.trim().isEmpty)
+                              ? 'Name required'
+                              : null,
                 ),
-                cursorColor: AppColors.ACCENT,
-                decoration: _inputDeco('Account Name'),
-                validator:
-                    (v) =>
-                        (v == null || v.trim().isEmpty)
-                            ? 'Name required'
-                            : null,
               ),
               SizedBox(height: sh * 0.026),
               _AnimatedDropdown<AccountType>(
@@ -182,20 +228,23 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
               ),
               SizedBox(height: sh * 0.022),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: _balanceCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                    child: _labeledField(
+                      'Initial Balance',
+                      TextFormField(
+                        controller: _balanceCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: sw * 0.038,
+                        ),
+                        cursorColor: AppColors.ACCENT,
+                        decoration: _inputDeco(),
                       ),
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: sw * 0.038,
-                      ),
-                      cursorColor: AppColors.ACCENT,
-                      decoration: _inputDeco('Initial Balance'),
                     ),
                   ),
                   SizedBox(width: sw * 0.030),

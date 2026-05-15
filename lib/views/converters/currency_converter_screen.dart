@@ -60,11 +60,11 @@ class _CurrencyConverterScreenState
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: 'Amount',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+              focusedBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 borderSide: const BorderSide(color: AppColors.PRIMARY),
               ),
               prefixIcon: const Icon(Icons.attach_money_rounded),
@@ -173,7 +173,9 @@ class _CurrencyDropdown extends StatelessWidget {
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       child: DropdownButton<String>(
