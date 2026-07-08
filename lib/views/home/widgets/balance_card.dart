@@ -64,15 +64,16 @@ class BalanceCard extends StatelessWidget {
                   tween: Tween(begin: 0, end: totalBalance),
                   duration: const Duration(milliseconds: 900),
                   curve: Curves.easeOut,
-                  builder: (_, value, __) => Text(
-                    '$currency ${value.toStringAsFixed(2)}',
-                    style: GoogleFonts.montserrat(
-                      fontSize: sw * 0.080,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+                  builder:
+                      (_, value, __) => Text(
+                        '$currency ${value.toStringAsFixed(2)}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: sw * 0.080,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
                 ),
                 SizedBox(height: sh * 0.022),
                 Row(
@@ -148,11 +149,7 @@ class _StatChip extends StatelessWidget {
               color: iconColor.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(sw * 0.020),
             ),
-            child: HugeIcon(
-              icon: icon,
-              color: iconColor,
-              size: sw * 0.038,
-            ),
+            child: HugeIcon(icon: icon, color: iconColor, size: sw * 0.038),
           ),
           SizedBox(width: sw * 0.025),
           Expanded(

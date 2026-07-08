@@ -54,31 +54,36 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text('Tax Calculator',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Tax Calculator',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
           // Country selector chips
           Wrap(
             spacing: 8,
-            children: TaxCountry.values.map((c) {
-              final selected = c == state.country;
-              return ChoiceChip(
-                label: Text(c.label),
-                selected: selected,
-                selectedColor: AppColors.PRIMARY.withValues(alpha: 0.15),
-                side: BorderSide(
-                    color: selected ? AppColors.PRIMARY : Colors.grey.shade300),
-                labelStyle: TextStyle(
-                  color: selected ? AppColors.PRIMARY : Colors.grey[700],
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 12,
-                ),
-                onSelected: (_) => notifier.setCountry(c),
-              );
-            }).toList(),
+            children:
+                TaxCountry.values.map((c) {
+                  final selected = c == state.country;
+                  return ChoiceChip(
+                    label: Text(c.label),
+                    selected: selected,
+                    selectedColor: AppColors.PRIMARY.withValues(alpha: 0.15),
+                    side: BorderSide(
+                      color:
+                          selected ? AppColors.PRIMARY : Colors.grey.shade300,
+                    ),
+                    labelStyle: TextStyle(
+                      color: selected ? AppColors.PRIMARY : Colors.grey[700],
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
+                      fontSize: 12,
+                    ),
+                    onSelected: (_) => notifier.setCountry(c),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -87,7 +92,8 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
             decoration: InputDecoration(
               labelText: 'Annual Income (${state.country.currency})',
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: AppColors.PRIMARY),
@@ -102,16 +108,18 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
               decoration: InputDecoration(
                 labelText: 'Filing Status',
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 prefixIcon: const Icon(Icons.person_rounded),
               ),
               child: DropdownButton<String>(
                 value: state.filingStatus,
                 isExpanded: true,
                 underline: const SizedBox(),
-                items: _usFilingStatuses
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
+                items:
+                    _usFilingStatuses
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
                 onChanged: (v) {
                   if (v != null) notifier.setFilingStatus(v);
                 },
@@ -174,21 +182,25 @@ class _ResultCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text(value,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(sub,
-              style:
-                  TextStyle(color: Colors.grey[500], fontSize: 11)),
+          Text(sub, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
         ],
       ),
     );

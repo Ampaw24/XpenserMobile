@@ -21,13 +21,20 @@ abstract final class AppTheme {
     final base = isDark ? ThemeData.dark() : ThemeData.light();
     final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
       headlineSmall: GoogleFonts.inter(
-          fontSize: 24, fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : Colors.black87),
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: isDark ? Colors.white : Colors.black87,
+      ),
       bodyMedium: GoogleFonts.inter(
-          fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey),
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Colors.grey,
+      ),
       titleLarge: GoogleFonts.inter(
-          fontSize: 20, fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : Colors.black87),
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: isDark ? Colors.white : Colors.black87,
+      ),
     );
 
     return ThemeData(
@@ -50,17 +57,21 @@ abstract final class AppTheme {
           backgroundColor: _primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           textStyle: GoogleFonts.inter(
-              fontSize: 16, fontWeight: FontWeight.w600),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey.withValues(alpha: 0.08),
+        fillColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.08),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -68,14 +79,17 @@ abstract final class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-              color: isDark ? Colors.white12 : Colors.grey.shade300),
+            color: isDark ? Colors.white12 : Colors.grey.shade300,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _primary, width: 1.5),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

@@ -31,14 +31,23 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
   bool get _isEditing => widget.accountId != null;
 
   static const _colors = [
-    'FF4CAF50', 'FF2196F3', 'FFFF9800', 'FFE91E63',
-    'FF9C27B0', 'FF00BCD4', 'FF795548', 'FF607D8B',
+    'FF4CAF50',
+    'FF2196F3',
+    'FFFF9800',
+    'FFE91E63',
+    'FF9C27B0',
+    'FF00BCD4',
+    'FF795548',
+    'FF607D8B',
   ];
 
   static const _icons = [
-    Icons.wallet_rounded, Icons.account_balance_rounded,
-    Icons.phone_android_rounded, Icons.savings_rounded,
-    Icons.credit_card_rounded, Icons.attach_money_rounded,
+    Icons.wallet_rounded,
+    Icons.account_balance_rounded,
+    Icons.phone_android_rounded,
+    Icons.savings_rounded,
+    Icons.credit_card_rounded,
+    Icons.attach_money_rounded,
   ];
 
   static const _currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR'];
@@ -94,24 +103,23 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
   }
 
   InputDecoration _inputDeco(String label) => InputDecoration(
-        labelText: label,
-        labelStyle:
-            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
-        ),
-      );
+    labelText: label,
+    labelStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+    filled: true,
+    fillColor: Colors.white.withValues(alpha: 0.06),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -141,69 +149,70 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.010, sw * 0.06, sh * 0.06),
+            padding: EdgeInsets.fromLTRB(
+              sw * 0.06,
+              sh * 0.010,
+              sw * 0.06,
+              sh * 0.06,
+            ),
             children: [
               TextFormField(
                 controller: _nameCtrl,
-                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.038),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: sw * 0.038,
+                ),
                 cursorColor: AppColors.ACCENT,
                 decoration: _inputDeco('Account Name'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name required' : null,
+                validator:
+                    (v) =>
+                        (v == null || v.trim().isEmpty)
+                            ? 'Name required'
+                            : null,
               ),
-              SizedBox(height: sh * 0.018),
-              DropdownButtonFormField<AccountType>(
-                initialValue: _type,
-                dropdownColor: const Color(0xFF1A2035),
-                style: GoogleFonts.inter(color: Colors.white, fontSize: sw * 0.036),
-                iconEnabledColor: Colors.white.withValues(alpha: 0.50),
-                decoration: _inputDeco('Account Type'),
-                items: AccountType.values
-                    .map((t) => DropdownMenuItem(
-                        value: t,
-                        child: Text(
-                          t.name[0].toUpperCase() + t.name.substring(1),
-                          style: GoogleFonts.inter(color: Colors.white),
-                        )))
-                    .toList(),
-                onChanged: (v) => setState(() => _type = v!),
+              SizedBox(height: sh * 0.026),
+              _AnimatedDropdown<AccountType>(
+                label: 'Account Type',
+                value: _type,
+                options: AccountType.values.toList(),
+                labelOf: (t) => t.name[0].toUpperCase() + t.name.substring(1),
+                onChanged: (v) => setState(() => _type = v),
+                sw: sw,
+                sh: sh,
               ),
-              SizedBox(height: sh * 0.018),
+              SizedBox(height: sh * 0.022),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _balanceCtrl,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       style: GoogleFonts.inter(
-                          color: Colors.white, fontSize: sw * 0.038),
+                        color: Colors.white,
+                        fontSize: sw * 0.038,
+                      ),
                       cursorColor: AppColors.ACCENT,
                       decoration: _inputDeco('Initial Balance'),
                     ),
                   ),
                   SizedBox(width: sw * 0.030),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _currency,
-                      dropdownColor: const Color(0xFF1A2035),
-                      style: GoogleFonts.inter(
-                          color: Colors.white, fontSize: sw * 0.036),
-                      iconEnabledColor: Colors.white.withValues(alpha: 0.50),
-                      decoration: _inputDeco('Currency'),
-                      items: _currencies
-                          .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(c,
-                                  style:
-                                      GoogleFonts.inter(color: Colors.white))))
-                          .toList(),
-                      onChanged: (v) => setState(() => _currency = v!),
+                    child: _AnimatedDropdown<String>(
+                      label: 'Currency',
+                      value: _currency,
+                      options: _currencies.toList(),
+                      labelOf: (c) => c,
+                      onChanged: (v) => setState(() => _currency = v),
+                      sw: sw,
+                      sh: sh,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: sh * 0.024),
+              SizedBox(height: sh * 0.028),
               Text(
                 'Color',
                 style: GoogleFonts.inter(
@@ -216,33 +225,41 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
               Wrap(
                 spacing: sw * 0.030,
                 runSpacing: sh * 0.012,
-                children: _colors.map((hex) {
-                  final color = Color(int.parse(hex, radix: 16));
-                  final isSelected = _colorHex == hex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _colorHex = hex),
-                    child: Container(
-                      width: sw * 0.090,
-                      height: sw * 0.090,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(color: Colors.white, width: 3)
-                            : Border.all(
-                                color: Colors.white.withValues(alpha: 0.0),
-                                width: 3),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                    color: color.withValues(alpha: 0.55),
-                                    blurRadius: 10)
-                              ]
-                            : null,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                children:
+                    _colors.map((hex) {
+                      final color = Color(int.parse(hex, radix: 16));
+                      final isSelected = _colorHex == hex;
+                      return GestureDetector(
+                        onTap: () => setState(() => _colorHex = hex),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: sw * 0.090,
+                          height: sw * 0.090,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border:
+                                isSelected
+                                    ? Border.all(color: Colors.white, width: 3)
+                                    : Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.0,
+                                      ),
+                                      width: 3,
+                                    ),
+                            boxShadow:
+                                isSelected
+                                    ? [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.55),
+                                        blurRadius: 10,
+                                      ),
+                                    ]
+                                    : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
               ),
               SizedBox(height: sh * 0.024),
               Text(
@@ -257,37 +274,54 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
               Wrap(
                 spacing: sw * 0.030,
                 runSpacing: sh * 0.012,
-                children: _icons.map((icon) {
-                  final isSelected = icon.codePoint == _iconCodePoint;
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _iconCodePoint = icon.codePoint),
-                    child: Container(
-                      width: sw * 0.120,
-                      height: sw * 0.120,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.ACCENT.withValues(alpha: 0.20)
-                            : Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(sw * 0.030),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.ACCENT
-                              : Colors.white.withValues(alpha: 0.12),
+                children:
+                    _icons.map((icon) {
+                      final isSelected = icon.codePoint == _iconCodePoint;
+                      return GestureDetector(
+                        onTap:
+                            () =>
+                                setState(() => _iconCodePoint = icon.codePoint),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: sw * 0.120,
+                          height: sw * 0.120,
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected
+                                    ? AppColors.ACCENT.withValues(alpha: 0.20)
+                                    : Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(sw * 0.030),
+                            border: Border.all(
+                              color:
+                                  isSelected
+                                      ? AppColors.ACCENT
+                                      : Colors.white.withValues(alpha: 0.12),
+                            ),
+                            boxShadow:
+                                isSelected
+                                    ? [
+                                      BoxShadow(
+                                        color: AppColors.ACCENT.withValues(
+                                          alpha: 0.25,
+                                        ),
+                                        blurRadius: 10,
+                                      ),
+                                    ]
+                                    : null,
+                          ),
+                          child: Icon(
+                            icon,
+                            color:
+                                isSelected
+                                    ? AppColors.ACCENT
+                                    : Colors.white.withValues(alpha: 0.40),
+                            size: sw * 0.058,
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? AppColors.ACCENT
-                            : Colors.white.withValues(alpha: 0.40),
-                        size: sw * 0.058,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
               ),
-              SizedBox(height: sh * 0.036),
+              SizedBox(height: sh * 0.040),
               _GradientButton(
                 label: _isEditing ? 'Update Account' : 'Create Account',
                 isLoading: _isLoading,
@@ -302,6 +336,309 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated Custom Dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AnimatedDropdown<T> extends StatefulWidget {
+  final String label;
+  final T value;
+  final List<T> options;
+  final String Function(T) labelOf;
+  final ValueChanged<T> onChanged;
+  final double sw;
+  final double sh;
+
+  const _AnimatedDropdown({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.labelOf,
+    required this.onChanged,
+    required this.sw,
+    required this.sh,
+  });
+
+  @override
+  State<_AnimatedDropdown<T>> createState() => _AnimatedDropdownState<T>();
+}
+
+class _AnimatedDropdownState<T> extends State<_AnimatedDropdown<T>>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _arrowTurns;
+  late final Animation<double> _fadeAnim;
+  bool _open = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
+    _arrowTurns = Tween<double>(
+      begin: 0.0,
+      end: 0.5,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    final willOpen = !_open;
+    setState(() => _open = willOpen);
+    if (willOpen) {
+      _ctrl.forward();
+    } else {
+      _ctrl.reverse();
+    }
+  }
+
+  void _select(T value) {
+    widget.onChanged(value);
+    setState(() => _open = false);
+    _ctrl.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sw = widget.sw;
+    final sh = widget.sh;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label sits above — never floats onto the border
+        Padding(
+          padding: EdgeInsets.only(left: sw * 0.010),
+          child: Text(
+            widget.label,
+            style: GoogleFonts.inter(
+              fontSize: sw * 0.030,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.55),
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        SizedBox(height: sh * 0.007),
+
+        // Trigger field
+        GestureDetector(
+          onTap: _toggle,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            height: sh * 0.068,
+            padding: EdgeInsets.symmetric(horizontal: sw * 0.040),
+            decoration: BoxDecoration(
+              color:
+                  _open
+                      ? AppColors.ACCENT.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.06),
+              borderRadius:
+                  _open
+                      ? const BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        topRight: Radius.circular(14),
+                      )
+                      : BorderRadius.circular(14),
+              border: Border.all(
+                color:
+                    _open
+                        ? AppColors.ACCENT
+                        : Colors.white.withValues(alpha: 0.12),
+                width: _open ? 1.5 : 1.0,
+              ),
+              boxShadow:
+                  _open
+                      ? [
+                        BoxShadow(
+                          color: AppColors.ACCENT.withValues(alpha: 0.18),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                      : null,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.labelOf(widget.value),
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: sw * 0.036,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                RotationTransition(
+                  turns: _arrowTurns,
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color:
+                        _open
+                            ? AppColors.ACCENT
+                            : Colors.white.withValues(alpha: 0.45),
+                    size: sw * 0.058,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Inline expanding menu
+        AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeInOut,
+          child:
+              _open
+                  ? FadeTransition(
+                    opacity: _fadeAnim,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF141929),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(14),
+                          bottomRight: Radius.circular(14),
+                        ),
+                        border: Border(
+                          left: BorderSide(color: AppColors.ACCENT, width: 1.5),
+                          right: BorderSide(
+                            color: AppColors.ACCENT,
+                            width: 1.5,
+                          ),
+                          bottom: BorderSide(
+                            color: AppColors.ACCENT,
+                            width: 1.5,
+                          ),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.30),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(13),
+                          bottomRight: Radius.circular(13),
+                        ),
+                        child: Column(
+                          children:
+                              widget.options.asMap().entries.map((entry) {
+                                final idx = entry.key;
+                                final option = entry.value;
+                                final isSelected = option == widget.value;
+                                final isLast = idx == widget.options.length - 1;
+
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (idx == 0)
+                                      Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: AppColors.ACCENT.withValues(
+                                          alpha: 0.20,
+                                        ),
+                                      ),
+                                    InkWell(
+                                      onTap: () => _select(option),
+                                      splashColor: AppColors.ACCENT.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      highlightColor: AppColors.ACCENT
+                                          .withValues(alpha: 0.06),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
+                                        height: sh * 0.060,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: sw * 0.040,
+                                        ),
+                                        color:
+                                            isSelected
+                                                ? AppColors.ACCENT.withValues(
+                                                  alpha: 0.12,
+                                                )
+                                                : Colors.transparent,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                widget.labelOf(option),
+                                                style: GoogleFonts.inter(
+                                                  color:
+                                                      isSelected
+                                                          ? AppColors.ACCENT
+                                                          : Colors.white
+                                                              .withValues(
+                                                                alpha: 0.85,
+                                                              ),
+                                                  fontSize: sw * 0.036,
+                                                  fontWeight:
+                                                      isSelected
+                                                          ? FontWeight.w600
+                                                          : FontWeight.w400,
+                                                ),
+                                              ),
+                                            ),
+                                            AnimatedOpacity(
+                                              duration: const Duration(
+                                                milliseconds: 150,
+                                              ),
+                                              opacity: isSelected ? 1.0 : 0.0,
+                                              child: Icon(
+                                                Icons.check_rounded,
+                                                color: AppColors.ACCENT,
+                                                size: sw * 0.044,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    if (!isLast)
+                                      Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        indent: sw * 0.040,
+                                        endIndent: sw * 0.040,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.06,
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                    ),
+                  )
+                  : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gradient Submit Button
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _GradientButton extends StatelessWidget {
   final String label;
@@ -338,20 +675,24 @@ class _GradientButton extends StatelessWidget {
           ],
         ),
         alignment: Alignment.center,
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
-            : Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: sw * 0.040,
-                  fontWeight: FontWeight.w700,
+        child:
+            isLoading
+                ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: sw * 0.040,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
       ),
     );
   }

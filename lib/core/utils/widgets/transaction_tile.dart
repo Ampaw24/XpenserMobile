@@ -32,9 +32,10 @@ class TransactionTile extends StatelessWidget {
     final isTransfer = transaction.type == TransactionType.transfer;
     final color = _hexToColor(categoryColor);
 
-    final amountColor = isExpense
-        ? const Color(0xFFFF5252)
-        : isTransfer
+    final amountColor =
+        isExpense
+            ? const Color(0xFFFF5252)
+            : isTransfer
             ? const Color(0xFFFFAB40)
             : const Color(0xFF00E676);
 
@@ -49,8 +50,9 @@ class TransactionTile extends StatelessWidget {
             foregroundColor: Colors.white,
             icon: AppIcons.edit,
             label: 'Edit',
-            borderRadius:
-                const BorderRadius.horizontal(left: Radius.circular(16)),
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(16),
+            ),
           ),
         ],
       ),
@@ -63,8 +65,9 @@ class TransactionTile extends StatelessWidget {
             foregroundColor: Colors.white,
             icon: AppIcons.delete,
             label: 'Delete',
-            borderRadius:
-                const BorderRadius.horizontal(right: Radius.circular(16)),
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(16),
+            ),
           ),
         ],
       ),

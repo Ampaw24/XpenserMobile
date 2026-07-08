@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:expenser/core/constants/imageconstants.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
-import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,8 +33,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   late final Animation<double> _btn1Fade;
   late final Animation<double> _btn2Fade;
   late final Animation<double> _btn3Fade;
-
-  bool _localLoading = false;
 
   bool get _showAppleButton => !kIsWeb && Platform.isIOS;
 
@@ -72,10 +70,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _headerSlide = Tween<Offset>(
       begin: const Offset(0, -0.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
+      ),
+    );
 
     _cardFade = CurvedAnimation(
       parent: _ctrl,
@@ -84,10 +84,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _cardSlide = Tween<Offset>(
       begin: const Offset(0, 0.25),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
+      ),
+    );
 
     _btn1Fade = CurvedAnimation(
       parent: _ctrl,
@@ -111,14 +113,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.dispose();
   }
 
-  Future<void> _handleSocialLogin(String providerName) async {
-    setState(() => _localLoading = true);
-    await Future.delayed(const Duration(milliseconds: 700));
+  Future<void> _handleGoogleSignIn() async {
+    await ref.read(authProvider.notifier).signInWithGoogle();
     if (!mounted) return;
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(true, userName: providerName);
-    if (mounted) setState(() => _localLoading = false);
+    final error = ref.read(authProvider).errorMessage;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+      );
+    }
   }
 
   @override
@@ -251,7 +254,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
 
           // Loading overlay
-          if (_localLoading) _buildLoadingOverlay(sw),
+          if (ref.watch(authProvider).isLoading) _buildLoadingOverlay(sw),
         ],
       ),
     );
@@ -359,7 +362,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: _GlassButton(
                       icon: SvgPicture.string(_googleIcon),
                       label: 'Continue with Google',
-                      onTap: () => _handleSocialLogin('Google User'),
+                      onTap: _handleGoogleSignIn,
                     ),
                   ),
                   SizedBox(height: sh * 0.016),
@@ -370,7 +373,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: _GlassButton(
                       icon: SvgPicture.string(_facebookIcon),
                       label: 'Continue with Facebook',
-                      onTap: () => _handleSocialLogin('Facebook User'),
+                      onTap: () {},
                     ),
                   ),
 
@@ -388,7 +391,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ),
                         ),
                         label: 'Continue with Apple',
-                        onTap: () => _handleSocialLogin('Apple User'),
+                        onTap: () {},
                       ),
                     ),
                   ],
@@ -531,9 +534,10 @@ class _GlassButtonState extends State<_GlassButton> {
             child: Container(
               height: sh * 0.068,
               decoration: BoxDecoration(
-                color: _pressed
-                    ? Colors.white.withValues(alpha: 0.18)
-                    : Colors.white.withValues(alpha: 0.10),
+                color:
+                    _pressed
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(sw * 0.035),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.20),

@@ -9,5 +9,4 @@ class Imageconstants {
   static const String taxImage = 'assets/images/taxillustration.png';
   static const String currencyConvertor = 'assets/images/multicurrency.png';
   static const String expensesImage = 'assets/images/expenseTrack.png';
-
 }

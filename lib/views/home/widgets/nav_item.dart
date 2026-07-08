@@ -45,9 +45,10 @@ class NavItem extends ConsumerWidget {
                 duration: const Duration(milliseconds: 250),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.ACCENT.withValues(alpha: 0.15)
-                      : Colors.transparent,
+                  color:
+                      isSelected
+                          ? AppColors.ACCENT.withValues(alpha: 0.15)
+                          : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -61,10 +62,8 @@ class NavItem extends ConsumerWidget {
                 duration: const Duration(milliseconds: 250),
                 style: TextStyle(
                   fontSize: isSelected ? 11 : 10,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color:
-                      isSelected ? AppColors.PRIMARY : Colors.grey[600],
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? AppColors.PRIMARY : Colors.grey[600],
                 ),
                 child: Text(label, style: GoogleFonts.inter()),
               ),

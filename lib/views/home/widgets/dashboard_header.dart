@@ -7,9 +7,11 @@ class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
     super.key,
     required this.userName,
+    required this.profilePicUrl,
   });
 
   final String userName;
+  final String profilePicUrl; // Placeholder for future profile picture URL
 
   @override
   Widget build(BuildContext context) {
@@ -56,9 +58,7 @@ class DashboardHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.13),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
               ),
               child: Icon(
                 AppIcons.bell,
@@ -73,6 +73,10 @@ class DashboardHeader extends StatelessWidget {
             height: sw * 0.108,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              image: DecorationImage(
+                image: NetworkImage(profilePicUrl),
+                fit: BoxFit.cover,
+              ),
               gradient: const LinearGradient(
                 colors: [AppColors.PRIMARY, AppColors.ACCENT],
                 begin: Alignment.topLeft,
@@ -81,16 +85,6 @@ class DashboardHeader extends StatelessWidget {
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.20),
                 width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: GoogleFonts.montserrat(
-                  fontSize: sw * 0.046,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
               ),
             ),
           ),

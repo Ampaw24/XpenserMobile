@@ -48,8 +48,10 @@ class _CurrencyConverterScreenState
                 ),
               ),
               const SizedBox(width: 10),
-              const Text('Currency Converter',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Currency Converter',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -59,7 +61,8 @@ class _CurrencyConverterScreenState
             decoration: InputDecoration(
               labelText: 'Amount',
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: AppColors.PRIMARY),
@@ -71,11 +74,13 @@ class _CurrencyConverterScreenState
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _CurrencyDropdown(
-                label: 'From',
-                value: state.fromCurrency,
-                onChanged: notifier.setFromCurrency,
-              )),
+              Expanded(
+                child: _CurrencyDropdown(
+                  label: 'From',
+                  value: state.fromCurrency,
+                  onChanged: notifier.setFromCurrency,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: IconButton(
@@ -83,17 +88,22 @@ class _CurrencyConverterScreenState
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.PRIMARY.withValues(alpha: 0.1),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  icon: const Icon(Icons.swap_horiz_rounded,
-                      color: AppColors.PRIMARY),
+                  icon: const Icon(
+                    Icons.swap_horiz_rounded,
+                    color: AppColors.PRIMARY,
+                  ),
                 ),
               ),
-              Expanded(child: _CurrencyDropdown(
-                label: 'To',
-                value: state.toCurrency,
-                onChanged: notifier.setToCurrency,
-              )),
+              Expanded(
+                child: _CurrencyDropdown(
+                  label: 'To',
+                  value: state.toCurrency,
+                  onChanged: notifier.setToCurrency,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -114,14 +124,18 @@ class _CurrencyConverterScreenState
                   '${_amountCtrl.text.isEmpty ? '0' : _amountCtrl.text} ${state.fromCurrency}',
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
-                const Icon(Icons.arrow_downward_rounded,
-                    color: Colors.white70, size: 18),
+                const Icon(
+                  Icons.arrow_downward_rounded,
+                  color: Colors.white70,
+                  size: 18,
+                ),
                 Text(
                   '${state.result.toStringAsFixed(2)} ${state.toCurrency}',
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -160,17 +174,19 @@ class _CurrencyDropdown extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       child: DropdownButton<String>(
         value: value,
         isExpanded: true,
         underline: const SizedBox(),
-        items: CurrencyNotifier.currencies
-            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-            .toList(),
-        onChanged: (v) { if (v != null) onChanged(v); },
+        items:
+            CurrencyNotifier.currencies
+                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                .toList(),
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
       ),
     );
   }

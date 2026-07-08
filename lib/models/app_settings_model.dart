@@ -28,6 +28,9 @@ class AppSettingsModel extends HiveObject {
   @HiveField(7)
   bool isLoggedIn;
 
+  @HiveField(8)
+  String? uid;
+
   AppSettingsModel({
     this.isDarkMode = false,
     this.preferredCurrency = 'GHS',
@@ -37,6 +40,7 @@ class AppSettingsModel extends HiveObject {
     this.userAvatarPath,
     this.isFirstLaunch = true,
     this.isLoggedIn = false,
+    this.uid,
   });
 
   factory AppSettingsModel.defaults() => AppSettingsModel();
@@ -50,6 +54,7 @@ class AppSettingsModel extends HiveObject {
     String? userAvatarPath,
     bool? isFirstLaunch,
     bool? isLoggedIn,
+    String? uid,
   }) {
     return AppSettingsModel(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -60,6 +65,7 @@ class AppSettingsModel extends HiveObject {
       userAvatarPath: userAvatarPath ?? this.userAvatarPath,
       isFirstLaunch: isFirstLaunch ?? this.isFirstLaunch,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+      uid: uid ?? this.uid,
     );
   }
 }

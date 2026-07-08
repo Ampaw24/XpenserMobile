@@ -47,11 +47,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: _sent ? _SuccessView(email: _emailCtrl.text) : _FormView(
-            formKey: _formKey,
-            emailCtrl: _emailCtrl,
-            onSubmit: _submit,
-          ),
+          child:
+              _sent
+                  ? _SuccessView(email: _emailCtrl.text)
+                  : _FormView(
+                    formKey: _formKey,
+                    emailCtrl: _emailCtrl,
+                    onSubmit: _submit,
+                  ),
         ),
       ),
     );
@@ -63,7 +66,11 @@ class _FormView extends StatelessWidget {
   final TextEditingController emailCtrl;
   final VoidCallback onSubmit;
 
-  const _FormView({required this.formKey, required this.emailCtrl, required this.onSubmit});
+  const _FormView({
+    required this.formKey,
+    required this.emailCtrl,
+    required this.onSubmit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +80,15 @@ class _FormView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-          Text('Reset Password',
-              style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(
+            'Reset Password',
+            style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          Text("Enter your email and we'll send reset instructions",
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[600])),
+          Text(
+            "Enter your email and we'll send reset instructions",
+            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[600]),
+          ),
           const SizedBox(height: 32),
           TextFormField(
             controller: emailCtrl,
@@ -85,7 +96,9 @@ class _FormView extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Email',
               prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -102,7 +115,10 @@ class _FormView extends StatelessWidget {
             },
           ),
           const SizedBox(height: 32),
-          CustomisedElevatedButton(text: 'Send Reset Link', onPressed: onSubmit),
+          CustomisedElevatedButton(
+            text: 'Send Reset Link',
+            onPressed: onSubmit,
+          ),
         ],
       ),
     );
@@ -124,16 +140,23 @@ class _SuccessView extends StatelessWidget {
             color: AppColors.PRIMARY.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.mark_email_read_outlined,
-              size: 56, color: AppColors.PRIMARY),
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            size: 56,
+            color: AppColors.PRIMARY,
+          ),
         ),
         const SizedBox(height: 24),
-        Text('Check Your Email',
-            style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(
+          'Check Your Email',
+          style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
-        Text('We sent instructions to $email',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[600])),
+        Text(
+          'We sent instructions to $email',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[600]),
+        ),
         const SizedBox(height: 32),
         CustomisedElevatedButton(
           text: 'Back to Sign In',

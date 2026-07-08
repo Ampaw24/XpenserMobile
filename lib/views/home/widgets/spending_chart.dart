@@ -45,14 +45,15 @@ class SpendingChart extends ConsumerWidget {
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) => const Color(0xFF0D1B2A),
-              getTooltipItem: (group, _, rod, __) => BarTooltipItem(
-                rod.toY.toStringAsFixed(0),
-                GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: sw * 0.028,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              getTooltipItem:
+                  (group, _, rod, __) => BarTooltipItem(
+                    rod.toY.toStringAsFixed(0),
+                    GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: sw * 0.028,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
             ),
           ),
           titlesData: FlTitlesData(
@@ -61,30 +62,35 @@ class SpendingChart extends ConsumerWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: sh * 0.030,
-                getTitlesWidget: (value, _) => Text(
-                  days[value.toInt()],
-                  style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.40),
-                    fontSize: sw * 0.028,
-                  ),
-                ),
+                getTitlesWidget:
+                    (value, _) => Text(
+                      days[value.toInt()],
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.40),
+                        fontSize: sw * 0.028,
+                      ),
+                    ),
               ),
             ),
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxY > 0 ? maxY / 3 : 33,
-            getDrawingHorizontalLine: (_) => FlLine(
-              color: Colors.white.withValues(alpha: 0.07),
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine:
+                (_) => FlLine(
+                  color: Colors.white.withValues(alpha: 0.07),
+                  strokeWidth: 1,
+                ),
           ),
           borderData: FlBorderData(show: false),
           barGroups: List.generate(7, (i) {
@@ -94,20 +100,21 @@ class SpendingChart extends ConsumerWidget {
               barRods: [
                 BarChartRodData(
                   toY: totals[i],
-                  gradient: isMax
-                      ? const LinearGradient(
-                          colors: [AppColors.ACCENT, Color(0xFF1DE9B6)],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        )
-                      : LinearGradient(
-                          colors: [
-                            AppColors.PRIMARY.withValues(alpha: 0.60),
-                            AppColors.PRIMARY.withValues(alpha: 0.90),
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
+                  gradient:
+                      isMax
+                          ? const LinearGradient(
+                            colors: [AppColors.ACCENT, Color(0xFF1DE9B6)],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          )
+                          : LinearGradient(
+                            colors: [
+                              AppColors.PRIMARY.withValues(alpha: 0.60),
+                              AppColors.PRIMARY.withValues(alpha: 0.90),
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
                   width: sw * 0.048,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(sw * 0.020),

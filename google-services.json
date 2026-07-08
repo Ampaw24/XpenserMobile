@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "824715451215",
+    "project_id": "xpensermobile-cbde1",
+    "storage_bucket": "xpensermobile-cbde1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824715451215:android:2301721fb8031841dfc33a",
+        "android_client_info": {
+          "package_name": "com.example.expenser"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "824715451215-d4js14p14hpr0vcpevm9aq44mkhmart9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.expenser",
+            "certificate_hash": "b9264ede6523bf7b7b78e9500d64fb04b2bb5e25"
+          }
+        },
+        {
+          "client_id": "824715451215-at4ku807qgt0t8lek17ggjk2v5hc98ni.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzejTdrq1IZnTXlXRN9MI9VrpwxO_fHdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "824715451215-at4ku807qgt0t8lek17ggjk2v5hc98ni.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "824715451215-guulec7mcs6i9t2vau8ai0ie12dak57p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.expenser"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
