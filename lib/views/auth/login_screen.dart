@@ -1,13 +1,10 @@
-import 'dart:io' show Platform;
 import 'dart:ui';
 
 import 'package:expenser/core/constants/imageconstants.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:svg_flutter/svg.dart';
@@ -22,6 +19,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _obscure = true;
 
   late final Animation<double> _bgFade;
   late final Animation<double> _orb1Scale;
@@ -31,10 +32,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   late final Animation<double> _cardFade;
   late final Animation<Offset> _cardSlide;
   late final Animation<double> _btn1Fade;
-  late final Animation<double> _btn2Fade;
-  late final Animation<double> _btn3Fade;
-
-  bool get _showAppleButton => !kIsWeb && Platform.isIOS;
 
   @override
   void initState() {
@@ -95,22 +92,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       parent: _ctrl,
       curve: const Interval(0.58, 0.76, curve: Curves.easeOut),
     );
-    _btn2Fade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.68, 0.86, curve: Curves.easeOut),
-    );
-    _btn3Fade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.78, 0.96, curve: Curves.easeOut),
-    );
 
     _ctrl.forward();
   }
 
   @override
   void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     _ctrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+    await ref
+        .read(authProvider.notifier)
+        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+    if (!mounted) return;
+    final error = ref.read(authProvider).errorMessage;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+      );
+    } else {
+      context.go('/shell/dashboard');
+    }
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -328,130 +335,201 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 width: 1.2,
               ),
             ),
-            child: Padding(
+            child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
                 horizontal: sw * 0.07,
                 vertical: sh * 0.035,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Welcome back',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      fontSize: sw * 0.055,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Welcome back',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.montserrat(
+                        fontSize: sw * 0.055,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: sh * 0.008),
-                  Text(
-                    'Sign in to continue',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.033,
-                      color: Colors.white.withValues(alpha: 0.50),
+                    SizedBox(height: sh * 0.008),
+                    Text(
+                      'Sign in to continue',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: sw * 0.033,
+                        color: Colors.white.withValues(alpha: 0.50),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: sh * 0.032),
+                    SizedBox(height: sh * 0.032),
 
-                  // Google
-                  FadeTransition(
-                    opacity: _btn1Fade,
-                    child: _GlassButton(
-                      icon: SvgPicture.string(_googleIcon),
-                      label: 'Continue with Google',
-                      onTap: _handleGoogleSignIn,
+                    // Email Field
+                    TextFormField(
+                      controller: _emailCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: 'Email',
+                        hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5)),
+                        prefixIcon: const Icon(Icons.email_outlined,
+                            color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Email is required';
+                        if (!v.contains('@')) return 'Enter a valid email';
+                        return null;
+                      },
                     ),
-                  ),
-                  SizedBox(height: sh * 0.016),
-
-                  // Facebook
-                  FadeTransition(
-                    opacity: _btn2Fade,
-                    child: _GlassButton(
-                      icon: SvgPicture.string(_facebookIcon),
-                      label: 'Continue with Facebook',
-                      onTap: () {},
-                    ),
-                  ),
-
-                  // Apple (iOS only)
-                  if (_showAppleButton) ...[
                     SizedBox(height: sh * 0.016),
-                    FadeTransition(
-                      opacity: _btn3Fade,
-                      child: _GlassButton(
-                        icon: FittedBox(
-                          child: Icon(
-                            FontAwesomeIcons.apple,
-                            color: Colors.white,
-                            size: sw * 0.048,
+
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      obscureText: _obscure,
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5)),
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            color: Colors.white70),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.white70,
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscure = !_obscure),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Password is required';
+                        return null;
+                      },
+                    ),
+                    
+                    // Forgot Password Link
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => context.push('/forgot-password'),
+                        child: Text(
+                          'Forgot Password?',
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.70),
+                            fontSize: sw * 0.033,
                           ),
                         ),
-                        label: 'Continue with Apple',
-                        onTap: () {},
+                      ),
+                    ),
+                    SizedBox(height: sh * 0.010),
+
+                    // Sign In Button
+                    GestureDetector(
+                      onTap: _handleLogin,
+                      child: Container(
+                        height: sh * 0.060,
+                        decoration: BoxDecoration(
+                          color: AppColors.PRIMARY,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Sign In',
+                            style: GoogleFonts.inter(
+                              fontSize: sw * 0.038,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: sh * 0.024),
+
+                    // Divider row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            thickness: 0.8,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: sw * 0.03),
+                          child: Text(
+                            'Or',
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withValues(alpha: 0.40),
+                              fontSize: sw * 0.031,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            thickness: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: sh * 0.024),
+
+                    // Google
+                    FadeTransition(
+                      opacity: _btn1Fade,
+                      child: _GlassButton(
+                        icon: SvgPicture.string(_googleIcon),
+                        label: 'Continue with Google',
+                        onTap: _handleGoogleSignIn,
+                      ),
+                    ),
+                    SizedBox(height: sh * 0.032),
+
+                    // Sign up button — ghost style
+                    GestureDetector(
+                      onTap: () => context.push('/register'),
+                      child: Container(
+                        height: sh * 0.060,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(sw * 0.035),
+                          border: Border.all(
+                            color: AppColors.ACCENT.withValues(alpha: 0.60),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Create an account',
+                            style: GoogleFonts.inter(
+                              fontSize: sw * 0.038,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ACCENT,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
-
-                  const Spacer(),
-
-                  // Divider row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          thickness: 0.8,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: sw * 0.03),
-                        child: Text(
-                          'New here?',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.40),
-                            fontSize: sw * 0.031,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          thickness: 0.8,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: sh * 0.016),
-
-                  // Sign up button — ghost style
-                  GestureDetector(
-                    onTap: () => context.push('/register'),
-                    child: Container(
-                      height: sh * 0.060,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(sw * 0.035),
-                        border: Border.all(
-                          color: AppColors.ACCENT.withValues(alpha: 0.60),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Create an account',
-                          style: GoogleFonts.inter(
-                            fontSize: sw * 0.038,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.ACCENT,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -581,7 +659,3 @@ const _googleIcon =
 <path d="M8.16265 3.15623C9.69541 3.15623 10.7293 3.81831 11.3189 4.3716L13.6226 2.12231C12.2077 0.807206 10.3666 0 8.16265 0C4.9701 0 2.2129 1.83206 0.870605 4.49853L3.50987 6.54831C4.17202 4.58019 6.00408 3.15623 8.16265 3.15623Z" fill="#EB4335"/>
 </svg>''';
 
-const _facebookIcon =
-    '''<svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5.02224 14.8963V8.10133H7.30305L7.64452 5.45323H5.02224V3.7625C5.02224 2.99583 5.23517 2.4733 6.33467 2.4733L7.73695 2.47265V0.104232C7.49432 0.0720777 6.66197 0 5.6936 0C3.67183 0 2.28768 1.23402 2.28768 3.50037V5.4533H0.000976562V8.1014H2.28761V14.8963L5.02224 14.8963Z" fill="#FFFFFF"/>
-</svg>''';

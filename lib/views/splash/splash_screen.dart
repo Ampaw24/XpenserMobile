@@ -2,18 +2,20 @@ import 'dart:ui';
 
 import 'package:expenser/core/constants/imageconstants.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _mainCtrl;
   late final AnimationController _pulseCtrl;
@@ -134,7 +136,16 @@ class _SplashScreenState extends State<SplashScreen>
     _mainCtrl.forward();
 
     Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) context.go('/onboarding');
+      if (mounted) {
+        final settings = ref.read(settingsProvider);
+        if (settings.isFirstLaunch) {
+          context.go('/onboarding');
+        } else if (settings.isLoggedIn) {
+          context.go('/shell/dashboard');
+        } else {
+          context.go('/login');
+        }
+      }
     });
   }
 

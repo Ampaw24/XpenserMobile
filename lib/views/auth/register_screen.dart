@@ -18,13 +18,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   bool _obscure = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
@@ -124,6 +127,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
                     if (v.length < 6) return 'Minimum 6 characters';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _Field(
+                  controller: _confirmPasswordCtrl,
+                  label: 'Confirm Password',
+                  hint: 'Min 6 characters',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: _obscureConfirm,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Confirm password is required';
+                    if (v != _passwordCtrl.text) return 'Passwords do not match';
                     return null;
                   },
                 ),
