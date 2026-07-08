@@ -1,9 +1,12 @@
 import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class DashboardHeader extends StatelessWidget {
+class DashboardHeader extends ConsumerWidget {
   const DashboardHeader({
     super.key,
     required this.userName,
@@ -11,14 +14,14 @@ class DashboardHeader extends StatelessWidget {
   });
 
   final String userName;
-  final String profilePicUrl; // Placeholder for future profile picture URL
+  final String profilePicUrl;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final sw = MediaQuery.of(context).size.width;
     final sh = MediaQuery.of(context).size.height;
-    final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
     final greeting = _greeting();
+    final unread = ref.watch(unreadNotificationCountProvider);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.018, sw * 0.06, 0),
@@ -48,23 +51,52 @@ class DashboardHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Notification bell
+          // Notification bell with unread badge
           GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: sw * 0.108,
-              height: sw * 0.108,
-              margin: EdgeInsets.only(right: sw * 0.03),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
-              ),
-              child: Icon(
-                AppIcons.bell,
-                color: Colors.white.withValues(alpha: 0.70),
-                size: sw * 0.052,
-              ),
+            onTap: () => context.push('/notifications'),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: sw * 0.108,
+                  height: sw * 0.108,
+                  margin: EdgeInsets.only(right: sw * 0.03),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.13),
+                    ),
+                  ),
+                  child: Icon(
+                    AppIcons.bell,
+                    color: Colors.white.withValues(alpha: 0.70),
+                    size: sw * 0.052,
+                  ),
+                ),
+                if (unread > 0)
+                  Positioned(
+                    top: -sw * 0.008,
+                    right: sw * 0.022,
+                    child: Container(
+                      padding: EdgeInsets.all(sw * 0.012),
+                      constraints: BoxConstraints(minWidth: sw * 0.044),
+                      decoration: const BoxDecoration(
+                        color: AppColors.ACCENT,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unread > 99 ? '99+' : '$unread',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: sw * 0.022,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           // Avatar

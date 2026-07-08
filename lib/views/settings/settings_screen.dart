@@ -1,8 +1,10 @@
 import 'package:expenser/core/providers/firebase_balance_provider.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:intl/intl.dart';
 import 'package:expenser/views/converters/currency_converter_screen.dart';
 import 'package:expenser/views/converters/tax_calculator_screen.dart';
@@ -21,6 +23,7 @@ class SettingsScreen extends ConsumerWidget {
     final sh = MediaQuery.of(context).size.height;
     final settings = ref.watch(settingsProvider);
     final balanceAsync = ref.watch(firebaseTotalBalanceProvider);
+    final tokenAsync = ref.watch(fcmTokenProvider);
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final userEmail = firebaseUser?.email ?? '';
     final isVerified = firebaseUser?.emailVerified ?? false;
@@ -342,6 +345,13 @@ class SettingsScreen extends ConsumerWidget {
                                 .read(settingsProvider.notifier)
                                 .toggleNotifications(),
                   ),
+                  tokenAsync.when(
+                    data: (token) => token == null
+                        ? const SizedBox.shrink()
+                        : _FcmTokenTile(token: token, sw: sw, sh: sh),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
                   SettingItem(
                     icon: Icons.help_rounded,
                     title: 'Help & Support',
@@ -482,6 +492,100 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
+    );
+  }
+}
+
+class _FcmTokenTile extends StatelessWidget {
+  const _FcmTokenTile({
+    required this.token,
+    required this.sw,
+    required this.sh,
+  });
+
+  final String token;
+  final double sw;
+  final double sh;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = '…${token.substring(token.length > 16 ? token.length - 16 : 0)}';
+
+    return GestureDetector(
+      onTap: () async {
+        await Clipboard.setData(ClipboardData(text: token));
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'FCM token copied to clipboard',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF1A2035),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: sh * 0.012),
+        padding: EdgeInsets.symmetric(
+          horizontal: sw * 0.042,
+          vertical: sh * 0.014,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(sw * 0.042),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(sw * 0.022),
+              decoration: BoxDecoration(
+                color: AppColors.ACCENT.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(sw * 0.024),
+              ),
+              child: Icon(
+                Icons.token_rounded,
+                color: AppColors.ACCENT,
+                size: sw * 0.052,
+              ),
+            ),
+            SizedBox(width: sw * 0.036),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'FCM Token',
+                    style: GoogleFonts.inter(
+                      fontSize: sw * 0.038,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: sh * 0.002),
+                  Text(
+                    preview,
+                    style: GoogleFonts.inter(
+                      fontSize: sw * 0.030,
+                      color: Colors.white.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.copy_rounded,
+              size: sw * 0.044,
+              color: Colors.white.withValues(alpha: 0.35),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

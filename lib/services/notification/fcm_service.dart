@@ -1,14 +1,24 @@
 import 'dart:async';
 
+import 'package:expenser/models/notification_record.dart';
 import 'package:expenser/services/user_profile_service.dart';
+import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:expenser/core/router/app_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService(ref));
+
+/// Exposes the device's FCM registration token — used to test Firebase
+/// notification campaigns ("Test on device" in the Firebase Console).
+final fcmTokenProvider = FutureProvider<String?>((ref) async {
+  return FirebaseMessaging.instance.getToken();
+});
 
 /// Android notification channel used for all app notifications.
 const _channel = AndroidNotificationChannel(
@@ -73,12 +83,16 @@ class FcmService {
       onDidReceiveNotificationResponse: _onLocalNotifTap,
     );
 
-    // Create the Android channel (no-op if it already exists).
-    await _localNotif
+    final android = _localNotif
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(_channel);
+        >();
+
+    // Android 13+ (API 33) requires POST_NOTIFICATIONS at runtime.
+    await android?.requestNotificationsPermission();
+
+    // Create the channel (no-op if it already exists).
+    await android?.createNotificationChannel(_channel);
   }
 
   Future<void> _requestPermission() async {
@@ -103,6 +117,9 @@ class FcmService {
 
   Future<void> _saveToken(String uid, String token) async {
     await UserProfileService().updateFcmToken(uid, token);
+    debugPrint('════════════════════════════════════════');
+    debugPrint('FCM TOKEN: $token');
+    debugPrint('════════════════════════════════════════');
   }
 
   // ---------------------------------------------------------------------------
@@ -114,10 +131,14 @@ class FcmService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final title = notification.title ?? '';
+    final body = notification.body ?? '';
+    final route = message.data['route'] as String?;
+
     _localNotif.show(
       notification.hashCode,
-      notification.title,
-      notification.body,
+      title,
+      body,
       NotificationDetails(
         android: AndroidNotificationDetails(
           _channel.id,
@@ -129,8 +150,18 @@ class FcmService {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
-      payload: message.data['route'],
+      payload: route,
     );
+
+    final record = NotificationRecord(
+      id: const Uuid().v4(),
+      title: title,
+      body: body,
+      type: 'fcm',
+      route: route,
+      createdAt: DateTime.now(),
+    );
+    _ref.read(notificationHistoryProvider.notifier).add(record);
   }
 
   void _onLocalNotifTap(NotificationResponse response) {
@@ -140,6 +171,47 @@ class FcmService {
 
   void _handleTap(RemoteMessage message) {
     _navigate(message.data['route'] as String?);
+  }
+
+  /// Show a local notification triggered by an in-app action (e.g. creating an
+  /// account or savings goal). Persists to Hive + Firebase and respects the
+  /// user's notification setting.
+  Future<void> showLocalNotification({
+    required String title,
+    required String body,
+    required String type,
+    String? route,
+  }) async {
+    final settings = _ref.read(settingsProvider);
+    if (!settings.notificationsEnabled) return;
+
+    await _localNotif.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channel.id,
+          _channel.name,
+          channelDescription: _channel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/launcher_icon',
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: route,
+    );
+
+    final record = NotificationRecord(
+      id: const Uuid().v4(),
+      title: title,
+      body: body,
+      type: type,
+      route: route,
+      createdAt: DateTime.now(),
+    );
+    await _ref.read(notificationHistoryProvider.notifier).add(record);
   }
 
   void _navigate(String? route) {

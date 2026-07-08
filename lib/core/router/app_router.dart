@@ -11,10 +11,12 @@ import 'package:expenser/views/transactions/transaction_list_screen.dart';
 import 'package:expenser/views/transactions/add_edit_transaction_screen.dart';
 import 'package:expenser/views/budgets/budgets_screen.dart';
 import 'package:expenser/views/budgets/add_edit_budget_screen.dart';
+import 'package:expenser/views/budgets/create_budget_wizard.dart';
 import 'package:expenser/views/accounts/accounts_screen.dart';
 import 'package:expenser/views/accounts/add_edit_account_screen.dart';
 import 'package:expenser/views/savings/savings_screen.dart';
 import 'package:expenser/views/savings/add_edit_savings_goal_screen.dart';
+import 'package:expenser/views/notifications/notification_history_screen.dart';
 import 'package:expenser/views/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -124,6 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 AddEditAccountScreen(accountId: state.pathParameters['id']),
       ),
       GoRoute(
+        path: '/budgets/create',
+        builder: (_, __) => const CreateBudgetWizard(),
+      ),
+      GoRoute(
         path: '/budgets/add',
         builder: (_, __) => const AddEditBudgetScreen(),
       ),
@@ -132,6 +138,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder:
             (_, state) =>
                 AddEditBudgetScreen(budgetId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationHistoryScreen(),
       ),
       GoRoute(path: '/savings', builder: (_, __) => const SavingsScreen()),
       GoRoute(

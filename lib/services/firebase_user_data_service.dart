@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expenser/models/account_model.dart';
+import 'package:expenser/models/notification_record.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/category_model.dart';
 import 'package:expenser/models/budget_model.dart';
@@ -127,6 +128,20 @@ class FirebaseUserDataService {
 
   Future<void> deleteRecurringRule(String uid, String id) =>
       _col(uid, 'recurring_rules').child(id).remove();
+
+  // ─── Notifications ────────────────────────────────────────────────────────
+
+  Future<void> saveNotification(String uid, NotificationRecord n) =>
+      _col(uid, 'notifications').child(n.id).set(n.toMap());
+
+  Future<List<NotificationRecord>> fetchNotifications(String uid) async {
+    final snap = await _col(uid, 'notifications').get();
+    if (!snap.exists || snap.value == null) return [];
+    return (snap.value as Map)
+        .values
+        .map((v) => NotificationRecord.fromMap(Map<String, dynamic>.from(v as Map)))
+        .toList();
+  }
 }
 
 final firebaseUserDataServiceProvider = Provider<FirebaseUserDataService>(

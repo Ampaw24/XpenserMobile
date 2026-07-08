@@ -203,13 +203,16 @@ class _Field extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.grey),
         suffixIcon: suffixIcon,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           borderSide: const BorderSide(color: AppColors.PRIMARY),
         ),
       ),

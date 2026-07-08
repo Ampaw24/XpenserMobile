@@ -72,18 +72,20 @@ abstract final class AppTheme {
             isDark
                 ? Colors.white.withValues(alpha: 0.05)
                 : Colors.grey.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           borderSide: BorderSide(
             color: isDark ? Colors.white12 : Colors.grey.shade300,
           ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white12 : Colors.grey.shade300,
+          ),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           borderSide: const BorderSide(color: _primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
