@@ -34,8 +34,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  font_awesome_flutter: ^10.8.0
-  google_fonts: ^6.3.0
+  font_awesome_flutter: ^11.0.0
+  google_fonts: ^6.3.3
   get_it: ^8.0.3
   flutter_riverpod: ^2.6.1
   flutter_launcher_icons: ^0.14.4
@@ -70,8 +70,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/icons/applogo.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
+  image_path: "assets/images/icons/app_icon_square.png"
+  adaptive_icon_background: "#042F2E"
+  adaptive_icon_foreground: "assets/images/icons/adaptive_foreground.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -94,7 +97,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/
     - assets/images/
+    - assets/images/icons/
 
   #   - images/a_dot_ham.jpeg
 

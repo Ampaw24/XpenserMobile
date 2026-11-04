@@ -1,356 +1,148 @@
-import 'dart:ui';
+import 'dart:math' as math;
 
-import 'package:expenser/core/constants/imageconstants.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/views/splash/widgets/animated_brand_logo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _mainCtrl;
-  late final AnimationController _pulseCtrl;
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+  late final Animation<double> _sloganFade;
+  late final Animation<Offset> _sloganSlide;
 
-  // Orbs
-  late final Animation<double> _orb1Scale;
-  late final Animation<double> _orb2Scale;
-  late final Animation<double> _orb3Scale;
-
-  // Logo glass container
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoFade;
-
-  // App name
-  late final Animation<double> _nameFade;
-  late final Animation<Offset> _nameSlide;
-
-  // Tagline
-  late final Animation<double> _tagFade;
-
-  // Dots
-  late final Animation<double> _dotsFade;
-  late final Animation<double> _dot1Opacity;
-  late final Animation<double> _dot2Opacity;
-  late final Animation<double> _dot3Opacity;
+  static const Duration _sloganReadTime = Duration(milliseconds: 800);
 
   @override
   void initState() {
     super.initState();
 
-    _mainCtrl = AnimationController(
+    _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    // Orbs
-    _orb1Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _mainCtrl,
-        curve: const Interval(0.0, 0.45, curve: Curves.elasticOut),
-      ),
+    final sloganCurve = CurvedAnimation(
+      parent: _animCtrl,
+      curve: const Interval(0.65, 1.0, curve: Curves.easeOutCubic),
     );
-    _orb2Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _mainCtrl,
-        curve: const Interval(0.05, 0.50, curve: Curves.elasticOut),
-      ),
-    );
-    _orb3Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _mainCtrl,
-        curve: const Interval(0.10, 0.50, curve: Curves.elasticOut),
-      ),
-    );
-
-    // Logo
-    _logoScale = Tween<double>(begin: 0.50, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _mainCtrl,
-        curve: const Interval(0.15, 0.55, curve: Curves.easeOutBack),
-      ),
-    );
-    _logoFade = CurvedAnimation(
-      parent: _mainCtrl,
-      curve: const Interval(0.15, 0.55, curve: Curves.easeOut),
-    );
-
-    // Name
-    _nameFade = CurvedAnimation(
-      parent: _mainCtrl,
-      curve: const Interval(0.42, 0.68, curve: Curves.easeOut),
-    );
-    _nameSlide = Tween<Offset>(
+    _sloganFade = sloganCurve;
+    _sloganSlide = Tween<Offset>(
       begin: const Offset(0, 0.6),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _mainCtrl,
-        curve: const Interval(0.42, 0.68, curve: Curves.easeOut),
-      ),
-    );
+    ).animate(sloganCurve);
 
-    // Tagline
-    _tagFade = CurvedAnimation(
-      parent: _mainCtrl,
-      curve: const Interval(0.60, 0.82, curve: Curves.easeIn),
-    );
+    _playIntro()
+        .then((_) => Future<void>.delayed(_sloganReadTime))
+        .then((_) => _navigateToNextScreen());
+  }
 
-    // Loading dots
-    _dotsFade = CurvedAnimation(
-      parent: _mainCtrl,
-      curve: const Interval(0.78, 1.0, curve: Curves.easeIn),
-    );
-    _dot1Opacity = Tween<double>(begin: 0.25, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseCtrl,
-        curve: const Interval(0.0, 0.35, curve: Curves.easeInOut),
-      ),
-    );
-    _dot2Opacity = Tween<double>(begin: 0.25, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseCtrl,
-        curve: const Interval(0.30, 0.65, curve: Curves.easeInOut),
-      ),
-    );
-    _dot3Opacity = Tween<double>(begin: 0.25, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseCtrl,
-        curve: const Interval(0.60, 0.95, curve: Curves.easeInOut),
-      ),
-    );
+  Future<void> _playIntro() {
+    final reduceMotion =
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .accessibilityFeatures
+            .disableAnimations;
+    if (reduceMotion) {
+      _animCtrl.value = 1;
+      return Future<void>.value();
+    }
+    return _animCtrl.forward();
+  }
 
-    _mainCtrl.forward();
+  void _navigateToNextScreen() {
+    if (!mounted) return;
+    final settings = ref.read(settingsProvider);
 
-    Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) context.go('/onboarding');
-    });
+    if (settings.isFirstLaunch) {
+      context.go('/onboarding');
+    } else if (settings.isLoggedIn) {
+      context.go('/shell/dashboard');
+    } else {
+      context.go('/login');
+    }
   }
 
   @override
   void dispose() {
-    _mainCtrl.dispose();
-    _pulseCtrl.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final sw = size.width;
-    final sh = size.height;
+    final isDark =
+        ref.watch(settingsProvider.select((s) => s.isDarkMode)) ||
+        Theme.of(context).brightness == Brightness.dark;
+
+    final bgColor = isDark ? AppBrand.spruceDark : Colors.white;
+    final brandAsset = isDark ? AppBrand.wordmarkDark : AppBrand.wordmarkLight;
+    final accentColor = isDark ? AppBrand.mintAccent : AppBrand.tealPrimary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
-      body: Stack(
-        children: [
-          // Background gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0A0E21),
-                  Color(0xFF0D1B2A),
-                  Color(0xFF0A1628),
-                ],
-              ),
-            ),
-          ),
+      backgroundColor: bgColor,
+      body: BrandWatermarkBackground(
+        isDark: isDark,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final shortestSide = constraints.biggest.shortestSide;
+            final logoWidth = math.min(
+              constraints.maxWidth * 0.8,
+              shortestSide * 0.7,
+            );
+            final sloganTop =
+                constraints.maxHeight / 2 +
+                AnimatedBrandLogo.heightFor(logoWidth) / 2;
 
-          // Orb — top left teal
-          Positioned(
-            top: -sh * 0.10,
-            left: -sw * 0.22,
-            child: ScaleTransition(
-              scale: _orb1Scale,
-              child: Container(
-                width: sw * 0.80,
-                height: sw * 0.80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.PRIMARY.withValues(alpha: 0.55),
-                      AppColors.ACCENT.withValues(alpha: 0.20),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Orb — bottom right mint
-          Positioned(
-            bottom: sh * 0.08,
-            right: -sw * 0.25,
-            child: ScaleTransition(
-              scale: _orb2Scale,
-              child: Container(
-                width: sw * 0.85,
-                height: sw * 0.85,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF1DE9B6).withValues(alpha: 0.28),
-                      AppColors.ACCENT.withValues(alpha: 0.12),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.50, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Orb — center right purple
-          Positioned(
-            top: sh * 0.32,
-            right: -sw * 0.12,
-            child: ScaleTransition(
-              scale: _orb3Scale,
-              child: Container(
-                width: sw * 0.45,
-                height: sw * 0.45,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF7C4DFF).withValues(alpha: 0.28),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Center content
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            return Stack(
               children: [
-                // Glass logo container
-                FadeTransition(
-                  opacity: _logoFade,
-                  child: ScaleTransition(
-                    scale: _logoScale,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(sw * 0.065),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(
-                          width: sw * 0.28,
-                          height: sw * 0.28,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(sw * 0.065),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.20),
-                              width: 1.2,
-                            ),
-                          ),
-                          padding: EdgeInsets.all(sw * 0.045),
-                          child: Image.asset(Imageconstants.applogo),
+                Center(
+                  child: AnimatedBrandLogo(
+                    animation: _animCtrl,
+                    assetPath: brandAsset,
+                    accentColor: accentColor,
+                    width: logoWidth,
+                  ),
+                ),
+                Positioned(
+                  top: sloganTop,
+                  left: constraints.maxWidth * 0.08,
+                  right: constraints.maxWidth * 0.08,
+                  child: FadeTransition(
+                    opacity: _sloganFade,
+                    child: SlideTransition(
+                      position: _sloganSlide,
+                      child: Text(
+                        AppBrand.slogan,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: shortestSide * 0.04,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: shortestSide * 0.002,
+                          color:
+                              isDark
+                                  ? AppBrand.textSecondaryDark
+                                  : AppBrand.textSecondaryLight,
                         ),
                       ),
                     ),
-                  ),
-                ),
-
-                SizedBox(height: sh * 0.028),
-
-                // App name
-                FadeTransition(
-                  opacity: _nameFade,
-                  child: SlideTransition(
-                    position: _nameSlide,
-                    child: Text(
-                      'Xpenser',
-                      style: GoogleFonts.montserrat(
-                        fontSize: sw * 0.085,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 1.8,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: sh * 0.010),
-
-                // Tagline
-                FadeTransition(
-                  opacity: _tagFade,
-                  child: Text(
-                    'Smart money management',
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.037,
-                      color: Colors.white.withValues(alpha: 0.50),
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: sh * 0.075),
-
-                // Pulsing loading dots
-                FadeTransition(
-                  opacity: _dotsFade,
-                  child: AnimatedBuilder(
-                    animation: _pulseCtrl,
-                    builder:
-                        (_, __) => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _Dot(opacity: _dot1Opacity.value, sw: sw),
-                            SizedBox(width: sw * 0.025),
-                            _Dot(opacity: _dot2Opacity.value, sw: sw),
-                            SizedBox(width: sw * 0.025),
-                            _Dot(opacity: _dot3Opacity.value, sw: sw),
-                          ],
-                        ),
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot({required this.opacity, required this.sw});
-  final double opacity;
-  final double sw;
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        width: sw * 0.018,
-        height: sw * 0.018,
-        decoration: BoxDecoration(
-          color: AppColors.ACCENT,
-          shape: BoxShape.circle,
+            );
+          },
         ),
       ),
     );

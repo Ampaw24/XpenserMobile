@@ -1,9 +1,8 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class SpendingChart extends ConsumerWidget {
@@ -12,7 +11,7 @@ class SpendingChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final insights = ref.watch(insightsProvider);
     final totals = insights.weeklyTotals;
     final maxY = totals.reduce((a, b) => a > b ? a : b);
@@ -23,37 +22,39 @@ class SpendingChart extends ConsumerWidget {
       return DateFormat('EEE').format(d);
     });
 
+    final cardBg = isDark ? AppBrand.surfaceDark : Colors.white;
+    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
+    final axisTextColor = isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
+    final gridLineColor = isDark
+        ? AppBrand.borderDark.withValues(alpha: 0.5)
+        : AppBrand.borderLight.withValues(alpha: 0.7);
+
     return Container(
-      height: sh * 0.190,
-      padding: EdgeInsets.fromLTRB(
-        sw * 0.04,
-        sh * 0.022,
-        sw * 0.04,
-        sh * 0.012,
-      ),
+      height: 160,
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(sw * 0.055),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.10),
+          color: borderColor,
           width: 1.0,
         ),
       ),
       child: BarChart(
         BarChartData(
-          maxY: maxY > 0 ? maxY * 1.30 : 100,
+          maxY: maxY > 0 ? maxY * 1.25 : 100,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
-              getTooltipColor: (_) => const Color(0xFF0D1B2A),
-              getTooltipItem:
-                  (group, _, rod, __) => BarTooltipItem(
-                    rod.toY.toStringAsFixed(0),
-                    GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: sw * 0.028,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              getTooltipColor: (_) => isDark ? AppBrand.surfaceDarkElevated : AppBrand.spruceDark,
+              getTooltipItem: (group, _, rod, __) => BarTooltipItem(
+                rod.toY.toStringAsFixed(0),
+                const TextStyle(
+                  fontFamily: 'Inter',
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           titlesData: FlTitlesData(
@@ -61,15 +62,19 @@ class SpendingChart extends ConsumerWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: sh * 0.030,
-                getTitlesWidget:
-                    (value, _) => Text(
-                      days[value.toInt()],
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.40),
-                        fontSize: sw * 0.028,
-                      ),
+                reservedSize: 24,
+                getTitlesWidget: (value, _) => Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    days[value.toInt()],
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: axisTextColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
                     ),
+                  ),
+                ),
               ),
             ),
             leftTitles: const AxisTitles(
@@ -86,11 +91,10 @@ class SpendingChart extends ConsumerWidget {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxY > 0 ? maxY / 3 : 33,
-            getDrawingHorizontalLine:
-                (_) => FlLine(
-                  color: Colors.white.withValues(alpha: 0.07),
-                  strokeWidth: 1,
-                ),
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: gridLineColor,
+              strokeWidth: 1,
+            ),
           ),
           borderData: FlBorderData(show: false),
           barGroups: List.generate(7, (i) {
@@ -100,24 +104,12 @@ class SpendingChart extends ConsumerWidget {
               barRods: [
                 BarChartRodData(
                   toY: totals[i],
-                  gradient:
-                      isMax
-                          ? const LinearGradient(
-                            colors: [AppColors.ACCENT, Color(0xFF1DE9B6)],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          )
-                          : LinearGradient(
-                            colors: [
-                              AppColors.PRIMARY.withValues(alpha: 0.60),
-                              AppColors.PRIMARY.withValues(alpha: 0.90),
-                            ],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                  width: sw * 0.048,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(sw * 0.020),
+                  color: isMax
+                      ? AppBrand.mintAccent
+                      : AppBrand.tealPrimary.withValues(alpha: isDark ? 0.85 : 0.75),
+                  width: (sw * 0.045).clamp(12.0, 18.0),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6),
                   ),
                 ),
               ],

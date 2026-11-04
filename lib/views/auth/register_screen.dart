@@ -1,10 +1,11 @@
+import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
 import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -46,122 +47,150 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor =
+        isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
+    final subtitleColor =
+        isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.black87),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: titleColor, size: 20),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  'Create Account',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Start managing your finances today',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                _Field(
-                  controller: _nameCtrl,
-                  label: 'Full Name',
-                  hint: 'John Doe',
-                  icon: Icons.person_outline_rounded,
-                  validator:
-                      (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? 'Name is required'
-                              : null,
-                ),
-                const SizedBox(height: 16),
-                _Field(
-                  controller: _emailCtrl,
-                  label: 'Email',
-                  hint: 'you@example.com',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Email is required';
-                    if (!v.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _Field(
-                  controller: _passwordCtrl,
-                  label: 'Password',
-                  hint: 'Min 6 characters',
-                  icon: Icons.lock_outline_rounded,
-                  obscureText: _obscure,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6) return 'Minimum 6 characters';
-                    return null;
-                  },
-                ),
-                if (auth.errorMessage != null) ...[
+      body: BrandWatermarkBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              0,
+              24,
+              BrandWatermarkBackground.reservedHeight(context),
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const SizedBox(height: 12),
                   Text(
-                    auth.errorMessage!,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                    'Create Account',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: titleColor,
+                      letterSpacing: -0.4,
+                    ),
                   ),
-                ],
-                const SizedBox(height: 32),
-                auth.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : CustomisedElevatedButton(
-                      text: 'Create Account',
-                      onPressed: _submit,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Start managing your finances today',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: subtitleColor,
                     ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  ),
+                  const SizedBox(height: 28),
+                  _Field(
+                    controller: _nameCtrl,
+                    label: 'Full Name',
+                    hint: 'John Doe',
+                    icon: Icons.person_outline_rounded,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Name is required'
+                                : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _Field(
+                    controller: _emailCtrl,
+                    label: 'Email',
+                    hint: 'you@example.com',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Email is required';
+                      if (!v.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _Field(
+                    controller: _passwordCtrl,
+                    label: 'Password',
+                    hint: 'Min 6 characters',
+                    icon: Icons.lock_outline_rounded,
+                    obscureText: _obscure,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: subtitleColor,
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Password is required';
+                      if (v.length < 6) return 'Minimum 6 characters';
+                      return null;
+                    },
+                  ),
+                  if (auth.errorMessage != null) ...[
+                    const SizedBox(height: 12),
                     Text(
-                      'Already have an account? ',
-                      style: GoogleFonts.inter(color: Colors.grey[600]),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
-                      child: Text(
-                        'Sign In',
-                        style: GoogleFonts.inter(
-                          color: AppColors.PRIMARY,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      auth.errorMessage!,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        color: Color(0xFFE11D48),
+                        fontSize: 13,
                       ),
                     ),
                   ],
-                ),
-              ],
+                  const SizedBox(height: 28),
+                  auth.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : CustomisedElevatedButton(
+                        text: 'Create Account',
+                        onPressed: _submit,
+                      ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: subtitleColor,
+                          fontSize: 13,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/login'),
+                        child: const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: AppBrand.tealPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         ),
@@ -193,27 +222,40 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor =
+        isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
+    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
+    final fieldBg = isDark ? AppBrand.surfaceDarkElevated : Colors.white;
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      style: TextStyle(
+        fontFamily: 'Inter',
+        color: isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.grey),
+        filled: true,
+        fillColor: fieldBg,
+        prefixIcon: Icon(icon, color: iconColor, size: 20),
         suffixIcon: suffixIcon,
-        border: UnderlineInputBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: borderColor),
         ),
-        enabledBorder: UnderlineInputBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: borderColor),
         ),
-        focusedBorder: UnderlineInputBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          borderSide: const BorderSide(color: AppColors.PRIMARY),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppBrand.tealPrimary, width: 1.5),
         ),
       ),
     );

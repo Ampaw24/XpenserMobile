@@ -1,30 +1,45 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/theme/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:expenser/main.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  group('Xpenser App Branding & Theme Tests', () {
+    test('Branding asset constants are defined and correct', () {
+      expect(
+        AppBrand.wordmarkLight,
+        'assets/xpenser-C-x-monogram-wordmark-light.svg',
+      );
+      expect(
+        AppBrand.wordmarkDark,
+        'assets/xpenser-C-x-monogram-wordmark-dark.svg',
+      );
+      expect(AppBrand.monogram, 'assets/images/xpenser-C-x-monogram.svg');
+      expect(AppBrand.spruceDark, const Color(0xFF042F2E));
+      expect(AppBrand.tealPrimary, const Color(0xFF0F766E));
+      expect(AppBrand.mintAccent, const Color(0xFF2DD4BF));
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('Light theme has correct brand primary and surface colors', () {
+      final light = AppTheme.light;
+      expect(light.brightness, Brightness.light);
+      expect(light.colorScheme.primary, AppBrand.tealPrimary);
+      expect(light.scaffoldBackgroundColor, AppBrand.backgroundLight);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test(
+      'Dark theme has correct brand spruce background and mint secondary',
+      () {
+        final dark = AppTheme.dark;
+        expect(dark.brightness, Brightness.dark);
+        expect(dark.colorScheme.primary, AppBrand.tealPrimary);
+        expect(dark.colorScheme.secondary, AppBrand.mintAccent);
+        expect(dark.scaffoldBackgroundColor, AppBrand.backgroundDark);
+      },
+    );
   });
 }

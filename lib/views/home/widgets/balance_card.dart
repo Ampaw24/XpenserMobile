@@ -1,9 +1,6 @@
-import 'dart:ui';
-
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -23,87 +20,118 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // A rich, calm brand card that anchors both light and dark modes
+    final cardBg = isDark ? AppBrand.surfaceDark : AppBrand.spruceDark;
+    final borderColor = isDark ? AppBrand.borderDark : const Color(0xFF0F4C49);
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(sw * 0.065),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.PRIMARY.withValues(alpha: 0.80),
-                  AppColors.ACCENT.withValues(alpha: 0.65),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(sw * 0.065),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.20),
-                width: 1.2,
-              ),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: borderColor,
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
-            padding: EdgeInsets.all(sw * 0.065),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Total Balance',
-                  style: GoogleFonts.inter(
-                    fontSize: sw * 0.033,
-                    color: Colors.white.withValues(alpha: 0.65),
-                    fontWeight: FontWeight.w400,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                SizedBox(height: sh * 0.008),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: totalBalance),
-                  duration: const Duration(milliseconds: 900),
-                  curve: Curves.easeOut,
-                  builder:
-                      (_, value, __) => Text(
-                        '$currency ${value.toStringAsFixed(2)}',
-                        style: GoogleFonts.montserrat(
-                          fontSize: sw * 0.080,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppBrand.mintAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppBrand.mintAccent,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                ),
-                SizedBox(height: sh * 0.022),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatChip(
-                        icon: AppIcons.arrowDown,
-                        iconColor: const Color(0xFF00E676),
-                        label: 'Income',
-                        value: '$currency ${monthlyIncome.toStringAsFixed(0)}',
-                        sw: sw,
-                        sh: sh,
+                      const SizedBox(width: 6),
+                      Text(
+                        currency,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppBrand.mintLight,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: sw * 0.04),
-                    Expanded(
-                      child: _StatChip(
-                        icon: AppIcons.arrowUp,
-                        iconColor: const Color(0xFFFF5252),
-                        label: 'Expenses',
-                        value: '$currency ${monthlyExpense.toStringAsFixed(0)}',
-                        sw: sw,
-                        sh: sh,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: totalBalance),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (_, value, __) => Text(
+                '$currency ${value.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -0.8,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatChip(
+                    icon: AppIcons.arrowDown,
+                    iconColor: const Color(0xFF34D399),
+                    label: 'Income',
+                    value: '$currency ${monthlyIncome.toStringAsFixed(0)}',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatChip(
+                    icon: AppIcons.arrowUp,
+                    iconColor: const Color(0xFFFB7185),
+                    label: 'Expenses',
+                    value: '$currency ${monthlyExpense.toStringAsFixed(0)}',
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -116,57 +144,54 @@ class _StatChip extends StatelessWidget {
     required this.iconColor,
     required this.label,
     required this.value,
-    required this.sw,
-    required this.sh,
   });
 
   final IconData icon;
   final Color iconColor;
   final String label;
   final String value;
-  final double sw, sh;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.038,
-        vertical: sh * 0.012,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(sw * 0.038),
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.10),
           width: 1.0,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(sw * 0.018),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(sw * 0.020),
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: HugeIcon(icon: icon, color: iconColor, size: sw * 0.038),
+            child: HugeIcon(icon: icon, color: iconColor, size: 14),
           ),
-          SizedBox(width: sw * 0.025),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: sw * 0.028,
-                    color: Colors.white.withValues(alpha: 0.55),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.65),
                   ),
                 ),
+                const SizedBox(height: 1),
                 Text(
                   value,
-                  style: GoogleFonts.montserrat(
-                    fontSize: sw * 0.034,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
