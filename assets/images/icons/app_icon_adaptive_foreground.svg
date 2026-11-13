@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+ <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#99F6E4"/><stop offset="1" stop-color="#2DD4BF"/></linearGradient>
+ <linearGradient id="mint2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A7F3D0"/><stop offset="1" stop-color="#14B8A6"/></linearGradient>
+ <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E6FFFA"/></linearGradient>
+ <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#021817" flood-opacity=".45"/></filter>
+</defs>
+<g transform="translate(512 512) scale(0.72) translate(-512 -512)">
+<g filter="url(#sh)">
+<g transform="rotate(-45 512 512)"><path d="M432 210 Q432 170 472 170 H552 Q592 170 592 210 V810 L565.3 844.0 L538.7 810.0 L512.0 844.0 L485.3 810.0 L458.7 844.0 L432.0 810.0 Z" fill="url(#mint)"/></g>
+<g transform="rotate(45 512 512)"><rect x="432" y="190" width="160" height="644" rx="80" fill="#FFFFFF"/></g>
+</g>
+<g transform="rotate(-45 512 512)"><rect x="472" y="260" width="80" height="18" rx="9" fill="#0F766E" opacity=".5"/><rect x="472" y="300" width="56" height="18" rx="9" fill="#0F766E" opacity=".35"/></g>
+<circle cx="512" cy="512" r="96" fill="#0F766E" stroke="#fff" stroke-width="10"/>
+<g transform="translate(469 457) scale(0.9)" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M70 33 C66 23 56 18 46 18 C31 18 22 27 22 39 C22 52 33 57 47 61 C63 65 75 71 75 87 C75 100 64 108 49 108 C36 108 26 102 22 91"/><path d="M48 4 V18 M48 108 V122"/>
+</g>
+</g>
+</svg>

@@ -20,7 +20,6 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
       body: shell,
       bottomNavigationBar: BottomNavBar(
         tabs: _tabs,

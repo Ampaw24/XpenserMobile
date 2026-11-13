@@ -1,10 +1,10 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class DashboardHeader extends ConsumerWidget {
   const DashboardHeader({
@@ -19,12 +19,18 @@ class DashboardHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final greeting = _greeting();
     final unread = ref.watch(unreadNotificationCountProvider);
 
+    final titleColor = isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
+    final subtitleColor = isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
+    final btnBg = isDark ? AppBrand.surfaceDark : Colors.white;
+    final btnBorder = isDark ? AppBrand.borderDark : AppBrand.borderLight;
+    final btnIconColor = isDark ? Colors.white : AppBrand.textPrimaryLight;
+
     return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.018, sw * 0.06, 0),
+      padding: EdgeInsets.fromLTRB(sw * 0.05, 12, sw * 0.05, 0),
       child: Row(
         children: [
           Expanded(
@@ -33,19 +39,22 @@ class DashboardHeader extends ConsumerWidget {
               children: [
                 Text(
                   greeting,
-                  style: GoogleFonts.inter(
-                    fontSize: sw * 0.033,
-                    color: Colors.white.withValues(alpha: 0.50),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    color: subtitleColor,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                SizedBox(height: sh * 0.004),
+                const SizedBox(height: 2),
                 Text(
                   userName.isNotEmpty ? userName : 'Welcome',
-                  style: GoogleFonts.montserrat(
-                    fontSize: sw * 0.058,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: titleColor,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ],
@@ -58,66 +67,52 @@ class DashboardHeader extends ConsumerWidget {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: sw * 0.108,
-                  height: sw * 0.108,
-                  margin: EdgeInsets.only(right: sw * 0.03),
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: btnBg,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.13),
+                      color: btnBorder,
+                      width: 1.0,
                     ),
                   ),
-                  child: Icon(
-                    AppIcons.bell,
-                    color: Colors.white.withValues(alpha: 0.70),
-                    size: sw * 0.052,
+                  child: Center(
+                    child: HugeIcon(
+                      icon: AppIcons.bell,
+                      color: btnIconColor,
+                      size: 20,
+                    ),
                   ),
                 ),
                 if (unread > 0)
                   Positioned(
-                    top: -sw * 0.008,
-                    right: sw * 0.022,
+                    top: -2,
+                    right: -2,
                     child: Container(
-                      padding: EdgeInsets.all(sw * 0.012),
-                      constraints: BoxConstraints(minWidth: sw * 0.044),
-                      decoration: const BoxDecoration(
-                        color: AppColors.ACCENT,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        unread > 99 ? '99+' : '$unread',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: sw * 0.022,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE11D48),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDark ? AppBrand.backgroundDark : Colors.white,
+                          width: 1.5,
                         ),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      child: Text(
+                        unread > 99 ? '99+' : unread.toString(),
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
               ],
-            ),
-          ),
-          // Avatar
-          Container(
-            width: sw * 0.108,
-            height: sw * 0.108,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage(profilePicUrl),
-                fit: BoxFit.cover,
-              ),
-              gradient: const LinearGradient(
-                colors: [AppColors.PRIMARY, AppColors.ACCENT],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.20),
-                width: 1.5,
-              ),
             ),
           ),
         ],
@@ -127,8 +122,8 @@ class DashboardHeader extends ConsumerWidget {
 
   String _greeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning 🌤';
-    if (hour < 17) return 'Good afternoon ☀️';
-    return 'Good evening 🌙';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 }

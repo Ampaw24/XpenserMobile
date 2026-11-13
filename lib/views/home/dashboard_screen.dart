@@ -1,7 +1,5 @@
-import 'dart:ui';
-
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
@@ -14,7 +12,6 @@ import 'package:expenser/views/home/widgets/spending_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -23,7 +20,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
 
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountProvider);
@@ -31,138 +27,96 @@ class DashboardScreen extends ConsumerWidget {
     final insights = ref.watch(insightsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
-      floatingActionButton: _AddFab(sw: sw, sh: sh),
-      body: Stack(
-        children: [
-          // Subtle background orb — top left
-          Positioned(
-            top: -sh * 0.06,
-            left: -sw * 0.18,
-            child: Container(
-              width: sw * 0.65,
-              height: sw * 0.65,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.PRIMARY.withValues(alpha: 0.35),
-                    Colors.transparent,
-                  ],
+      floatingActionButton: const _AddFab(),
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ── Header ──────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: DashboardHeader(
+                userName: settings.userName,
+                profilePicUrl: settings.userAvatarPath ?? 's',
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
+
+            // ── Balance card ─────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: BalanceCard(
+                totalBalance: totalBalance,
+                currency: settings.preferredCurrency,
+                monthlyIncome: insights.monthlyIncome,
+                monthlyExpense: insights.monthlyExpense,
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // ── Quick actions ─────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: QuickActionsRow(
+                onAddExpense: () => context.push('/transactions/add'),
+                onAddIncome: () => context.push('/transactions/add'),
+                onTransfer: () => context.push('/transactions/add'),
+                onSavings: () => context.push('/savings'),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            // ── Spending chart ────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+                child: const _SectionHeader(title: 'Spending (7 days)'),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 10)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+                child: const SpendingChart(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            // ── Recent transactions ───────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+                child: _SectionHeader(
+                  title: 'Recent Transactions',
+                  trailingLabel: 'See all',
+                  onTrailingTap: () => context.go('/shell/transactions'),
                 ),
               ),
             ),
-          ),
-          // Subtle orb — bottom right
-          Positioned(
-            bottom: sh * 0.18,
-            right: -sw * 0.20,
-            child: Container(
-              width: sw * 0.55,
-              height: sw * 0.55,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1DE9B6).withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
-                ),
+            const SliverToBoxAdapter(child: SizedBox(height: 10)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+                child: const RecentTransactionsSection(),
               ),
             ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // ── Header ──────────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: DashboardHeader(
-                    userName: settings.userName,
-                    profilePicUrl: settings.userAvatarPath ?? 's',
-                  ),
-                ),
 
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.022)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                // ── Balance card ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: BalanceCard(
-                    totalBalance: totalBalance,
-                    currency: settings.preferredCurrency,
-                    monthlyIncome: insights.monthlyIncome,
-                    monthlyExpense: insights.monthlyExpense,
-                  ),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.026)),
-
-                // ── Quick actions ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: QuickActionsRow(
-                    onAddExpense: () => context.push('/transactions/add'),
-                    onAddIncome: () => context.push('/transactions/add'),
-                    onTransfer: () => context.push('/transactions/add'),
-                    onSavings: () => context.push('/savings'),
-                  ),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.030)),
-
-                // ── Spending chart ────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: _SectionHeader(title: 'Spending (7 days)', sw: sw),
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.014)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: const SpendingChart(),
-                  ),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.030)),
-
-                // ── Recent transactions ───────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: _SectionHeader(
-                      title: 'Recent Transactions',
-                      trailingLabel: 'See all',
-                      onTrailingTap: () => context.go('/shell/transactions'),
-                      sw: sw,
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.014)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: const RecentTransactionsSection(),
-                  ),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.030)),
-
-                // ── Budget overview ───────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
-                    child: const BudgetProgressSection(),
-                  ),
-                ),
-
-                // Bottom padding — nav bar clearance
-                SliverToBoxAdapter(child: SizedBox(height: sh * 0.14)),
-              ],
+            // ── Budget overview ───────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
+                child: const BudgetProgressSection(),
+              ),
             ),
-          ),
-        ],
+
+            // Bottom padding for nav bar clearance
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+          ],
+        ),
       ),
     );
   }
@@ -173,7 +127,6 @@ class DashboardScreen extends ConsumerWidget {
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
-    required this.sw,
     this.trailingLabel,
     this.onTrailingTap,
   });
@@ -181,29 +134,33 @@ class _SectionHeader extends StatelessWidget {
   final String title;
   final String? trailingLabel;
   final VoidCallback? onTrailingTap;
-  final double sw;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: GoogleFonts.montserrat(
-            fontSize: sw * 0.042,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: titleColor,
           ),
         ),
         if (trailingLabel != null)
           GestureDetector(
             onTap: onTrailingTap,
-            child: Text(
-              trailingLabel!,
-              style: GoogleFonts.inter(
-                fontSize: sw * 0.033,
-                color: AppColors.ACCENT,
+            child: const Text(
+              'See all',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: AppBrand.tealPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -215,44 +172,48 @@ class _SectionHeader extends StatelessWidget {
 
 // ── Floating action button ─────────────────────────────────────────────────────
 
-class _AddFab extends StatelessWidget {
-  const _AddFab({required this.sw, required this.sh});
+class _AddFab extends StatefulWidget {
+  const _AddFab();
 
-  final double sw, sh;
+  @override
+  State<_AddFab> createState() => _AddFabState();
+}
+
+class _AddFabState extends State<_AddFab> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
       onTap: () => context.push('/transactions/add'),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(sw * 0.042),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            width: sw * 0.145,
-            height: sw * 0.145,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.PRIMARY, AppColors.ACCENT],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: AnimatedScale(
+        scale: _pressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: AppBrand.tealPrimary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppBrand.tealPrimary.withValues(alpha: isDark ? 0.35 : 0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              borderRadius: BorderRadius.circular(sw * 0.042),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.ACCENT.withValues(alpha: 0.40),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-              border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
-            ),
-            child: Center(
-              child: HugeIcon(
-                icon: AppIcons.add,
-                color: Colors.white,
-                size: sw * 0.062,
-              ),
+            ],
+          ),
+          child: const Center(
+            child: HugeIcon(
+              icon: AppIcons.add,
+              color: Colors.white,
+              size: 26,
             ),
           ),
         ),

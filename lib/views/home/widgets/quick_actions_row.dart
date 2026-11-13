@@ -1,7 +1,6 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class QuickActionsRow extends StatelessWidget {
@@ -21,48 +20,39 @@ class QuickActionsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _ActionButton(
             icon: AppIcons.arrowUp,
             label: 'Expense',
-            iconColor: const Color(0xFFFF5252),
-            bgColor: const Color(0xFFFF5252).withValues(alpha: 0.12),
+            iconColor: const Color(0xFFE11D48),
+            bgColor: const Color(0xFFE11D48).withValues(alpha: 0.10),
             onTap: onAddExpense,
-            sw: sw,
-            sh: sh,
           ),
           _ActionButton(
             icon: AppIcons.arrowDown,
             label: 'Income',
-            iconColor: const Color(0xFF00E676),
-            bgColor: const Color(0xFF00E676).withValues(alpha: 0.12),
+            iconColor: const Color(0xFF059669),
+            bgColor: const Color(0xFF059669).withValues(alpha: 0.10),
             onTap: onAddIncome,
-            sw: sw,
-            sh: sh,
           ),
           _ActionButton(
             icon: AppIcons.transfer,
             label: 'Transfer',
-            iconColor: const Color(0xFF448AFF),
-            bgColor: const Color(0xFF448AFF).withValues(alpha: 0.12),
+            iconColor: const Color(0xFF0284C7),
+            bgColor: const Color(0xFF0284C7).withValues(alpha: 0.10),
             onTap: onTransfer,
-            sw: sw,
-            sh: sh,
           ),
           _ActionButton(
             icon: AppIcons.savings,
             label: 'Savings',
-            iconColor: AppColors.ACCENT,
-            bgColor: AppColors.ACCENT.withValues(alpha: 0.12),
+            iconColor: AppBrand.tealPrimary,
+            bgColor: AppBrand.tealPrimary.withValues(alpha: 0.10),
             onTap: onSavings,
-            sw: sw,
-            sh: sh,
           ),
         ],
       ),
@@ -70,15 +60,13 @@ class QuickActionsRow extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.iconColor,
     required this.bgColor,
     required this.onTap,
-    required this.sw,
-    required this.sh,
   });
 
   final IconData icon;
@@ -86,39 +74,62 @@ class _ActionButton extends StatelessWidget {
   final Color iconColor;
   final Color bgColor;
   final VoidCallback onTap;
-  final double sw, sh;
+
+  @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
+    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
+
     return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: sw * 0.145,
-            height: sw * 0.145,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(sw * 0.042),
-              border: Border.all(
-                color: iconColor.withValues(alpha: 0.25),
-                width: 1.0,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Column(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: widget.bgColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: borderColor,
+                  width: 1.0,
+                ),
+              ),
+              child: Center(
+                child: HugeIcon(
+                  icon: widget.icon,
+                  color: widget.iconColor,
+                  size: 24,
+                ),
               ),
             ),
-            child: Center(
-              child: HugeIcon(icon: icon, color: iconColor, size: sw * 0.058),
+            const SizedBox(height: 6),
+            Text(
+              widget.label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: labelColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          SizedBox(height: sh * 0.008),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: sw * 0.030,
-              color: Colors.white.withValues(alpha: 0.65),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

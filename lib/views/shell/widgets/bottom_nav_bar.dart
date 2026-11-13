@@ -1,9 +1,6 @@
-import 'dart:ui';
-
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/views/shell/widgets/nav_tab_item.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -21,42 +18,44 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
     final bottom = MediaQuery.of(context).padding.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final navBg = isDark ? AppBrand.surfaceDark : Colors.white;
+    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
         sw * 0.04,
         0,
         sw * 0.04,
-        bottom + sh * 0.015,
+        bottom > 0 ? bottom + 6 : 16,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(sw * 0.065),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: sh * 0.082,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0A0E21).withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(sw * 0.065),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1.0,
-              ),
-            ),
-            child: Row(
-              children: List.generate(tabs.length, (i) {
-                return _NavItem(
-                  item: tabs[i],
-                  isActive: i == currentIndex,
-                  onTap: () => onTap(i),
-                  sw: sw,
-                  sh: sh,
-                );
-              }),
-            ),
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: navBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: borderColor,
+            width: 1.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: List.generate(tabs.length, (i) {
+            return _NavItem(
+              item: tabs[i],
+              isActive: i == currentIndex,
+              onTap: () => onTap(i),
+            );
+          }),
         ),
       ),
     );
@@ -68,17 +67,21 @@ class _NavItem extends StatelessWidget {
     required this.item,
     required this.isActive,
     required this.onTap,
-    required this.sw,
-    required this.sh,
   });
 
   final NavTabItem item;
   final bool isActive;
   final VoidCallback onTap;
-  final double sw, sh;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppBrand.mintAccent : AppBrand.tealPrimary;
+    final inactiveColor = isDark ? const Color(0xFF64748B) : AppBrand.textSecondaryLight;
+    final activeBg = isDark
+        ? AppBrand.mintAccent.withValues(alpha: 0.15)
+        : AppBrand.tealPrimary.withValues(alpha: 0.10);
+
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -87,38 +90,30 @@ class _NavItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              padding: EdgeInsets.symmetric(
-                horizontal: sw * 0.038,
-                vertical: sh * 0.008,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 4,
               ),
               decoration: BoxDecoration(
-                color:
-                    isActive
-                        ? AppColors.ACCENT.withValues(alpha: 0.18)
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(sw * 0.035),
+                color: isActive ? activeBg : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: HugeIcon(
                 icon: item.icon,
-                color:
-                    isActive
-                        ? AppColors.ACCENT
-                        : Colors.white.withValues(alpha: 0.38),
-                size: sw * 0.056,
+                color: isActive ? activeColor : inactiveColor,
+                size: 20,
               ),
             ),
-            SizedBox(height: sh * 0.004),
+            const SizedBox(height: 2),
             AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 250),
-              style: GoogleFonts.inter(
-                fontSize: sw * 0.026,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color:
-                    isActive
-                        ? AppColors.ACCENT
-                        : Colors.white.withValues(alpha: 0.35),
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive ? activeColor : inactiveColor,
               ),
               child: Text(item.label),
             ),

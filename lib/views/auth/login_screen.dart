@@ -1,12 +1,18 @@
-import 'dart:ui';
+import 'dart:io' show Platform;
+import 'dart:math' as math;
 
-import 'package:expenser/core/constants/imageconstants.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
+import 'package:expenser/core/utils/widgets/brand_wordmark.dart';
+import 'package:expenser/core/utils/widgets/reveal_transition.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/views/auth/widgets/auth_social_button.dart';
+import 'package:expenser/views/auth/widgets/login_glow_backdrop.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:svg_flutter/svg.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -18,629 +24,295 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
+  static const double _compactBreakpoint = 600;
 
-  late final Animation<double> _bgFade;
-  late final Animation<double> _orb1Scale;
-  late final Animation<double> _orb2Scale;
-  late final Animation<double> _headerFade;
-  late final Animation<Offset> _headerSlide;
-  late final Animation<double> _cardFade;
-  late final Animation<Offset> _cardSlide;
-  late final Animation<double> _btn1Fade;
+  late final AnimationController _entranceCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  late final Animation<double> _glowReveal = _interval(0.0, 0.5);
+  late final Animation<double> _logoReveal = _interval(0.0, 0.45);
+  late final Animation<double> _titleReveal = _interval(0.25, 0.6);
+  late final Animation<double> _subtitleReveal = _interval(0.32, 0.67);
+  late final List<Animation<double>> _buttonReveals = [
+    for (var i = 0; i < 3; i++) _interval(0.45 + i * 0.07, 0.8 + i * 0.07),
+  ];
+  late final Animation<double> _footerReveal = _interval(0.72, 1.0);
+
+  bool get _showAppleButton => !kIsWeb && Platform.isIOS;
+
+  Animation<double> _interval(double start, double end) => CurvedAnimation(
+    parent: _entranceCtrl,
+    curve: Interval(start, end, curve: Curves.easeOutCubic),
+  );
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-
-    _bgFade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.0, 0.25, curve: Curves.easeIn),
-    );
-
-    _orb1Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.0, 0.40, curve: Curves.elasticOut),
-      ),
-    );
-
-    _orb2Scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.08, 0.45, curve: Curves.elasticOut),
-      ),
-    );
-
-    _headerFade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
-    );
-    _headerSlide = Tween<Offset>(
-      begin: const Offset(0, -0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.20, 0.50, curve: Curves.easeOut),
-      ),
-    );
-
-    _cardFade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
-    );
-    _cardSlide = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.38, 0.65, curve: Curves.easeOut),
-      ),
-    );
-
-    _btn1Fade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.58, 0.76, curve: Curves.easeOut),
-    );
-
-    _ctrl.forward();
+    final reduceMotion =
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .accessibilityFeatures
+            .disableAnimations;
+    if (reduceMotion) {
+      _entranceCtrl.value = 1;
+    } else {
+      _entranceCtrl.forward();
+    }
   }
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    _ctrl.dispose();
+    _entranceCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    await ref
-        .read(authProvider.notifier)
-        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+  Future<void> _signInWithGoogle() async {
+    await ref.read(authProvider.notifier).signInWithGoogle();
     if (!mounted) return;
+
     final error = ref.read(authProvider).errorMessage;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
-      );
-    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error)));
+    } else if (ref.read(settingsProvider).isLoggedIn) {
       context.go('/shell/dashboard');
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    await ref.read(authProvider.notifier).signInWithGoogle();
-    if (!mounted) return;
-    final error = ref.read(authProvider).errorMessage;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark ? AppBrand.mintAccent : AppBrand.tealPrimary;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
+    final watermarkInset = BrandWatermarkBackground.reservedHeight(context);
+
+    return Scaffold(
+      body: BrandWatermarkBackground(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: FadeTransition(
+                opacity: _glowReveal,
+                child: LoginGlowBackdrop(
+                  primary: accent,
+                  secondary: AppBrand.mintAccent,
+                ),
+              ),
+            ),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+                  final height = constraints.maxHeight;
+                  final contentWidth =
+                      width *
+                      (constraints.biggest.shortestSide > _compactBreakpoint
+                          ? 0.55
+                          : 0.86);
+
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      (width - contentWidth) / 2,
+                      0,
+                      (width - contentWidth) / 2,
+                      watermarkInset,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: math.max(0, height - watermarkInset),
+                      ),
+                      child: IntrinsicHeight(
+                        child: _buildContent(width, height, accent),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            if (isLoading) _LoadingOverlay(accent: accent),
+          ],
+        ),
+      ),
+    );
   }
+
+  Widget _buildContent(double width, double height, Color accent) {
+    final gap = height * 0.016;
+    final buttons = <Widget>[
+      AuthSocialButton(
+        primary: true,
+        icon: SvgPicture.string(_googleIcon),
+        label: 'Continue with Google',
+        onPressed: _signInWithGoogle,
+      ),
+      AuthSocialButton(
+        icon: SvgPicture.string(_facebookIcon),
+        label: 'Continue with Facebook',
+        onPressed: () {},
+      ),
+      if (_showAppleButton)
+        AuthSocialButton(
+          icon: const FaIcon(FontAwesomeIcons.apple),
+          label: 'Continue with Apple',
+          onPressed: () {},
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(flex: 3),
+        RevealTransition(
+          animation: _logoReveal,
+          slideFrom: const Offset(0, -0.25),
+          scaleFrom: 0.85,
+          child: Center(
+            child: BrandWordmark(width: math.min(width * 0.82, height * 0.75)),
+          ),
+        ),
+        SizedBox(height: height * 0.03),
+        RevealTransition(
+          animation: _titleReveal,
+          slideFrom: const Offset(0, 0.4),
+          child: const _Headline(),
+        ),
+        SizedBox(height: height * 0.008),
+        RevealTransition(
+          animation: _subtitleReveal,
+          slideFrom: const Offset(0, 0.4),
+          child: const _Subtitle(),
+        ),
+        const Spacer(flex: 2),
+        for (var i = 0; i < buttons.length; i++) ...[
+          if (i > 0) SizedBox(height: gap),
+          RevealTransition(
+            animation: _buttonReveals[i],
+            slideFrom: const Offset(0, 0.5),
+            child: buttons[i],
+          ),
+        ],
+        SizedBox(height: height * 0.03),
+        RevealTransition(
+          animation: _footerReveal,
+          child: _SignUpPrompt(
+            accent: accent,
+            onTap: () => context.push('/register'),
+          ),
+        ),
+        const Spacer(),
+      ],
+    );
+  }
+}
+
+class _Headline extends StatelessWidget {
+  const _Headline();
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final sw = size.width;
-    final sh = size.height;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
-      body: Stack(
-        children: [
-          // Background gradient
-          FadeTransition(
-            opacity: _bgFade,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0A0E21),
-                    Color(0xFF0D1B2A),
-                    Color(0xFF0A1628),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Top-left orb
-          Positioned(
-            top: -sh * 0.08,
-            left: -sw * 0.20,
-            child: ScaleTransition(
-              scale: _orb1Scale,
-              child: Container(
-                width: sw * 0.75,
-                height: sw * 0.75,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.PRIMARY.withValues(alpha: 0.55),
-                      AppColors.ACCENT.withValues(alpha: 0.25),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom-right orb
-          Positioned(
-            bottom: sh * 0.10,
-            right: -sw * 0.25,
-            child: ScaleTransition(
-              scale: _orb2Scale,
-              child: Container(
-                width: sw * 0.80,
-                height: sw * 0.80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF1DE9B6).withValues(alpha: 0.30),
-                      AppColors.ACCENT.withValues(alpha: 0.15),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.50, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Small accent orb center-right
-          Positioned(
-            top: sh * 0.30,
-            right: -sw * 0.10,
-            child: ScaleTransition(
-              scale: _orb1Scale,
-              child: Container(
-                width: sw * 0.40,
-                height: sw * 0.40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF7C4DFF).withValues(alpha: 0.30),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                // Header: logo + branding
-                Expanded(
-                  flex: 4,
-                  child: FadeTransition(
-                    opacity: _headerFade,
-                    child: SlideTransition(
-                      position: _headerSlide,
-                      child: _buildHeader(sw, sh),
-                    ),
-                  ),
-                ),
-
-                // Glass card
-                Expanded(
-                  flex: 6,
-                  child: FadeTransition(
-                    opacity: _cardFade,
-                    child: SlideTransition(
-                      position: _cardSlide,
-                      child: _buildGlassCard(sw, sh),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Loading overlay
-          if (ref.watch(authProvider).isLoading) _buildLoadingOverlay(sw),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(double sw, double sh) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: sw * 0.08),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Glass logo container
-          ClipRRect(
-            borderRadius: BorderRadius.circular(sw * 0.06),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Container(
-                width: sw * 0.22,
-                height: sw * 0.22,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(sw * 0.06),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.20),
-                    width: 1.2,
-                  ),
-                ),
-                padding: EdgeInsets.all(sw * 0.035),
-                child: Image.asset(Imageconstants.applogo),
-              ),
-            ),
-          ),
-          SizedBox(height: sh * 0.022),
-          Text(
-            'Xpenser',
-            style: GoogleFonts.montserrat(
-              fontSize: sw * 0.082,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 1.5,
-            ),
-          ),
-          SizedBox(height: sh * 0.008),
-          Text(
-            'Smart money management',
-            style: GoogleFonts.inter(
-              fontSize: sw * 0.036,
-              color: Colors.white.withValues(alpha: 0.55),
-              fontWeight: FontWeight.w400,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlassCard(double sw, double sh) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.06, 0, sw * 0.06, sh * 0.02),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(sw * 0.07),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(sw * 0.07),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1.2,
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: sw * 0.07,
-                vertical: sh * 0.035,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Welcome back',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.montserrat(
-                        fontSize: sw * 0.055,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: sh * 0.008),
-                    Text(
-                      'Sign in to continue',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: sw * 0.033,
-                        color: Colors.white.withValues(alpha: 0.50),
-                      ),
-                    ),
-                    SizedBox(height: sh * 0.032),
-
-                    // Email Field
-                    TextFormField(
-                      controller: _emailCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Email',
-                        hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5)),
-                        prefixIcon: const Icon(Icons.email_outlined,
-                            color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Email is required';
-                        if (!v.contains('@')) return 'Enter a valid email';
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: sh * 0.016),
-
-                    // Password Field
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      obscureText: _obscure,
-                      decoration: InputDecoration(
-                        hintText: 'Password',
-                        hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5)),
-                        prefixIcon: const Icon(Icons.lock_outline_rounded,
-                            color: Colors.white70),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.white70,
-                          ),
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Password is required';
-                        return null;
-                      },
-                    ),
-                    
-                    // Forgot Password Link
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push('/forgot-password'),
-                        child: Text(
-                          'Forgot Password?',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.70),
-                            fontSize: sw * 0.033,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: sh * 0.010),
-
-                    // Sign In Button
-                    GestureDetector(
-                      onTap: _handleLogin,
-                      child: Container(
-                        height: sh * 0.060,
-                        decoration: BoxDecoration(
-                          color: AppColors.PRIMARY,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Sign In',
-                            style: GoogleFonts.inter(
-                              fontSize: sw * 0.038,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: sh * 0.024),
-
-                    // Divider row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            thickness: 0.8,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: sw * 0.03),
-                          child: Text(
-                            'Or',
-                            style: GoogleFonts.inter(
-                              color: Colors.white.withValues(alpha: 0.40),
-                              fontSize: sw * 0.031,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            thickness: 0.8,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: sh * 0.024),
-
-                    // Google
-                    FadeTransition(
-                      opacity: _btn1Fade,
-                      child: _GlassButton(
-                        icon: SvgPicture.string(_googleIcon),
-                        label: 'Continue with Google',
-                        onTap: _handleGoogleSignIn,
-                      ),
-                    ),
-                    SizedBox(height: sh * 0.032),
-
-                    // Sign up button — ghost style
-                    GestureDetector(
-                      onTap: () => context.push('/register'),
-                      child: Container(
-                        height: sh * 0.060,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(sw * 0.035),
-                          border: Border.all(
-                            color: AppColors.ACCENT.withValues(alpha: 0.60),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Create an account',
-                            style: GoogleFonts.inter(
-                              fontSize: sw * 0.038,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.ACCENT,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingOverlay(double sw) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.40),
-        child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(sw * 0.05),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                padding: EdgeInsets.all(sw * 0.08),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(sw * 0.05),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.20),
-                  ),
-                ),
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2.5,
-                ),
-              ),
-            ),
-          ),
-        ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+    return Text(
+      'Welcome back',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: shortestSide * 0.075,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -shortestSide * 0.0015,
+        color: isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight,
       ),
     );
   }
 }
 
-// ─── Glass social button ───────────────────────────────────────────────────────
+class _Subtitle extends StatelessWidget {
+  const _Subtitle();
 
-class _GlassButton extends StatefulWidget {
-  const _GlassButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+    return Text(
+      'Sign in to take control of your money.',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: shortestSide * 0.038,
+        height: 1.4,
+        color:
+            isDark
+                ? AppBrand.textPrimaryDark.withValues(alpha: 0.7)
+                : AppBrand.textSecondaryLight,
+      ),
+    );
+  }
+}
 
-  final Widget icon;
-  final String label;
+class _SignUpPrompt extends StatelessWidget {
+  const _SignUpPrompt({required this.accent, required this.onTap});
+
+  final Color accent;
   final VoidCallback onTap;
 
   @override
-  State<_GlassButton> createState() => _GlassButtonState();
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fontSize = MediaQuery.sizeOf(context).shortestSide * 0.036;
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          'New to Xpenser?',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: fontSize,
+            color:
+                isDark
+                    ? AppBrand.textPrimaryDark.withValues(alpha: 0.7)
+                    : AppBrand.textSecondaryLight,
+          ),
+        ),
+        TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(foregroundColor: accent),
+          child: Text(
+            'Create an account',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _GlassButtonState extends State<_GlassButton> {
-  bool _pressed = false;
+class _LoadingOverlay extends StatelessWidget {
+  const _LoadingOverlay({required this.accent});
+
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(sw * 0.035),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              height: sh * 0.068,
-              decoration: BoxDecoration(
-                color:
-                    _pressed
-                        ? Colors.white.withValues(alpha: 0.18)
-                        : Colors.white.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(sw * 0.035),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.20),
-                  width: 1.0,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: sw * 0.052,
-                    height: sw * 0.052,
-                    child: widget.icon,
-                  ),
-                  SizedBox(width: sw * 0.038),
-                  Text(
-                    widget.label,
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.038,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+    final indicatorSize = MediaQuery.sizeOf(context).shortestSide * 0.1;
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.4),
+        child: Center(
+          child: SizedBox.square(
+            dimension: indicatorSize,
+            child: CircularProgressIndicator(
+              strokeWidth: indicatorSize * 0.08,
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
         ),
@@ -659,3 +331,7 @@ const _googleIcon =
 <path d="M8.16265 3.15623C9.69541 3.15623 10.7293 3.81831 11.3189 4.3716L13.6226 2.12231C12.2077 0.807206 10.3666 0 8.16265 0C4.9701 0 2.2129 1.83206 0.870605 4.49853L3.50987 6.54831C4.17202 4.58019 6.00408 3.15623 8.16265 3.15623Z" fill="#EB4335"/>
 </svg>''';
 
+const _facebookIcon =
+    '''<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 8.049C16 3.603 12.418 0 8 0S0 3.603 0 8.049C0 12.067 2.926 15.397 6.75 16V10.375H4.719V8.049H6.75V6.275C6.75 4.27 7.944 3.163 9.771 3.163C10.646 3.163 11.562 3.32 11.562 3.32V5.29H10.553C9.559 5.29 9.25 5.907 9.25 6.541V8.049H11.469L11.114 10.375H9.25V16C13.074 15.397 16 12.067 16 8.049Z" fill="#1877F2"/>
+</svg>''';

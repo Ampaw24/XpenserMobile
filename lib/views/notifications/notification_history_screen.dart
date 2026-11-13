@@ -184,10 +184,8 @@ class _NotificationTile extends StatelessWidget {
 
 class _TypeIcon extends StatelessWidget {
   const _TypeIcon({required this.type, required this.sw});
-
   final String type;
   final double sw;
-
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (type) {
