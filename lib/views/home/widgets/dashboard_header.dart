@@ -1,129 +1,205 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/widgets/user_avatar.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class DashboardHeader extends ConsumerWidget {
+class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
     super.key,
     required this.userName,
-    required this.profilePicUrl,
+    required this.photoUrl,
   });
 
   final String userName;
-  final String profilePicUrl;
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final firstName = userName.trim().split(RegExp(r'\s+')).first;
+
+    return Row(
+      children: [
+        Semantics(
+          button: true,
+          label: 'Open profile',
+          child: GestureDetector(
+            onTap: () => context.go('/shell/settings'),
+            child: UserAvatar(
+              name: userName,
+              photoUrl: photoUrl,
+              diameter: context.rs(46),
+            ),
+          ),
+        ),
+        SizedBox(width: context.rs(12)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _GreetingLine(period: _DayPeriod.now()),
+              SizedBox(height: context.rs(2)),
+              Text(
+                firstName.isEmpty ? 'Welcome back' : firstName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: context.rs(20),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                  color: context.palette.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: context.rs(12)),
+        const _HeaderActions(),
+      ],
+    );
+  }
+}
+
+enum _DayPeriod {
+  morning('Good morning', AppIcons.morning, Color(0xFFF59E0B)),
+  afternoon('Good afternoon', AppIcons.afternoon, Color(0xFFF97316)),
+  evening('Good evening', AppIcons.evening, Color(0xFF818CF8));
+
+  const _DayPeriod(this.greeting, this.icon, this.tint);
+
+  final String greeting;
+  final IconData icon;
+  final Color tint;
+
+  static _DayPeriod now() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return morning;
+    if (hour >= 12 && hour < 17) return afternoon;
+    return evening;
+  }
+}
+
+class _GreetingLine extends StatelessWidget {
+  const _GreetingLine({required this.period});
+
+  final _DayPeriod period;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        HugeIcon(icon: period.icon, color: period.tint, size: context.rs(15)),
+        SizedBox(width: context.rs(5)),
+        Flexible(
+          child: Text(
+            period.greeting,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: context.rs(13),
+              fontWeight: FontWeight.w500,
+              color: context.palette.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderActions extends ConsumerWidget {
+  const _HeaderActions();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sw = MediaQuery.of(context).size.width;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final greeting = _greeting();
     final unread = ref.watch(unreadNotificationCountProvider);
+    final iconColor = context.palette.textPrimary;
 
-    final titleColor = isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
-    final btnBg = isDark ? AppBrand.surfaceDark : Colors.white;
-    final btnBorder = isDark ? AppBrand.borderDark : AppBrand.borderLight;
-    final btnIconColor = isDark ? Colors.white : AppBrand.textPrimaryLight;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.05, 12, sw * 0.05, 0),
+    return Container(
+      padding: EdgeInsets.all(context.rs(4)),
+      decoration: BoxDecoration(
+        color: context.palette.surface,
+        borderRadius: BorderRadius.circular(context.rs(28)),
+        border: Border.all(color: context.palette.border),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  greeting,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    color: subtitleColor,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  userName.isNotEmpty ? userName : 'Welcome',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: titleColor,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
-            ),
+          _HeaderIconButton(
+            icon: AppIcons.search,
+            color: iconColor,
+            tooltip: 'Search transactions',
+            onTap: () => context.go('/shell/transactions'),
           ),
-          // Notification bell with unread badge
-          GestureDetector(
+          _HeaderIconButton(
+            icon: AppIcons.bell,
+            color: iconColor,
+            tooltip: 'Notifications',
+            showBadge: unread > 0,
             onTap: () => context.push('/notifications'),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: btnBg,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: btnBorder,
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Center(
-                    child: HugeIcon(
-                      icon: AppIcons.bell,
-                      color: btnIconColor,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                if (unread > 0)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE11D48),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isDark ? AppBrand.backgroundDark : Colors.white,
-                          width: 1.5,
-                        ),
-                      ),
-                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                      child: Text(
-                        unread > 99 ? '99+' : unread.toString(),
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
           ),
         ],
       ),
     );
   }
+}
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+    this.showBadge = false,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool showBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = context.rs(40);
+    final dotSize = context.rs(8);
+
+    return Tooltip(
+      message: tooltip,
+      child: InkResponse(
+        onTap: onTap,
+        radius: size / 2,
+        child: SizedBox.square(
+          dimension: size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              HugeIcon(icon: icon, color: color, size: context.rs(21)),
+              if (showBadge)
+                Positioned(
+                  top: size * 0.24,
+                  right: size * 0.26,
+                  child: Container(
+                    width: dotSize,
+                    height: dotSize,
+                    decoration: BoxDecoration(
+                      color: context.palette.danger,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: context.palette.surface,
+                        width: context.rs(1.5),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

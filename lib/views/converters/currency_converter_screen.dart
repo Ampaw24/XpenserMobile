@@ -1,5 +1,13 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
+import 'package:expenser/core/utils/widgets/app_select_field.dart';
+import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/viewmodels/currency_viewmodel.dart';
+import 'package:expenser/viewmodels/exchange_rates_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/sheet_title.dart';
+import 'package:expenser/views/converters/widgets/conversion_result_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +24,14 @@ class _CurrencyConverterScreenState
   final _amountCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(exchangeRatesProvider.notifier).ensureFresh(),
+    );
+  }
+
+  @override
   void dispose() {
     _amountCtrl.dispose();
     super.dispose();
@@ -25,171 +41,110 @@ class _CurrencyConverterScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(currencyProvider);
     final notifier = ref.read(currencyProvider.notifier);
+    final rates = ref.watch(exchangeRatesProvider);
+    final ratesNotifier = ref.read(exchangeRatesProvider.notifier);
+    final palette = context.palette;
+    final currencies = CurrencyNotifier.supportedBy(rates.rates);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      padding: EdgeInsets.fromLTRB(
+        context.rs(20),
+        0,
+        context.rs(20),
+        MediaQuery.viewInsetsOf(context).bottom + context.rs(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: AppColors.PRIMARY,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Currency Converter',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          TextField(
+          const SheetTitle('Currency Converter'),
+          SizedBox(height: context.rs(20)),
+          AppTextField(
             controller: _amountCtrl,
+            label: 'Amount',
+            hint: '0.00',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: 'Amount',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                borderSide: const BorderSide(color: AppColors.PRIMARY),
-              ),
-              prefixIcon: const Icon(Icons.attach_money_rounded),
-            ),
-            onChanged: (v) => notifier.convert(double.tryParse(v) ?? 0.0),
+            inputFormatters: [AppTextField.decimalFormatter],
+            onChanged: (v) => notifier.setAmount(double.tryParse(v) ?? 0.0),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: context.rs(16)),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: _CurrencyDropdown(
+                child: _CurrencySelect(
                   label: 'From',
+                  currencies: currencies,
                   value: state.fromCurrency,
                   onChanged: notifier.setFromCurrency,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.fromLTRB(
+                  context.rs(8),
+                  0,
+                  context.rs(8),
+                  context.rs(4),
+                ),
                 child: IconButton(
                   onPressed: notifier.swapCurrencies,
+                  tooltip: 'Swap currencies',
                   style: IconButton.styleFrom(
-                    backgroundColor: AppColors.PRIMARY.withValues(alpha: 0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    backgroundColor: palette.accent.withValues(alpha: 0.12),
+                    foregroundColor: palette.accent,
+                    shape: const CircleBorder(),
                   ),
-                  icon: const Icon(
-                    Icons.swap_horiz_rounded,
-                    color: AppColors.PRIMARY,
-                  ),
+                  icon: Icon(AppIcons.transfer, size: context.rs(20)),
                 ),
               ),
               Expanded(
-                child: _CurrencyDropdown(
+                child: _CurrencySelect(
                   label: 'To',
+                  currencies: currencies,
                   value: state.toCurrency,
                   onChanged: notifier.setToCurrency,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.PRIMARY, AppColors.ACCENT],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '${_amountCtrl.text.isEmpty ? '0' : _amountCtrl.text} ${state.fromCurrency}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-                const Icon(
-                  Icons.arrow_downward_rounded,
-                  color: Colors.white70,
-                  size: 18,
-                ),
-                Text(
-                  '${state.result.toStringAsFixed(2)} ${state.toCurrency}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '1 ${state.fromCurrency} = ${_rate(state).toStringAsFixed(4)} ${state.toCurrency}',
-                  style: const TextStyle(color: Colors.white60, fontSize: 11),
-                ),
-              ],
-            ),
+          SizedBox(height: context.rs(20)),
+          ConversionResultCard(
+            conversion: state,
+            rates: rates,
+            onRefresh: ratesNotifier.refresh,
+            onRetry: ratesNotifier.retry,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: context.rs(8)),
         ],
       ),
     );
   }
-
-  double _rate(CurrencyState state) {
-    if (state.amount == 0) return 0;
-    return state.result / state.amount;
-  }
 }
 
-class _CurrencyDropdown extends StatelessWidget {
+class _CurrencySelect extends StatelessWidget {
   final String label;
+  final List<String> currencies;
   final String value;
   final ValueChanged<String> onChanged;
 
-  const _CurrencyDropdown({
+  const _CurrencySelect({
     required this.label,
+    required this.currencies,
     required this.value,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        border: UnderlineInputBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      child: DropdownButton<String>(
-        value: value,
-        isExpanded: true,
-        underline: const SizedBox(),
-        items:
-            CurrencyNotifier.currencies
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-        onChanged: (v) {
-          if (v != null) onChanged(v);
-        },
-      ),
+    return AppSelectField<String>(
+      label: label,
+      sheetTitle: 'Convert $label',
+      value: value,
+      options: [
+        for (final code in currencies)
+          AppSelectOption(value: code, label: code),
+      ],
+      onChanged: onChanged,
     );
   }
 }

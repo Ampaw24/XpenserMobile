@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -7,6 +9,13 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use(::load)
+}
+val facebookAppId: String = localProperties.getProperty("facebook.appId", "")
+val facebookClientToken: String = localProperties.getProperty("facebook.clientToken", "")
 
 android {
     namespace = "com.example.expenser"
@@ -32,6 +41,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        resValue("string", "facebook_app_id", facebookAppId)
+        resValue("string", "facebook_client_token", facebookClientToken)
+        resValue("string", "fb_login_protocol_scheme", "fb$facebookAppId")
     }
 
     buildTypes {

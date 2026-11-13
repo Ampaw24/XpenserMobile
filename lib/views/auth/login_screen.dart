@@ -70,8 +70,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.dispose();
   }
 
-  Future<void> _signInWithGoogle() async {
-    await ref.read(authProvider.notifier).signInWithGoogle();
+  Future<void> _signInWithGoogle() =>
+      _socialSignIn(ref.read(authProvider.notifier).signInWithGoogle);
+
+  Future<void> _signInWithFacebook() =>
+      _socialSignIn(ref.read(authProvider.notifier).signInWithFacebook);
+
+  Future<void> _socialSignIn(Future<void> Function() signIn) async {
+    await signIn();
     if (!mounted) return;
 
     final error = ref.read(authProvider).errorMessage;
@@ -153,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       AuthSocialButton(
         icon: SvgPicture.string(_facebookIcon),
         label: 'Continue with Facebook',
-        onPressed: () {},
+        onPressed: _signInWithFacebook,
       ),
       if (_showAppleButton)
         AuthSocialButton(

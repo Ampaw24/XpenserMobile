@@ -1,13 +1,23 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/utils/extensions/color_extensions.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_color_picker.dart';
+import 'package:expenser/core/utils/widgets/app_field_label.dart';
+import 'package:expenser/core/utils/widgets/app_form_layout.dart';
+import 'package:expenser/core/utils/widgets/app_icon_picker.dart';
+import 'package:expenser/core/utils/widgets/app_identity_preview.dart';
+import 'package:expenser/core/utils/widgets/app_primary_button.dart';
+import 'package:expenser/core/utils/widgets/app_tap_field.dart';
+import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditSavingsGoalScreen extends ConsumerStatefulWidget {
@@ -24,11 +34,12 @@ class _AddEditSavingsGoalScreenState
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _targetCtrl = TextEditingController();
-  final _savedCtrl = TextEditingController(text: '0');
+  final _savedCtrl = TextEditingController();
 
   DateTime _targetDate = DateTime.now().add(const Duration(days: 30));
   String _colorHex = 'FF4CAF50';
   int _iconCodePoint = HugeIcons.strokeRoundedSavings.codePoint;
+  SavingsGoalModel? _existing;
   bool _isLoading = false;
 
   bool get _isEditing => widget.goalId != null;
@@ -70,6 +81,7 @@ class _AddEditSavingsGoalScreenState
     _targetCtrl.text = g.targetAmount.toStringAsFixed(2);
     _savedCtrl.text = g.savedAmount.toStringAsFixed(2);
     setState(() {
+      _existing = g;
       _targetDate = g.targetDate;
       _colorHex = g.colorHex;
       _iconCodePoint = g.iconCodePoint;
@@ -85,355 +97,175 @@ class _AddEditSavingsGoalScreenState
   }
 
   Future<void> _pickDate() async {
+    FocusScope.of(context).unfocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _targetDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
-      builder:
-          (ctx, child) => Theme(
-            data: ThemeData.dark().copyWith(
-              colorScheme: const ColorScheme.dark(
-                primary: AppColors.ACCENT,
-                onPrimary: Colors.white,
-                surface: Color(0xFF1A2035),
-              ),
-            ),
-            child: child!,
-          ),
     );
-    if (picked != null) setState(() => _targetDate = picked);
+    if (picked != null && mounted) setState(() => _targetDate = picked);
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading || !_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    final goal = SavingsGoalModel(
-      id: _isEditing ? widget.goalId! : const Uuid().v4(),
-      name: _nameCtrl.text.trim(),
-      targetAmount: double.parse(_targetCtrl.text),
-      savedAmount: double.tryParse(_savedCtrl.text) ?? 0,
-      targetDate: _targetDate,
-      colorHex: _colorHex,
-      iconCodePoint: _iconCodePoint,
-      createdAt: DateTime.now(),
-    );
-    final notifier = ref.read(savingsGoalProvider.notifier);
-    if (_isEditing) {
-      await notifier.updateGoal(goal);
-    } else {
-      await notifier.addGoal(goal);
-      await ref.read(fcmServiceProvider).showLocalNotification(
-        title: 'Savings Goal Created',
-        body: '"${goal.name}" savings goal has been created.',
-        type: 'savings',
-        route: '/savings',
+
+    final name = _nameCtrl.text.trim();
+    final target = double.parse(_targetCtrl.text);
+    final saved = double.tryParse(_savedCtrl.text) ?? 0;
+    final goal =
+        _existing?.copyWith(
+          name: name,
+          targetAmount: target,
+          savedAmount: saved,
+          targetDate: _targetDate,
+          colorHex: _colorHex,
+          iconCodePoint: _iconCodePoint,
+        ) ??
+        SavingsGoalModel(
+          id: const Uuid().v4(),
+          name: name,
+          targetAmount: target,
+          savedAmount: saved,
+          targetDate: _targetDate,
+          colorHex: _colorHex,
+          iconCodePoint: _iconCodePoint,
+          createdAt: DateTime.now(),
+        );
+
+    try {
+      final notifier = ref.read(savingsGoalProvider.notifier);
+      if (_isEditing) {
+        await notifier.updateGoal(goal);
+      } else {
+        await notifier.addGoal(goal);
+        await ref
+            .read(fcmServiceProvider)
+            .showLocalNotification(
+              title: 'Savings Goal Created',
+              body: '"${goal.name}" savings goal has been created.',
+              type: 'savings',
+              route: '/savings',
+            );
+      }
+      if (mounted) context.pop();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the goal. Please try again.'),
+        ),
       );
     }
-    if (mounted) context.pop();
   }
 
-  InputDecoration _inputDeco(String label) => InputDecoration(
-    labelText: label,
-    labelStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
-    filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.06),
-    border: UnderlineInputBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-    ),
-    enabledBorder: UnderlineInputBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-    ),
-    focusedBorder: UnderlineInputBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-      borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
-    ),
-  );
+  String? _validateTarget(String? value) {
+    final target = double.tryParse(value ?? '');
+    if (target == null || target <= 0) return 'Enter a target above zero';
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final palette = context.palette;
+    final color = colorFromHex(_colorHex, fallback: palette.accent);
+    final icon = _icons.firstWhere(
+      (i) => i.codePoint == _iconCodePoint,
+      orElse: () => _icons.first,
+    );
+    final dateLabel = DateFormat.yMMMd().format(_targetDate);
+    final amountKeyboard = const TextInputType.numberWithOptions(decimal: true);
+    final fieldGap = SizedBox(height: context.rs(16));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        title: Text(
-          _isEditing ? 'Edit Goal' : 'New Savings Goal',
-          style: GoogleFonts.montserrat(
-            fontSize: sw * 0.046,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        title: Text(_isEditing ? 'Edit Goal' : 'New Savings Goal'),
         leading: IconButton(
-          icon: const Icon(AppIcons.arrowLeft, color: Colors.white),
+          tooltip: 'Back',
+          icon: Icon(AppIcons.arrowLeft, size: context.rs(22)),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-              sw * 0.06,
-              sh * 0.010,
-              sw * 0.06,
-              sh * 0.06,
-            ),
+      body: AppFormLayout(
+        formKey: _formKey,
+        action: AppPrimaryButton(
+          label: _isEditing ? 'Save Changes' : 'Create Goal',
+          isLoading: _isLoading,
+          onPressed: _submit,
+        ),
+        children: [
+          AppIdentityPreview(
+            icon: icon,
+            color: color,
+            name: _nameCtrl,
+            placeholder: 'Goal name',
+            subtitle: 'Target date · $dateLabel',
+          ),
+          SizedBox(height: context.rs(28)),
+          AppTextField(
+            controller: _nameCtrl,
+            label: 'Goal name',
+            hint: 'e.g. New laptop',
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            validator:
+                (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Give this goal a name'
+                        : null,
+          ),
+          fieldGap,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _nameCtrl,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: sw * 0.038,
-                ),
-                cursorColor: AppColors.ACCENT,
-                decoration: _inputDeco('Goal Name'),
-                validator:
-                    (v) =>
-                        (v == null || v.trim().isEmpty)
-                            ? 'Name required'
-                            : null,
-              ),
-              SizedBox(height: sh * 0.018),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _targetCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: sw * 0.038,
-                      ),
-                      cursorColor: AppColors.ACCENT,
-                      decoration: _inputDeco('Target Amount'),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Required';
-                        if (double.tryParse(v) == null) return 'Invalid';
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(width: sw * 0.030),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _savedCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: sw * 0.038,
-                      ),
-                      cursorColor: AppColors.ACCENT,
-                      decoration: _inputDeco('Already Saved'),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sh * 0.018),
-              GestureDetector(
-                onTap: _pickDate,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.042,
-                    vertical: sh * 0.016,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        AppIcons.calendar,
-                        color: Colors.white.withValues(alpha: 0.45),
-                        size: sw * 0.045,
-                      ),
-                      SizedBox(width: sw * 0.026),
-                      Text(
-                        'Target: ${_targetDate.day}/${_targetDate.month}/${_targetDate.year}',
-                        style: GoogleFonts.inter(
-                          fontSize: sw * 0.036,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+              Expanded(
+                child: AppTextField(
+                  controller: _targetCtrl,
+                  label: 'Target amount',
+                  hint: '0.00',
+                  keyboardType: amountKeyboard,
+                  inputFormatters: [AppTextField.decimalFormatter],
+                  textInputAction: TextInputAction.next,
+                  validator: _validateTarget,
                 ),
               ),
-              SizedBox(height: sh * 0.024),
-              Text(
-                'Color',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: sw * 0.032,
-                  color: Colors.white.withValues(alpha: 0.50),
+              SizedBox(width: context.rs(12)),
+              Expanded(
+                child: AppTextField(
+                  controller: _savedCtrl,
+                  label: 'Already saved',
+                  hint: '0.00',
+                  keyboardType: amountKeyboard,
+                  inputFormatters: [AppTextField.decimalFormatter],
                 ),
-              ),
-              SizedBox(height: sh * 0.012),
-              Wrap(
-                spacing: sw * 0.030,
-                runSpacing: sh * 0.012,
-                children:
-                    _colors.map((hex) {
-                      final color = Color(int.parse(hex, radix: 16));
-                      final isSelected = _colorHex == hex;
-                      return GestureDetector(
-                        onTap: () => setState(() => _colorHex = hex),
-                        child: Container(
-                          width: sw * 0.090,
-                          height: sw * 0.090,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border:
-                                isSelected
-                                    ? Border.all(color: Colors.white, width: 3)
-                                    : null,
-                            boxShadow:
-                                isSelected
-                                    ? [
-                                      BoxShadow(
-                                        color: color.withValues(alpha: 0.55),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                    : null,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              SizedBox(height: sh * 0.024),
-              Text(
-                'Icon',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: sw * 0.032,
-                  color: Colors.white.withValues(alpha: 0.50),
-                ),
-              ),
-              SizedBox(height: sh * 0.012),
-              Wrap(
-                spacing: sw * 0.030,
-                runSpacing: sh * 0.012,
-                children:
-                    _icons.map((icon) {
-                      final isSelected = icon.codePoint == _iconCodePoint;
-                      return GestureDetector(
-                        onTap:
-                            () =>
-                                setState(() => _iconCodePoint = icon.codePoint),
-                        child: Container(
-                          width: sw * 0.120,
-                          height: sw * 0.120,
-                          decoration: BoxDecoration(
-                            color:
-                                isSelected
-                                    ? AppColors.ACCENT.withValues(alpha: 0.20)
-                                    : Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(sw * 0.030),
-                            border: Border.all(
-                              color:
-                                  isSelected
-                                      ? AppColors.ACCENT
-                                      : Colors.white.withValues(alpha: 0.12),
-                            ),
-                          ),
-                          child: Icon(
-                            icon,
-                            color:
-                                isSelected
-                                    ? AppColors.ACCENT
-                                    : Colors.white.withValues(alpha: 0.40),
-                            size: sw * 0.058,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              SizedBox(height: sh * 0.036),
-              _GradientButton(
-                label: _isEditing ? 'Update Goal' : 'Create Goal',
-                isLoading: _isLoading,
-                onPressed: _isLoading ? null : _submit,
-                sw: sw,
-                sh: sh,
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GradientButton extends StatelessWidget {
-  final String label;
-  final bool isLoading;
-  final VoidCallback? onPressed;
-  final double sw, sh;
-  const _GradientButton({
-    required this.label,
-    required this.isLoading,
-    required this.onPressed,
-    required this.sw,
-    required this.sh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        height: sh * 0.065,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.PRIMARY, AppColors.ACCENT],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          fieldGap,
+          AppTapField(
+            label: 'Target date',
+            value: dateLabel,
+            prefixIcon: AppIcons.calendar,
+            onTap: _pickDate,
           ),
-          borderRadius: BorderRadius.circular(sw * 0.042),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.ACCENT.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child:
-            isLoading
-                ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-                : Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: sw * 0.040,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+          SizedBox(height: context.rs(28)),
+          const AppFieldLabel('Color'),
+          AppColorPicker(
+            options: _colors,
+            selectedHex: _colorHex,
+            onSelected: (hex) => setState(() => _colorHex = hex),
+          ),
+          SizedBox(height: context.rs(20)),
+          const AppFieldLabel('Icon'),
+          AppIconPicker(
+            options: _icons,
+            selectedCodePoint: _iconCodePoint,
+            color: color,
+            onSelected: (code) => setState(() => _iconCodePoint = code),
+          ),
+        ],
       ),
     );
   }

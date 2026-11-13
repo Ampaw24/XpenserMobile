@@ -1,6 +1,7 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SettingItem extends StatelessWidget {
   const SettingItem({
@@ -11,75 +12,89 @@ class SettingItem extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.backgroundColor,
+    this.trailing,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+
+  /// Defaults to `palette.accent`; pass `palette.danger` for destructive rows.
   final Color? iconColor;
+
+  /// Defaults to `palette.surface`.
   final Color? backgroundColor;
+
+  /// Defaults to a chevron.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
-    final effectiveIconColor = iconColor ?? AppColors.ACCENT;
+    final palette = context.palette;
+    final effectiveIconColor = iconColor ?? palette.accent;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: sh * 0.012),
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.rs(10)),
+      child: AppSurfaceCard(
+        onTap: onTap,
+        color: backgroundColor,
         padding: EdgeInsets.symmetric(
-          horizontal: sw * 0.042,
-          vertical: sh * 0.016,
-        ),
-        decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(sw * 0.042),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          horizontal: context.rs(14),
+          vertical: context.rs(12),
         ),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(sw * 0.022),
+              padding: EdgeInsets.all(context.rs(9)),
               decoration: BoxDecoration(
-                color: effectiveIconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(sw * 0.024),
+                color: Color.alphaBlend(
+                  effectiveIconColor.withValues(alpha: 0.10),
+                  palette.surfaceMuted,
+                ),
+                borderRadius: BorderRadius.circular(context.rs(12)),
               ),
-              child: Icon(icon, color: effectiveIconColor, size: sw * 0.052),
+              child: Icon(
+                icon,
+                color: effectiveIconColor,
+                size: context.rs(20),
+              ),
             ),
-            SizedBox(width: sw * 0.036),
+            SizedBox(width: context.rs(14)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.038,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: context.rs(15),
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: palette.textPrimary,
                     ),
                   ),
-                  SizedBox(height: sh * 0.002),
+                  SizedBox(height: context.rs(2)),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.030,
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: context.rs(12.5),
+                      color: palette.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: sw * 0.038,
-              color: Colors.white.withValues(alpha: 0.25),
-            ),
+            SizedBox(width: context.rs(8)),
+            trailing ??
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: context.rs(14),
+                  color: palette.textMuted,
+                ),
           ],
         ),
       ),

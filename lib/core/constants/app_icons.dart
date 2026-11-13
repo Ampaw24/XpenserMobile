@@ -11,6 +11,9 @@ class AppIcons {
   static const IconData navBudgets = HugeIcons.strokeRoundedPieChart01;
   static const IconData navAccounts = HugeIcons.strokeRoundedWallet01;
   static const IconData navSettings = HugeIcons.strokeRoundedSettings01;
+  static const IconData navProfile = HugeIcons.strokeRoundedUser;
+  static const IconData navCenter =
+      HugeIcons.strokeRoundedArrowDataTransferHorizontal;
 
   // ── Actions ───────────────────────────────────────────────────────────────
   static const IconData add = HugeIcons.strokeRoundedAdd01;
@@ -20,6 +23,18 @@ class AppIcons {
   static const IconData calendar = HugeIcons.strokeRoundedCalendar01;
   static const IconData arrowLeft = HugeIcons.strokeRoundedArrowLeft01;
   static const IconData arrowRight = HugeIcons.strokeRoundedArrowRight01;
+  static const IconData arrowForward = HugeIcons.strokeRoundedArrowRight02;
+  static const IconData search = HugeIcons.strokeRoundedSearch01;
+  static const IconData send = HugeIcons.strokeRoundedSent;
+  static const IconData chartBars = HugeIcons.strokeRoundedChartColumn;
+  static const IconData show = HugeIcons.strokeRoundedView;
+  static const IconData hide = HugeIcons.strokeRoundedViewOff;
+  static const IconData wallet = HugeIcons.strokeRoundedWallet02;
+
+  // ── Time of day ───────────────────────────────────────────────────────────
+  static const IconData morning = HugeIcons.strokeRoundedSun03;
+  static const IconData afternoon = HugeIcons.strokeRoundedSunset;
+  static const IconData evening = HugeIcons.strokeRoundedMoon02;
 
   // ── Status / Indicators ───────────────────────────────────────────────────
   static const IconData arrowUp = HugeIcons.strokeRoundedArrowUp01;

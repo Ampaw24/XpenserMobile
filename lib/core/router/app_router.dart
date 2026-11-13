@@ -1,16 +1,20 @@
+import 'package:expenser/core/router/app_page_transitions.dart';
 import 'package:expenser/core/router/route_guard.dart';
+import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:expenser/views/auth/forgot_password_screen.dart';
 import 'package:expenser/views/auth/login_screen.dart';
 import 'package:expenser/views/auth/register_screen.dart';
 import 'package:expenser/views/onboarding/onboarding_screen.dart';
 import 'package:expenser/views/shell/app_shell.dart';
+import 'package:expenser/views/shell/widgets/animated_branch_container.dart';
 import 'package:expenser/views/splash/splash_screen.dart';
 import 'package:expenser/views/home/dashboard_screen.dart';
 import 'package:expenser/views/transactions/transaction_list_screen.dart';
 import 'package:expenser/views/transactions/add_edit_transaction_screen.dart';
 import 'package:expenser/views/budgets/budgets_screen.dart';
 import 'package:expenser/views/budgets/add_edit_budget_screen.dart';
+import 'package:expenser/views/budgets/budget_plan_detail_screen.dart';
 import 'package:expenser/views/budgets/create_budget_wizard.dart';
 import 'package:expenser/views/accounts/accounts_screen.dart';
 import 'package:expenser/views/accounts/add_edit_account_screen.dart';
@@ -48,19 +52,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return RouteGuard(settings).redirect(state.uri.path);
     },
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(
+        path: '/splash',
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.fadeThrough(state, const SplashScreen()),
+      ),
       GoRoute(
         path: '/onboarding',
-        builder: (_, __) => const OnboardingScreen(),
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.fadeThrough(state, const OnboardingScreen()),
       ),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(
+        path: '/login',
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.fadeThrough(state, const LoginScreen()),
+      ),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(
         path: '/forgot-password',
         builder: (_, __) => const ForgotPasswordScreen(),
       ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) => AppShell(shell: shell),
+      StatefulShellRoute(
+        pageBuilder:
+            (context, state, shell) =>
+                AppPageTransitions.fadeThrough(state, AppShell(shell: shell)),
+        navigatorContainerBuilder:
+            (context, shell, children) => AnimatedBranchContainer(
+              currentIndex: shell.currentIndex,
+              children: children,
+            ),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -106,7 +129,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/transactions/add',
-        builder: (_, __) => const AddEditTransactionScreen(),
+        pageBuilder:
+            (_, state) => AppPageTransitions.modal(
+              state,
+              AddEditTransactionScreen(
+                initialType:
+                    TransactionType.values.asNameMap()[state
+                        .uri
+                        .queryParameters['type']],
+              ),
+            ),
       ),
       GoRoute(
         path: '/transactions/:id/edit',
@@ -117,7 +149,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/accounts/add',
-        builder: (_, __) => const AddEditAccountScreen(),
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.modal(state, const AddEditAccountScreen()),
       ),
       GoRoute(
         path: '/accounts/:id/edit',
@@ -127,11 +161,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/budgets/create',
-        builder: (_, __) => const CreateBudgetWizard(),
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.modal(state, const CreateBudgetWizard()),
+      ),
+      GoRoute(
+        path: '/budgets/plan/:planId',
+        builder:
+            (_, state) =>
+                BudgetPlanDetailScreen(planId: state.pathParameters['planId']!),
+      ),
+      GoRoute(
+        path: '/budgets/plan/:planId/edit',
+        pageBuilder:
+            (_, state) => AppPageTransitions.modal(
+              state,
+              CreateBudgetWizard(planId: state.pathParameters['planId']),
+            ),
       ),
       GoRoute(
         path: '/budgets/add',
-        builder: (_, __) => const AddEditBudgetScreen(),
+        pageBuilder:
+            (_, state) =>
+                AppPageTransitions.modal(state, const AddEditBudgetScreen()),
       ),
       GoRoute(
         path: '/budgets/:id/edit',
@@ -146,7 +198,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/savings', builder: (_, __) => const SavingsScreen()),
       GoRoute(
         path: '/savings/add',
-        builder: (_, __) => const AddEditSavingsGoalScreen(),
+        pageBuilder:
+            (_, state) => AppPageTransitions.modal(
+              state,
+              const AddEditSavingsGoalScreen(),
+            ),
       ),
       GoRoute(
         path: '/savings/:id/edit',

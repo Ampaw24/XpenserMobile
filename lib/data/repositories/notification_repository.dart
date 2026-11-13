@@ -13,6 +13,8 @@ class NotificationRepository {
     return records;
   }
 
+  bool exists(String id) => _box.containsKey(id);
+
   Future<void> add(NotificationRecord record) =>
       _box.put(record.id, record);
 

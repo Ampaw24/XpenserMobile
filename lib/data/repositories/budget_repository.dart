@@ -26,6 +26,13 @@ class BudgetRepository implements IBudgetRepository {
 
   @override
   Future<void> delete(String id) => _box.delete(id);
+
+  @override
+  Future<void> replaceAll(List<BudgetModel> budgets) async {
+    final keep = {for (final b in budgets) b.id: b};
+    await _box.deleteAll(_box.keys.where((k) => !keep.containsKey(k)).toList());
+    await _box.putAll(keep);
+  }
 }
 
 final budgetRepositoryProvider = Provider<IBudgetRepository>(

@@ -1,4 +1,16 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/utils/extensions/color_extensions.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_color_picker.dart';
+import 'package:expenser/core/utils/widgets/app_field_label.dart';
+import 'package:expenser/core/utils/widgets/app_form_layout.dart';
+import 'package:expenser/core/utils/widgets/app_icon_picker.dart';
+import 'package:expenser/core/utils/widgets/app_identity_preview.dart';
+import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
+import 'package:expenser/core/utils/widgets/app_primary_button.dart';
+import 'package:expenser/core/utils/widgets/app_select_field.dart';
+import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/account_type.dart';
 import 'package:expenser/services/notification/fcm_service.dart';
@@ -6,7 +18,6 @@ import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditAccountScreen extends ConsumerStatefulWidget {
@@ -21,8 +32,9 @@ class AddEditAccountScreen extends ConsumerStatefulWidget {
 class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  final _balanceCtrl = TextEditingController(text: '0');
+  final _balanceCtrl = TextEditingController();
 
+  AccountModel? _existing;
   AccountType _type = AccountType.cash;
   String _colorHex = 'FF4CAF50';
   int _iconCodePoint = Icons.wallet_rounded.codePoint;
@@ -53,6 +65,13 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
 
   static const _currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR'];
 
+  static IconData _typeIcon(AccountType type) => switch (type) {
+    AccountType.cash => Icons.payments_rounded,
+    AccountType.bank => Icons.account_balance_rounded,
+    AccountType.mobileMoney => Icons.phone_android_rounded,
+    AccountType.savings => Icons.savings_rounded,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +86,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     _nameCtrl.text = account.name;
     _balanceCtrl.text = account.initialBalance.toStringAsFixed(2);
     setState(() {
+      _existing = account;
       _type = account.type;
       _colorHex = account.colorHex;
       _iconCodePoint = account.iconCodePoint;
@@ -82,666 +102,164 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading || !_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    final account = AccountModel(
-      id: _isEditing ? widget.accountId! : const Uuid().v4(),
-      name: _nameCtrl.text.trim(),
-      type: _type,
-      initialBalance: double.tryParse(_balanceCtrl.text) ?? 0,
-      currencyCode: _currency,
-      colorHex: _colorHex,
-      iconCodePoint: _iconCodePoint,
-      createdAt: DateTime.now(),
-    );
-    final notifier = ref.read(accountProvider.notifier);
-    if (_isEditing) {
-      await notifier.updateAccount(account);
-    } else {
-      await notifier.addAccount(account);
-      await ref.read(fcmServiceProvider).showLocalNotification(
-        title: 'Account Added',
-        body: '"${account.name}" has been added to your accounts.',
-        type: 'account',
-        route: '/shell/accounts',
+
+    final name = _nameCtrl.text.trim();
+    final balance = double.tryParse(_balanceCtrl.text) ?? 0;
+    final existing = _existing;
+    final account =
+        existing?.copyWith(
+          name: name,
+          type: _type,
+          initialBalance: balance,
+          currencyCode: _currency,
+          colorHex: _colorHex,
+          iconCodePoint: _iconCodePoint,
+        ) ??
+        AccountModel(
+          id: const Uuid().v4(),
+          name: name,
+          type: _type,
+          initialBalance: balance,
+          currencyCode: _currency,
+          colorHex: _colorHex,
+          iconCodePoint: _iconCodePoint,
+          createdAt: DateTime.now(),
+        );
+
+    try {
+      final notifier = ref.read(accountProvider.notifier);
+      if (_isEditing) {
+        await notifier.updateAccount(account);
+      } else {
+        await notifier.addAccount(account);
+        await ref
+            .read(fcmServiceProvider)
+            .showLocalNotification(
+              title: 'Account Added',
+              body: '"${account.name}" has been added to your accounts.',
+              type: 'account',
+              route: '/shell/accounts',
+            );
+      }
+      if (mounted) context.pop();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the account. Please try again.'),
+        ),
       );
     }
-    if (mounted) context.pop();
-  }
-
-  InputDecoration _inputDeco() => InputDecoration(
-    filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.06),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.ACCENT, width: 1.5),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-    ),
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: MediaQuery.of(context).size.width * 0.040,
-      vertical: MediaQuery.of(context).size.height * 0.020,
-    ),
-  );
-
-  Widget _labeledField(String label, Widget field) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: sw * 0.010),
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: sw * 0.030,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.55),
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-        SizedBox(height: sh * 0.007),
-        field,
-      ],
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final color = colorFromHex(_colorHex, fallback: context.palette.accent);
+    final fieldGap = SizedBox(height: context.rs(16));
+    final sectionGap = SizedBox(height: context.rs(28));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-        title: Text(
-          _isEditing ? 'Edit Account' : 'New Account',
-          style: GoogleFonts.montserrat(
-            fontSize: sw * 0.046,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        title: Text(_isEditing ? 'Edit Account' : 'New Account'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          tooltip: 'Back',
+          icon: Icon(AppIcons.arrowLeft, size: context.rs(22)),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-              sw * 0.06,
-              sh * 0.010,
-              sw * 0.06,
-              sh * 0.06,
-            ),
+      body: AppFormLayout(
+        formKey: _formKey,
+        action: AppPrimaryButton(
+          label: _isEditing ? 'Save Changes' : 'Create Account',
+          isLoading: _isLoading,
+          onPressed: _submit,
+        ),
+        children: [
+          AppIdentityPreview(
+            icon: IconData(_iconCodePoint, fontFamily: 'MaterialIcons'),
+            color: color,
+            name: _nameCtrl,
+            placeholder: 'Account name',
+            subtitle: '${_type.label} · $_currency',
+          ),
+          sectionGap,
+          AppTextField(
+            controller: _nameCtrl,
+            label: 'Account name',
+            hint: 'e.g. Main wallet',
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            validator:
+                (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Give this account a name'
+                        : null,
+          ),
+          fieldGap,
+          AppSelectField<AccountType>(
+            label: 'Account type',
+            value: _type,
+            prefixIcon: _typeIcon(_type),
+            options: [
+              for (final type in AccountType.values)
+                AppSelectOption(
+                  value: type,
+                  label: type.label,
+                  icon: _typeIcon(type),
+                ),
+            ],
+            onChanged: (type) => setState(() => _type = type),
+          ),
+          fieldGap,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _labeledField(
-                'Account Name',
-                TextFormField(
-                  controller: _nameCtrl,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: sw * 0.038,
+              Expanded(
+                flex: 3,
+                child: AppTextField(
+                  controller: _balanceCtrl,
+                  label: 'Opening balance',
+                  hint: '0.00',
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                  cursorColor: AppColors.ACCENT,
-                  decoration: _inputDeco(),
-                  validator:
-                      (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? 'Name required'
-                              : null,
+                  inputFormatters: [AppTextField.decimalFormatter],
                 ),
               ),
-              SizedBox(height: sh * 0.026),
-              _AnimatedDropdown<AccountType>(
-                label: 'Account Type',
-                value: _type,
-                options: AccountType.values.toList(),
-                labelOf: (t) => t.name[0].toUpperCase() + t.name.substring(1),
-                onChanged: (v) => setState(() => _type = v),
-                sw: sw,
-                sh: sh,
-              ),
-              SizedBox(height: sh * 0.022),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _labeledField(
-                      'Initial Balance',
-                      TextFormField(
-                        controller: _balanceCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: sw * 0.038,
-                        ),
-                        cursorColor: AppColors.ACCENT,
-                        decoration: _inputDeco(),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: sw * 0.030),
-                  Expanded(
-                    child: _AnimatedDropdown<String>(
-                      label: 'Currency',
-                      value: _currency,
-                      options: _currencies.toList(),
-                      labelOf: (c) => c,
-                      onChanged: (v) => setState(() => _currency = v),
-                      sw: sw,
-                      sh: sh,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sh * 0.028),
-              Text(
-                'Color',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: sw * 0.032,
-                  color: Colors.white.withValues(alpha: 0.50),
+              SizedBox(width: context.rs(12)),
+              Expanded(
+                flex: 2,
+                child: AppSelectField<String>(
+                  label: 'Currency',
+                  value: _currency,
+                  options: [
+                    for (final code in _currencies)
+                      AppSelectOption(value: code, label: code),
+                  ],
+                  onChanged: (code) => setState(() => _currency = code),
                 ),
-              ),
-              SizedBox(height: sh * 0.012),
-              Wrap(
-                spacing: sw * 0.030,
-                runSpacing: sh * 0.012,
-                children:
-                    _colors.map((hex) {
-                      final color = Color(int.parse(hex, radix: 16));
-                      final isSelected = _colorHex == hex;
-                      return GestureDetector(
-                        onTap: () => setState(() => _colorHex = hex),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: sw * 0.090,
-                          height: sw * 0.090,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border:
-                                isSelected
-                                    ? Border.all(color: Colors.white, width: 3)
-                                    : Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.0,
-                                      ),
-                                      width: 3,
-                                    ),
-                            boxShadow:
-                                isSelected
-                                    ? [
-                                      BoxShadow(
-                                        color: color.withValues(alpha: 0.55),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                    : null,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              SizedBox(height: sh * 0.024),
-              Text(
-                'Icon',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: sw * 0.032,
-                  color: Colors.white.withValues(alpha: 0.50),
-                ),
-              ),
-              SizedBox(height: sh * 0.012),
-              Wrap(
-                spacing: sw * 0.030,
-                runSpacing: sh * 0.012,
-                children:
-                    _icons.map((icon) {
-                      final isSelected = icon.codePoint == _iconCodePoint;
-                      return GestureDetector(
-                        onTap:
-                            () =>
-                                setState(() => _iconCodePoint = icon.codePoint),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: sw * 0.120,
-                          height: sw * 0.120,
-                          decoration: BoxDecoration(
-                            color:
-                                isSelected
-                                    ? AppColors.ACCENT.withValues(alpha: 0.20)
-                                    : Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(sw * 0.030),
-                            border: Border.all(
-                              color:
-                                  isSelected
-                                      ? AppColors.ACCENT
-                                      : Colors.white.withValues(alpha: 0.12),
-                            ),
-                            boxShadow:
-                                isSelected
-                                    ? [
-                                      BoxShadow(
-                                        color: AppColors.ACCENT.withValues(
-                                          alpha: 0.25,
-                                        ),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                    : null,
-                          ),
-                          child: Icon(
-                            icon,
-                            color:
-                                isSelected
-                                    ? AppColors.ACCENT
-                                    : Colors.white.withValues(alpha: 0.40),
-                            size: sw * 0.058,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              SizedBox(height: sh * 0.040),
-              _GradientButton(
-                label: _isEditing ? 'Update Account' : 'Create Account',
-                isLoading: _isLoading,
-                onPressed: _isLoading ? null : _submit,
-                sw: sw,
-                sh: sh,
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Animated Custom Dropdown
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _AnimatedDropdown<T> extends StatefulWidget {
-  final String label;
-  final T value;
-  final List<T> options;
-  final String Function(T) labelOf;
-  final ValueChanged<T> onChanged;
-  final double sw;
-  final double sh;
-
-  const _AnimatedDropdown({
-    required this.label,
-    required this.value,
-    required this.options,
-    required this.labelOf,
-    required this.onChanged,
-    required this.sw,
-    required this.sh,
-  });
-
-  @override
-  State<_AnimatedDropdown<T>> createState() => _AnimatedDropdownState<T>();
-}
-
-class _AnimatedDropdownState<T> extends State<_AnimatedDropdown<T>>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _arrowTurns;
-  late final Animation<double> _fadeAnim;
-  bool _open = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 260),
-    );
-    _arrowTurns = Tween<double>(
-      begin: 0.0,
-      end: 0.5,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-    _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    final willOpen = !_open;
-    setState(() => _open = willOpen);
-    if (willOpen) {
-      _ctrl.forward();
-    } else {
-      _ctrl.reverse();
-    }
-  }
-
-  void _select(T value) {
-    widget.onChanged(value);
-    setState(() => _open = false);
-    _ctrl.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sw = widget.sw;
-    final sh = widget.sh;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Label sits above — never floats onto the border
-        Padding(
-          padding: EdgeInsets.only(left: sw * 0.010),
-          child: Text(
-            widget.label,
-            style: GoogleFonts.inter(
-              fontSize: sw * 0.030,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.55),
-              letterSpacing: 0.3,
-            ),
+          sectionGap,
+          const AppFieldLabel('Color'),
+          AppColorPicker(
+            options: _colors,
+            selectedHex: _colorHex,
+            onSelected: (hex) => setState(() => _colorHex = hex),
           ),
-        ),
-        SizedBox(height: sh * 0.007),
-
-        // Trigger field
-        GestureDetector(
-          onTap: _toggle,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            height: sh * 0.068,
-            padding: EdgeInsets.symmetric(horizontal: sw * 0.040),
-            decoration: BoxDecoration(
-              color:
-                  _open
-                      ? AppColors.ACCENT.withValues(alpha: 0.08)
-                      : Colors.white.withValues(alpha: 0.06),
-              borderRadius:
-                  _open
-                      ? const BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        topRight: Radius.circular(14),
-                      )
-                      : BorderRadius.circular(14),
-              border: Border.all(
-                color:
-                    _open
-                        ? AppColors.ACCENT
-                        : Colors.white.withValues(alpha: 0.12),
-                width: _open ? 1.5 : 1.0,
-              ),
-              boxShadow:
-                  _open
-                      ? [
-                        BoxShadow(
-                          color: AppColors.ACCENT.withValues(alpha: 0.18),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                      : null,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.labelOf(widget.value),
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: sw * 0.036,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                RotationTransition(
-                  turns: _arrowTurns,
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color:
-                        _open
-                            ? AppColors.ACCENT
-                            : Colors.white.withValues(alpha: 0.45),
-                    size: sw * 0.058,
-                  ),
-                ),
-              ],
-            ),
+          SizedBox(height: context.rs(20)),
+          const AppFieldLabel('Icon'),
+          AppIconPicker(
+            options: _icons,
+            selectedCodePoint: _iconCodePoint,
+            color: color,
+            onSelected: (code) => setState(() => _iconCodePoint = code),
           ),
-        ),
-
-        // Inline expanding menu
-        AnimatedSize(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeInOut,
-          child:
-              _open
-                  ? FadeTransition(
-                    opacity: _fadeAnim,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF141929),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(14),
-                          bottomRight: Radius.circular(14),
-                        ),
-                        border: Border(
-                          left: BorderSide(color: AppColors.ACCENT, width: 1.5),
-                          right: BorderSide(
-                            color: AppColors.ACCENT,
-                            width: 1.5,
-                          ),
-                          bottom: BorderSide(
-                            color: AppColors.ACCENT,
-                            width: 1.5,
-                          ),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.30),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(13),
-                          bottomRight: Radius.circular(13),
-                        ),
-                        child: Column(
-                          children:
-                              widget.options.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final option = entry.value;
-                                final isSelected = option == widget.value;
-                                final isLast = idx == widget.options.length - 1;
-
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (idx == 0)
-                                      Divider(
-                                        height: 1,
-                                        thickness: 1,
-                                        color: AppColors.ACCENT.withValues(
-                                          alpha: 0.20,
-                                        ),
-                                      ),
-                                    InkWell(
-                                      onTap: () => _select(option),
-                                      splashColor: AppColors.ACCENT.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                      highlightColor: AppColors.ACCENT
-                                          .withValues(alpha: 0.06),
-                                      child: AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 150,
-                                        ),
-                                        height: sh * 0.060,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: sw * 0.040,
-                                        ),
-                                        color:
-                                            isSelected
-                                                ? AppColors.ACCENT.withValues(
-                                                  alpha: 0.12,
-                                                )
-                                                : Colors.transparent,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                widget.labelOf(option),
-                                                style: GoogleFonts.inter(
-                                                  color:
-                                                      isSelected
-                                                          ? AppColors.ACCENT
-                                                          : Colors.white
-                                                              .withValues(
-                                                                alpha: 0.85,
-                                                              ),
-                                                  fontSize: sw * 0.036,
-                                                  fontWeight:
-                                                      isSelected
-                                                          ? FontWeight.w600
-                                                          : FontWeight.w400,
-                                                ),
-                                              ),
-                                            ),
-                                            AnimatedOpacity(
-                                              duration: const Duration(
-                                                milliseconds: 150,
-                                              ),
-                                              opacity: isSelected ? 1.0 : 0.0,
-                                              child: Icon(
-                                                Icons.check_rounded,
-                                                color: AppColors.ACCENT,
-                                                size: sw * 0.044,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    if (!isLast)
-                                      Divider(
-                                        height: 1,
-                                        thickness: 1,
-                                        indent: sw * 0.040,
-                                        endIndent: sw * 0.040,
-                                        color: Colors.white.withValues(
-                                          alpha: 0.06,
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              }).toList(),
-                        ),
-                      ),
-                    ),
-                  )
-                  : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Gradient Submit Button
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _GradientButton extends StatelessWidget {
-  final String label;
-  final bool isLoading;
-  final VoidCallback? onPressed;
-  final double sw, sh;
-  const _GradientButton({
-    required this.label,
-    required this.isLoading,
-    required this.onPressed,
-    required this.sw,
-    required this.sh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        height: sh * 0.065,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.PRIMARY, AppColors.ACCENT],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(sw * 0.042),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.ACCENT.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child:
-            isLoading
-                ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-                : Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: sw * 0.040,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+        ],
       ),
     );
   }

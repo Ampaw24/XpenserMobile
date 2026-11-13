@@ -1,7 +1,8 @@
 import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,52 +98,73 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  _Field(
-                    controller: _nameCtrl,
-                    label: 'Full Name',
-                    hint: 'John Doe',
-                    icon: Icons.person_outline_rounded,
-                    validator:
-                        (v) =>
-                            (v == null || v.trim().isEmpty)
-                                ? 'Name is required'
-                                : null,
-                  ),
-                  const SizedBox(height: 16),
-                  _Field(
-                    controller: _emailCtrl,
-                    label: 'Email',
-                    hint: 'you@example.com',
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Email is required';
-                      if (!v.contains('@')) return 'Enter a valid email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _Field(
-                    controller: _passwordCtrl,
-                    label: 'Password',
-                    hint: 'Min 6 characters',
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: _obscure,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: subtitleColor,
-                        size: 20,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
+                  AutofillGroup(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AppTextField(
+                          controller: _nameCtrl,
+                          label: 'Full name',
+                          hint: 'John Doe',
+                          prefixIcon: Icons.person_outline_rounded,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.name],
+                          validator:
+                              (v) =>
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'Name is required'
+                                      : null,
+                        ),
+                        SizedBox(height: context.rs(16)),
+                        AppTextField(
+                          controller: _emailCtrl,
+                          label: 'Email',
+                          hint: 'you@example.com',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Email is required';
+                            }
+                            if (!v.contains('@')) return 'Enter a valid email';
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: context.rs(16)),
+                        AppTextField(
+                          controller: _passwordCtrl,
+                          label: 'Password',
+                          hint: 'Min 6 characters',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: _obscure,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.newPassword],
+                          onFieldSubmitted: (_) => _submit(),
+                          suffixIcon: IconButton(
+                            tooltip:
+                                _obscure ? 'Show password' : 'Hide password',
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              size: context.rs(20),
+                            ),
+                            onPressed:
+                                () => setState(() => _obscure = !_obscure),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Password is required';
+                            }
+                            if (v.length < 6) return 'Minimum 6 characters';
+                            return null;
+                          },
+                        ),
+                      ],
                     ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password is required';
-                      if (v.length < 6) return 'Minimum 6 characters';
-                      return null;
-                    },
                   ),
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 12),
@@ -193,69 +215,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final IconData icon;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final String? Function(String?)? validator;
-  final Widget? suffixIcon;
-
-  const _Field({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.icon,
-    this.obscureText = false,
-    this.keyboardType,
-    this.validator,
-    this.suffixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor =
-        isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
-    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
-    final fieldBg = isDark ? AppBrand.surfaceDarkElevated : Colors.white;
-
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: TextStyle(
-        fontFamily: 'Inter',
-        color: isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        filled: true,
-        fillColor: fieldBg,
-        prefixIcon: Icon(icon, color: iconColor, size: 20),
-        suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppBrand.tealPrimary, width: 1.5),
         ),
       ),
     );

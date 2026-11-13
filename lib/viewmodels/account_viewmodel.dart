@@ -80,8 +80,6 @@ class AccountNotifier extends Notifier<AccountState> {
     _mirror((svc, uid) => svc.deleteAccount(uid, id));
   }
 
-  double get totalBalance => state.balances.values.fold(0.0, (a, b) => a + b);
-
   void _mirror(
     Future<void> Function(FirebaseUserDataService svc, String uid) fn,
   ) {

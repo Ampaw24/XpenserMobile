@@ -1,242 +1,214 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_empty_state.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SavingsScreen extends ConsumerWidget {
   const SavingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
     final goals = ref.watch(savingsGoalProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        title: Text(
-          'Savings Goals',
-          style: GoogleFonts.montserrat(
-            fontSize: sw * 0.048,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Savings Goals'),
         leading: IconButton(
-          icon: const Icon(AppIcons.arrowLeft, color: Colors.white),
+          icon: const Icon(AppIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child:
-            goals.isEmpty
-                ? Center(
+      body: BrandWatermarkBackground(
+        child: SafeArea(
+          child:
+              goals.isEmpty
+                  ? const AppEmptyState(
+                    icon: AppIcons.savings,
+                    title: 'No savings goals yet',
+                    message: 'Tap + to add a goal',
+                  )
+                  : ListView.separated(
+                    padding: EdgeInsets.fromLTRB(
+                      context.contentGutter,
+                      context.rs(8),
+                      context.contentGutter,
+                      context.rs(96),
+                    ),
+                    itemCount: goals.length,
+                    separatorBuilder:
+                        (_, __) => SizedBox(height: context.rs(12)),
+                    itemBuilder: (context, i) {
+                      final goal = goals[i];
+                      return _SavingsGoalCard(
+                        goal: goal,
+                        onTap: () => context.push('/savings/${goal.id}/edit'),
+                        onDelete:
+                            () => ref
+                                .read(savingsGoalProvider.notifier)
+                                .deleteGoal(goal.id),
+                      );
+                    },
+                  ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_savings',
+        onPressed: () => context.push('/savings/add'),
+        child: const Icon(AppIcons.add),
+      ),
+    );
+  }
+}
+
+class _SavingsGoalCard extends StatelessWidget {
+  const _SavingsGoalCard({
+    required this.goal,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final SavingsGoalModel goal;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final goalColor = _hexToColor(goal.colorHex, palette.accent);
+    final isCompleted = goal.progressPercent >= 1;
+    final progressColor = isCompleted ? palette.success : goalColor;
+    final daysLeft = goal.targetDate.difference(DateTime.now()).inDays;
+    final metaStyle = TextStyle(
+      fontSize: context.rs(12),
+      color: palette.textSecondary,
+    );
+
+    return Dismissible(
+      key: ValueKey(goal.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: context.rs(20)),
+        decoration: BoxDecoration(
+          color: palette.danger,
+          borderRadius: BorderRadius.circular(context.rs(18)),
+        ),
+        child: Icon(AppIcons.delete, color: Colors.white, size: context.rs(22)),
+      ),
+      onDismissed: (_) => onDelete(),
+      child: AppSurfaceCard(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(context.rs(11)),
+                  decoration: BoxDecoration(
+                    color: goalColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(context.rs(14)),
+                  ),
+                  child: Icon(
+                    IconData(
+                      goal.iconCodePoint,
+                      fontFamily: 'HgiStrokeRounded',
+                      fontPackage: 'hugeicons',
+                    ),
+                    color: goalColor,
+                    size: context.rs(22),
+                  ),
+                ),
+                SizedBox(width: context.rs(14)),
+                Expanded(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        AppIcons.savings,
-                        size: sw * 0.155,
-                        color: Colors.white.withValues(alpha: 0.20),
-                      ),
-                      SizedBox(height: sh * 0.016),
                       Text(
-                        'No savings goals yet',
-                        style: GoogleFonts.inter(
-                          fontSize: sw * 0.040,
-                          color: Colors.white.withValues(alpha: 0.40),
+                        goal.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: context.rs(15),
+                          fontWeight: FontWeight.w600,
+                          color: palette.textPrimary,
                         ),
                       ),
-                      SizedBox(height: sh * 0.008),
+                      SizedBox(height: context.rs(2)),
                       Text(
-                        'Tap + to add a goal',
-                        style: GoogleFonts.inter(
-                          fontSize: sw * 0.032,
-                          color: Colors.white.withValues(alpha: 0.25),
+                        daysLeft > 0
+                            ? '$daysLeft days left'
+                            : 'Target date passed',
+                        style: metaStyle.copyWith(
+                          color: daysLeft > 0 ? null : palette.danger,
                         ),
                       ),
                     ],
                   ),
-                )
-                : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    sw * 0.06,
-                    sh * 0.010,
-                    sw * 0.06,
-                    sh * 0.12,
-                  ),
-                  itemCount: goals.length,
-                  separatorBuilder: (_, __) => SizedBox(height: sh * 0.014),
-                  itemBuilder: (context, i) {
-                    final g = goals[i];
-                    final color = _hexToColor(g.colorHex);
-                    final daysLeft =
-                        g.targetDate.difference(DateTime.now()).inDays;
-
-                    return Dismissible(
-                      key: ValueKey(g.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.only(right: sw * 0.050),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFFF5252,
-                          ).withValues(alpha: 0.85),
-                          borderRadius: BorderRadius.circular(sw * 0.050),
-                        ),
-                        child: Icon(
-                          AppIcons.delete,
-                          color: Colors.white,
-                          size: sw * 0.060,
-                        ),
-                      ),
-                      onDismissed:
-                          (_) => ref
-                              .read(savingsGoalProvider.notifier)
-                              .deleteGoal(g.id),
-                      child: GestureDetector(
-                        onTap: () => context.push('/savings/${g.id}/edit'),
-                        child: Container(
-                          padding: EdgeInsets.all(sw * 0.048),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(sw * 0.050),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.10),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(sw * 0.026),
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: 0.18),
-                                      borderRadius: BorderRadius.circular(
-                                        sw * 0.028,
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      IconData(
-                                        g.iconCodePoint,
-                                        fontFamily: 'HgiStrokeRounded',
-                                        fontPackage: 'hugeicons',
-                                      ),
-                                      color: color,
-                                      size: sw * 0.055,
-                                    ),
-                                  ),
-                                  SizedBox(width: sw * 0.034),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          g.name,
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: sw * 0.040,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(height: sh * 0.003),
-                                        Text(
-                                          daysLeft > 0
-                                              ? '$daysLeft days left'
-                                              : 'Target date passed',
-                                          style: GoogleFonts.inter(
-                                            color:
-                                                daysLeft > 0
-                                                    ? Colors.white.withValues(
-                                                      alpha: 0.45,
-                                                    )
-                                                    : const Color(0xFFFF5252),
-                                            fontSize: sw * 0.030,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Text(
-                                    '${(g.progressPercent * 100).toStringAsFixed(0)}%',
-                                    style: GoogleFonts.montserrat(
-                                      color: color,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: sw * 0.045,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: sh * 0.014),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(sw * 0.020),
-                                child: LinearProgressIndicator(
-                                  value: g.progressPercent,
-                                  minHeight: sh * 0.007,
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  valueColor: AlwaysStoppedAnimation(color),
-                                ),
-                              ),
-                              SizedBox(height: sh * 0.010),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Saved: ${g.savedAmount.toStringAsFixed(2)}',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.45,
-                                      ),
-                                      fontSize: sw * 0.030,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Goal: ${g.targetAmount.toStringAsFixed(2)}',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.45,
-                                      ),
-                                      fontSize: sw * 0.030,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
                 ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'fab_savings',
-        backgroundColor: AppColors.PRIMARY,
-        onPressed: () => context.push('/savings/add'),
-        child: const Icon(AppIcons.add, color: Colors.white),
+                SizedBox(width: context.rs(8)),
+                Text(
+                  '${(goal.progressPercent * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: progressColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: context.rs(17),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: context.rs(14)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(context.rs(8)),
+              child: LinearProgressIndicator(
+                value: goal.progressPercent,
+                minHeight: context.rs(6),
+                backgroundColor: palette.surfaceMuted,
+                valueColor: AlwaysStoppedAnimation(progressColor),
+              ),
+            ),
+            SizedBox(height: context.rs(10)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    'Saved: ${goal.savedAmount.toStringAsFixed(2)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: metaStyle,
+                  ),
+                ),
+                SizedBox(width: context.rs(8)),
+                Flexible(
+                  child: Text(
+                    'Goal: ${goal.targetAmount.toStringAsFixed(2)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: metaStyle,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Color _hexToColor(String hex) {
+  static Color _hexToColor(String hex, Color fallback) {
     try {
       return Color(int.parse(hex.length == 6 ? 'FF$hex' : hex, radix: 16));
     } catch (_) {
-      return AppColors.PRIMARY;
+      return fallback;
     }
   }
 }

@@ -14,12 +14,6 @@ import 'package:uuid/uuid.dart';
 
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService(ref));
 
-/// Exposes the device's FCM registration token — used to test Firebase
-/// notification campaigns ("Test on device" in the Firebase Console).
-final fcmTokenProvider = FutureProvider<String?>((ref) async {
-  return FirebaseMessaging.instance.getToken();
-});
-
 /// Android notification channel used for all app notifications.
 const _channel = AndroidNotificationChannel(
   'xpenser_general',
@@ -83,10 +77,11 @@ class FcmService {
       onDidReceiveNotificationResponse: _onLocalNotifTap,
     );
 
-    final android = _localNotif
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    final android =
+        _localNotif
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
     // Android 13+ (API 33) requires POST_NOTIFICATIONS at runtime.
     await android?.requestNotificationsPermission();
@@ -176,11 +171,13 @@ class FcmService {
   /// Show a local notification triggered by an in-app action (e.g. creating an
   /// account or savings goal). Persists to Hive + Firebase and respects the
   /// user's notification setting.
+  /// Pass a stable [id] to record a one-off event so it can be de-duplicated.
   Future<void> showLocalNotification({
     required String title,
     required String body,
     required String type,
     String? route,
+    String? id,
   }) async {
     final settings = _ref.read(settingsProvider);
     if (!settings.notificationsEnabled) return;
@@ -204,7 +201,7 @@ class FcmService {
     );
 
     final record = NotificationRecord(
-      id: const Uuid().v4(),
+      id: id ?? const Uuid().v4(),
       title: title,
       body: body,
       type: type,

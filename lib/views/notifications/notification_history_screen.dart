@@ -1,10 +1,14 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_empty_state.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
 import 'package:expenser/models/notification_record.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
   const NotificationHistoryScreen({super.key});
@@ -28,93 +32,74 @@ class _NotificationHistoryScreenState
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
     final notifications = ref.watch(notificationHistoryProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          icon: const Icon(AppIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          'Notifications',
-          style: GoogleFonts.montserrat(
-            fontSize: sw * 0.046,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Notifications'),
         actions: [
           if (notifications.isNotEmpty)
             TextButton(
-              onPressed: () =>
-                  ref.read(notificationHistoryProvider.notifier).markAllRead(),
-              child: Text(
-                'Mark all read',
-                style: GoogleFonts.inter(
-                  fontSize: sw * 0.032,
-                  color: AppColors.ACCENT,
-                ),
-              ),
+              onPressed:
+                  () =>
+                      ref
+                          .read(notificationHistoryProvider.notifier)
+                          .markAllRead(),
+              child: const Text('Mark all read'),
             ),
         ],
       ),
-      body: notifications.isEmpty
-          ? _EmptyState(sw: sw, sh: sh)
-          : ListView.separated(
-              padding: EdgeInsets.symmetric(
-                horizontal: sw * 0.04,
-                vertical: sh * 0.012,
-              ),
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-              itemBuilder: (context, index) =>
-                  _NotificationTile(record: notifications[index], sw: sw, sh: sh),
-            ),
+      body: BrandWatermarkBackground(
+        child: SafeArea(
+          child:
+              notifications.isEmpty
+                  ? const AppEmptyState(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'No notifications yet',
+                    message:
+                        'Activity from accounts and savings\nwill appear here.',
+                  )
+                  : ListView.separated(
+                    padding: EdgeInsets.fromLTRB(
+                      context.contentGutter,
+                      context.rs(8),
+                      context.contentGutter,
+                      context.rs(24),
+                    ),
+                    itemCount: notifications.length,
+                    separatorBuilder:
+                        (_, __) => SizedBox(height: context.rs(10)),
+                    itemBuilder:
+                        (context, index) =>
+                            _NotificationTile(record: notifications[index]),
+                  ),
+        ),
+      ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({
-    required this.record,
-    required this.sw,
-    required this.sh,
-  });
+  const _NotificationTile({required this.record});
 
   final NotificationRecord record;
-  final double sw;
-  final double sh;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.03,
-        vertical: sh * 0.016,
-      ),
-      decoration: BoxDecoration(
-        color: record.isRead
-            ? Colors.transparent
-            : AppColors.ACCENT.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final palette = context.palette;
+    final isUnread = !record.isRead;
+
+    return AppSurfaceCard(
+      padding: EdgeInsets.all(context.rs(14)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _TypeIcon(type: record.type, sw: sw),
-          SizedBox(width: sw * 0.034),
+          _TypeIcon(type: record.type),
+          SizedBox(width: context.rs(12)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,40 +109,44 @@ class _NotificationTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         record.title,
-                        style: GoogleFonts.inter(
-                          fontSize: sw * 0.037,
-                          fontWeight: record.isRead
-                              ? FontWeight.w500
-                              : FontWeight.w700,
-                          color: Colors.white,
+                        style: TextStyle(
+                          fontSize: context.rs(14),
+                          fontWeight:
+                              isUnread ? FontWeight.w600 : FontWeight.w500,
+                          color:
+                              isUnread
+                                  ? palette.textPrimary
+                                  : palette.textSecondary,
                         ),
                       ),
                     ),
-                    if (!record.isRead)
+                    if (isUnread) ...[
+                      SizedBox(width: context.rs(8)),
                       Container(
-                        width: sw * 0.020,
-                        height: sw * 0.020,
-                        decoration: const BoxDecoration(
-                          color: AppColors.ACCENT,
+                        width: context.rs(8),
+                        height: context.rs(8),
+                        decoration: BoxDecoration(
+                          color: palette.accent,
                           shape: BoxShape.circle,
                         ),
                       ),
+                    ],
                   ],
                 ),
-                SizedBox(height: sh * 0.004),
+                SizedBox(height: context.rs(4)),
                 Text(
                   record.body,
-                  style: GoogleFonts.inter(
-                    fontSize: sw * 0.033,
-                    color: Colors.white.withValues(alpha: 0.60),
+                  style: TextStyle(
+                    fontSize: context.rs(13),
+                    color: palette.textSecondary,
                   ),
                 ),
-                SizedBox(height: sh * 0.006),
+                SizedBox(height: context.rs(6)),
                 Text(
                   _formatTime(record.createdAt),
-                  style: GoogleFonts.inter(
-                    fontSize: sw * 0.028,
-                    color: Colors.white.withValues(alpha: 0.38),
+                  style: TextStyle(
+                    fontSize: context.rs(11),
+                    color: palette.textMuted,
                   ),
                 ),
               ],
@@ -180,71 +169,30 @@ class _NotificationTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _TypeIcon extends StatelessWidget {
-  const _TypeIcon({required this.type, required this.sw});
+  const _TypeIcon({required this.type});
+
   final String type;
-  final double sw;
+
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = switch (type) {
-      'account' => (Icons.account_balance_wallet_rounded, const Color(0xFF2196F3)),
-      'savings' => (Icons.savings_rounded, const Color(0xFF4CAF50)),
-      _ => (Icons.notifications_rounded, AppColors.ACCENT),
+    final palette = context.palette;
+    final icon = switch (type) {
+      'account' => Icons.account_balance_wallet_rounded,
+      'savings' => Icons.savings_rounded,
+      'budget' => Icons.pie_chart_rounded,
+      _ => Icons.notifications_rounded,
     };
+    final size = context.rs(42);
 
     return Container(
-      width: sw * 0.108,
-      height: sw * 0.108,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: palette.surfaceMuted,
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, color: color, size: sw * 0.050),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.sw, required this.sh});
-
-  final double sw;
-  final double sh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.notifications_none_rounded,
-            size: sw * 0.18,
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
-          SizedBox(height: sh * 0.020),
-          Text(
-            'No notifications yet',
-            style: GoogleFonts.montserrat(
-              fontSize: sw * 0.044,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.40),
-            ),
-          ),
-          SizedBox(height: sh * 0.008),
-          Text(
-            'Activity from accounts and savings\nwill appear here.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: sw * 0.033,
-              color: Colors.white.withValues(alpha: 0.28),
-            ),
-          ),
-        ],
-      ),
+      child: Icon(icon, color: palette.accent, size: context.rs(20)),
     );
   }
 }

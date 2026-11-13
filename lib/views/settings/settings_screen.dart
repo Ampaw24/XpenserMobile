@@ -1,432 +1,164 @@
-import 'package:expenser/core/providers/firebase_balance_provider.dart';
-import 'package:expenser/core/utils/theme/colors.dart';
-import 'package:expenser/services/notification/fcm_service.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
+import 'package:expenser/core/utils/widgets/app_page_header.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/user_avatar.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
+import 'package:expenser/viewmodels/consolidated_balance_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:intl/intl.dart';
 import 'package:expenser/views/converters/currency_converter_screen.dart';
 import 'package:expenser/views/converters/tax_calculator_screen.dart';
 import 'package:expenser/views/settings/widgets/setting_item.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sw = MediaQuery.of(context).size.width;
-    final sh = MediaQuery.of(context).size.height;
+    final palette = context.palette;
     final settings = ref.watch(settingsProvider);
-    final balanceAsync = ref.watch(firebaseTotalBalanceProvider);
-    final tokenAsync = ref.watch(fcmTokenProvider);
+    final balance = ref.watch(consolidatedBalanceProvider);
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final userEmail = firebaseUser?.email ?? '';
     final isVerified = firebaseUser?.emailVerified ?? false;
 
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(sw * 0.06, sh * 0.024, sw * 0.06, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Settings',
-              style: GoogleFonts.montserrat(
-                fontSize: sw * 0.058,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: sh * 0.022),
-            // Profile card
-            Container(
-              padding: EdgeInsets.all(sw * 0.048),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.PRIMARY, AppColors.ACCENT],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+    return Scaffold(
+      body: BrandWatermarkBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const AppPageHeader(title: 'Profile'),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    context.contentGutter,
+                    0,
+                    context.contentGutter,
+                    context.rs(24),
+                  ),
+                  children: [
+                    _ProfileCard(
+                      name: settings.userName,
+                      photoUrl: settings.userAvatarPath,
+                      email: userEmail,
+                      isVerified: isVerified,
+                      currency: balance.currency,
+                      balance: balance.total,
+                      isEstimate: balance.isEstimate || balance.isPartial,
+                    ),
+                    SizedBox(height: context.rs(20)),
+                    const _SectionLabel('Preferences'),
+                    SettingItem(
+                      icon: Icons.dark_mode_rounded,
+                      title: 'Dark Mode',
+                      subtitle:
+                          settings.isDarkMode
+                              ? 'Dark theme on'
+                              : 'Light theme on',
+                      onTap:
+                          () =>
+                              ref
+                                  .read(settingsProvider.notifier)
+                                  .toggleDarkMode(),
+                      trailing: Switch(
+                        value: settings.isDarkMode,
+                        onChanged:
+                            (_) =>
+                                ref
+                                    .read(settingsProvider.notifier)
+                                    .toggleDarkMode(),
+                      ),
+                    ),
+                    SettingItem(
+                      icon: Icons.currency_exchange_rounded,
+                      title: 'Currency',
+                      subtitle: settings.preferredCurrency,
+                      onTap: () => _showCurrencyPicker(context, ref),
+                    ),
+                    const _SectionLabel('Tools'),
+                    SettingItem(
+                      icon: Icons.currency_exchange_rounded,
+                      title: 'Currency Converter',
+                      subtitle: 'Convert between currencies',
+                      onTap: () => _showConverter(context),
+                    ),
+                    SettingItem(
+                      icon: Icons.calculate_rounded,
+                      title: 'Tax Calculator',
+                      subtitle: 'Calculate your tax',
+                      onTap: () => _showTaxCalc(context),
+                    ),
+                    SettingItem(
+                      icon: Icons.savings_rounded,
+                      title: 'Savings Goals',
+                      subtitle: 'Track your savings goals',
+                      onTap: () => context.push('/savings'),
+                    ),
+                    const _SectionLabel('Account'),
+                    SettingItem(
+                      icon: Icons.notifications_rounded,
+                      title: 'Notifications',
+                      subtitle:
+                          settings.notificationsEnabled
+                              ? 'Enabled'
+                              : 'Disabled',
+                      onTap:
+                          () =>
+                              ref
+                                  .read(settingsProvider.notifier)
+                                  .toggleNotifications(),
+                    ),
+                    SettingItem(
+                      icon: Icons.help_rounded,
+                      title: 'Help & Support',
+                      subtitle: 'Get help and contact us',
+                      onTap: () {},
+                    ),
+                    SizedBox(height: context.rs(8)),
+                    SettingItem(
+                      icon: Icons.logout_rounded,
+                      iconColor: palette.danger,
+                      title: 'Sign Out',
+                      subtitle: 'Log out of your account',
+                      onTap: () => _confirmLogout(context, ref),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(sw * 0.050),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.ACCENT.withValues(alpha: 0.30),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
               ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: sw * 0.070,
-                    backgroundColor: Colors.white.withValues(alpha: 0.20),
-                    child: ClipOval(
-                      child: Image.network(
-                        settings.userAvatarPath!,
-                        width: sw * 0.140,
-                        height: sw * 0.140,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          final initial =
-                              settings.userName.isNotEmpty
-                                  ? settings.userName[0].toUpperCase()
-                                  : 'U';
-                          return Text(
-                            initial,
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: sw * 0.042,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: sw * 0.040),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          settings.userName.isNotEmpty
-                              ? settings.userName
-                              : 'User',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: sw * 0.042,
-                          ),
-                        ),
-                        SizedBox(height: sh * 0.005),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                userEmail,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white.withValues(alpha: 0.70),
-                                  fontSize: sw * 0.028,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: sw * 0.016),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.018,
-                                vertical: sh * 0.003,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isVerified
-                                        ? const Color(
-                                          0xFF1DB954,
-                                        ).withValues(alpha: 0.22)
-                                        : Colors.amber.withValues(alpha: 0.20),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color:
-                                      isVerified
-                                          ? const Color(
-                                            0xFF1DB954,
-                                          ).withValues(alpha: 0.55)
-                                          : Colors.amber.withValues(
-                                            alpha: 0.50,
-                                          ),
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    isVerified
-                                        ? Icons.verified_rounded
-                                        : Icons.warning_amber_rounded,
-                                    size: sw * 0.028,
-                                    color:
-                                        isVerified
-                                            ? const Color(0xFF1DB954)
-                                            : Colors.amber,
-                                  ),
-                                  SizedBox(width: sw * 0.008),
-                                  Text(
-                                    isVerified ? 'Verified' : 'Unverified',
-                                    style: GoogleFonts.inter(
-                                      fontSize: sw * 0.022,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                          isVerified
-                                              ? const Color(0xFF1DB954)
-                                              : Colors.amber,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sh * 0.008),
-                        balanceAsync.when(
-                          data:
-                              (total) => Text(
-                                NumberFormat.currency(
-                                  symbol: '${settings.preferredCurrency} ',
-                                  decimalDigits: 2,
-                                ).format(total),
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: sw * 0.038,
-                                ),
-                              ),
-                          loading:
-                              () => Container(
-                                width: sw * 0.30,
-                                height: sh * 0.016,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ),
-                          error:
-                              (_, __) => Text(
-                                '—',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white.withValues(alpha: 0.50),
-                                  fontSize: sw * 0.036,
-                                ),
-                              ),
-                        ),
-                        SizedBox(height: sh * 0.004),
-                        Text(
-                          '${settings.preferredCurrency} · Total Balance',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.55),
-                            fontSize: sw * 0.026,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: sh * 0.024),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.only(bottom: sh * 0.14),
-                children: [
-                  // Dark mode toggle
-                  GestureDetector(
-                    onTap:
-                        () =>
-                            ref
-                                .read(settingsProvider.notifier)
-                                .toggleDarkMode(),
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: sh * 0.012),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.042,
-                        vertical: sh * 0.014,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(sw * 0.042),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(sw * 0.022),
-                            decoration: BoxDecoration(
-                              color: AppColors.ACCENT.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(sw * 0.024),
-                            ),
-                            child: Icon(
-                              Icons.dark_mode_rounded,
-                              color: AppColors.ACCENT,
-                              size: sw * 0.052,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.036),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dark Mode',
-                                  style: GoogleFonts.inter(
-                                    fontSize: sw * 0.038,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: sh * 0.002),
-                                Text(
-                                  settings.isDarkMode
-                                      ? 'Dark theme on'
-                                      : 'Light theme on',
-                                  style: GoogleFonts.inter(
-                                    fontSize: sw * 0.030,
-                                    color: Colors.white.withValues(alpha: 0.45),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: settings.isDarkMode,
-                            activeThumbColor: AppColors.ACCENT,
-                            activeTrackColor: AppColors.ACCENT.withValues(
-                              alpha: 0.35,
-                            ),
-                            inactiveThumbColor: Colors.white.withValues(
-                              alpha: 0.40,
-                            ),
-                            inactiveTrackColor: Colors.white.withValues(
-                              alpha: 0.12,
-                            ),
-                            onChanged:
-                                (_) =>
-                                    ref
-                                        .read(settingsProvider.notifier)
-                                        .toggleDarkMode(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SettingItem(
-                    icon: Icons.currency_exchange_rounded,
-                    title: 'Currency',
-                    subtitle: settings.preferredCurrency,
-                    onTap: () => _showCurrencyPicker(context, ref),
-                  ),
-                  _SectionLabel('Tools', sw, sh),
-                  SettingItem(
-                    icon: Icons.currency_exchange_rounded,
-                    title: 'Currency Converter',
-                    subtitle: 'Convert between currencies',
-                    onTap: () => _showConverter(context),
-                  ),
-                  SettingItem(
-                    icon: Icons.calculate_rounded,
-                    title: 'Tax Calculator',
-                    subtitle: 'Calculate your tax',
-                    onTap: () => _showTaxCalc(context),
-                  ),
-                  SettingItem(
-                    icon: Icons.savings_rounded,
-                    title: 'Savings Goals',
-                    subtitle: 'Track your savings goals',
-                    onTap: () => context.push('/savings'),
-                  ),
-                  _SectionLabel('Account', sw, sh),
-                  SettingItem(
-                    icon: Icons.notifications_rounded,
-                    title: 'Notifications',
-                    subtitle:
-                        settings.notificationsEnabled ? 'Enabled' : 'Disabled',
-                    onTap:
-                        () =>
-                            ref
-                                .read(settingsProvider.notifier)
-                                .toggleNotifications(),
-                  ),
-                  tokenAsync.when(
-                    data: (token) => token == null
-                        ? const SizedBox.shrink()
-                        : _FcmTokenTile(token: token, sw: sw, sh: sh),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                  SettingItem(
-                    icon: Icons.help_rounded,
-                    title: 'Help & Support',
-                    subtitle: 'Get help and contact us',
-                    onTap: () {},
-                  ),
-                  SizedBox(height: sh * 0.004),
-                  SettingItem(
-                    icon: Icons.logout_rounded,
-                    iconColor: const Color(0xFFFF5252),
-                    title: 'Sign Out',
-                    subtitle: 'Log out of your account',
-                    onTap: () => _confirmLogout(context, ref),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showCurrencyPicker(BuildContext context, WidgetRef ref) {
+  Future<void> _showCurrencyPicker(BuildContext context, WidgetRef ref) async {
     const currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR', 'JPY'];
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF111827),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        final sw = MediaQuery.of(ctx).size.width;
-        return ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.all(sw * 0.060),
-          children: [
-            Text(
-              'Select Currency',
-              style: GoogleFonts.montserrat(
-                fontSize: sw * 0.046,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...currencies.map(
-              (c) => ListTile(
-                title: Text(
-                  c,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: sw * 0.038,
-                  ),
-                ),
-                onTap: () {
-                  ref.read(settingsProvider.notifier).setCurrency(c);
-                  Navigator.pop(ctx);
-                },
-              ),
-            ),
-          ],
-        );
-      },
+    final picked = await showAppOptionSheet<String>(
+      context,
+      title: 'Select currency',
+      selected: ref.read(settingsProvider).preferredCurrency,
+      options: [
+        for (final code in currencies)
+          AppSelectOption(value: code, label: code),
+      ],
     );
+    if (picked != null) ref.read(settingsProvider.notifier).setCurrency(picked);
   }
 
   void _showConverter(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111827),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (_) => const CurrencyConverterScreen(),
     );
   }
@@ -435,10 +167,6 @@ class SettingsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111827),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (_) => const TaxCalculatorScreen(),
     );
   }
@@ -446,165 +174,189 @@ class SettingsScreen extends ConsumerWidget {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            backgroundColor: const Color(0xFF1A2035),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      builder: (dialogContext) {
+        final palette = dialogContext.palette;
+        return AlertDialog(
+          title: const Text('Sign Out'),
+          content: const Text('Are you sure you want to sign out?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              style: TextButton.styleFrom(
+                foregroundColor: palette.textSecondary,
+              ),
+              child: const Text('Cancel'),
             ),
-            title: Text(
-              'Sign Out',
-              style: GoogleFonts.montserrat(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ref.read(authProvider.notifier).logout();
+                });
+              },
+              style: TextButton.styleFrom(foregroundColor: palette.danger),
+              child: const Text('Sign Out'),
             ),
-            content: Text(
-              'Are you sure you want to sign out?',
-              style: GoogleFonts.inter(
-                color: Colors.white.withValues(alpha: 0.70),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.60),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(authProvider.notifier).logout();
-                  });
-                },
-                child: Text(
-                  'Sign Out',
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFFFF5252),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _FcmTokenTile extends StatelessWidget {
-  const _FcmTokenTile({
-    required this.token,
-    required this.sw,
-    required this.sh,
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.name,
+    required this.photoUrl,
+    required this.email,
+    required this.isVerified,
+    required this.currency,
+    required this.balance,
+    required this.isEstimate,
   });
 
-  final String token;
-  final double sw;
-  final double sh;
+  final String name;
+  final String? photoUrl;
+  final String email;
+  final bool isVerified;
+  final String currency;
+  final double balance;
+  final bool isEstimate;
 
   @override
   Widget build(BuildContext context) {
-    final preview = '…${token.substring(token.length > 16 ? token.length - 16 : 0)}';
+    final palette = context.palette;
 
-    return GestureDetector(
-      onTap: () async {
-        await Clipboard.setData(ClipboardData(text: token));
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'FCM token copied to clipboard',
-              style: GoogleFonts.inter(color: Colors.white),
-            ),
-            backgroundColor: const Color(0xFF1A2035),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return AppSurfaceCard(
+      color: palette.hero,
+      borderColor: palette.hero,
+      padding: EdgeInsets.all(context.rs(18)),
+      child: Row(
+        children: [
+          UserAvatar(name: name, photoUrl: photoUrl, diameter: context.rs(56)),
+          SizedBox(width: context.rs(16)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.isNotEmpty ? name : 'User',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: palette.onHero,
+                    fontWeight: FontWeight.w700,
+                    fontSize: context.rs(16),
+                  ),
+                ),
+                SizedBox(height: context.rs(4)),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        email,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: palette.onHeroMuted,
+                          fontSize: context.rs(12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: context.rs(6)),
+                    _VerificationBadge(isVerified: isVerified),
+                  ],
+                ),
+                SizedBox(height: context.rs(8)),
+                Text(
+                  '${isEstimate ? '≈ ' : ''}${NumberFormat.currency(symbol: '$currency ', decimalDigits: 2).format(balance)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: palette.onHero,
+                    fontWeight: FontWeight.w600,
+                    fontSize: context.rs(15),
+                  ),
+                ),
+                SizedBox(height: context.rs(2)),
+                Text(
+                  '$currency · Total Balance',
+                  style: TextStyle(
+                    color: palette.onHeroMuted,
+                    fontSize: context.rs(11),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: sh * 0.012),
-        padding: EdgeInsets.symmetric(
-          horizontal: sw * 0.042,
-          vertical: sh * 0.014,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(sw * 0.042),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(sw * 0.022),
-              decoration: BoxDecoration(
-                color: AppColors.ACCENT.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(sw * 0.024),
-              ),
-              child: Icon(
-                Icons.token_rounded,
-                color: AppColors.ACCENT,
-                size: sw * 0.052,
-              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerificationBadge extends StatelessWidget {
+  const _VerificationBadge({required this.isVerified});
+
+  final bool isVerified;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final color = isVerified ? palette.onHeroSuccess : palette.onHeroWarning;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.rs(7),
+        vertical: context.rs(2),
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(context.rs(20)),
+        border: Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isVerified ? Icons.verified_rounded : Icons.warning_amber_rounded,
+            size: context.rs(11),
+            color: color,
+          ),
+          SizedBox(width: context.rs(3)),
+          Text(
+            isVerified ? 'Verified' : 'Unverified',
+            style: TextStyle(
+              fontSize: context.rs(10.5),
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
-            SizedBox(width: sw * 0.036),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'FCM Token',
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.038,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: sh * 0.002),
-                  Text(
-                    preview,
-                    style: GoogleFonts.inter(
-                      fontSize: sw * 0.030,
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.copy_rounded,
-              size: sw * 0.044,
-              color: Colors.white.withValues(alpha: 0.35),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
   final String text;
-  final double sw, sh;
-  const _SectionLabel(this.text, this.sw, this.sh);
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: sh * 0.010, top: sh * 0.006),
+    padding: EdgeInsets.only(
+      top: context.rs(6),
+      bottom: context.rs(8),
+      left: context.rs(4),
+    ),
     child: Text(
       text.toUpperCase(),
-      style: GoogleFonts.inter(
-        fontWeight: FontWeight.w700,
-        fontSize: sw * 0.028,
-        color: Colors.white.withValues(alpha: 0.35),
-        letterSpacing: 1.2,
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: context.rs(11.5),
+        color: context.palette.textSecondary,
+        letterSpacing: 0.8,
       ),
     ),
   );

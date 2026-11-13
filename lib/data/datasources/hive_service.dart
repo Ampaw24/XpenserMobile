@@ -20,6 +20,8 @@ class HiveService {
   static const String recurringRules = 'recurring_rules';
   static const String settings = 'settings';
   static const String notifications = 'notifications';
+  static const String exchangeRates = 'exchange_rates';
+  static const String budgetOutbox = 'budget_outbox';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -44,6 +46,8 @@ class HiveService {
     await Hive.openBox<RecurringRuleModel>(recurringRules);
     await Hive.openBox<AppSettingsModel>(settings);
     await Hive.openBox<NotificationRecord>(notifications);
+    await Hive.openBox<String>(exchangeRates);
+    await Hive.openBox<String>(budgetOutbox);
   }
 
   static Box<T> box<T>(String name) => Hive.box<T>(name);

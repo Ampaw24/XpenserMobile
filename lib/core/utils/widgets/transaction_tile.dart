@@ -1,5 +1,7 @@
 import 'package:expenser/core/constants/app_icons.dart';
-import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/formatters/date_labels.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/transaction_type.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ class TransactionTile extends StatelessWidget {
     required this.categoryIconCode,
     required this.onEdit,
     required this.onDelete,
+    this.embedded = false,
   });
 
   final TransactionModel transaction;
@@ -24,29 +27,23 @@ class TransactionTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
+  /// Renders without its own card chrome and shows the date instead of time,
+  /// for use inside a grouped list container.
+  final bool embedded;
+
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
     final isExpense = transaction.type == TransactionType.expense;
     final isTransfer = transaction.type == TransactionType.transfer;
     final color = _hexToColor(categoryColor);
-
     final amountColor =
         isExpense
-            ? const Color(0xFFE11D48)
+            ? palette.danger
             : isTransfer
-            ? const Color(0xFF0284C7)
-            : const Color(0xFF059669);
-
-    final tileBg = isDark ? AppBrand.surfaceDark : Colors.white;
-    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
-    final titleColor =
-        isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
-    final subtitleColor =
-        isDark ? const Color(0xFF94A3B8) : AppBrand.textSecondaryLight;
-    final metaColor =
-        isDark ? const Color(0xFF64748B) : AppBrand.textMutedLight;
+            ? palette.info
+            : palette.success;
+    final actionRadius = Radius.circular(context.rs(14));
 
     return Slidable(
       key: ValueKey(transaction.id),
@@ -55,13 +52,11 @@ class TransactionTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onEdit(),
-            backgroundColor: const Color(0xFF0F766E),
-            foregroundColor: Colors.white,
+            backgroundColor: palette.accent,
+            foregroundColor: palette.onAccent,
             icon: AppIcons.edit,
             label: 'Edit',
-            borderRadius: const BorderRadius.horizontal(
-              left: Radius.circular(14),
-            ),
+            borderRadius: BorderRadius.horizontal(left: actionRadius),
           ),
         ],
       ),
@@ -70,97 +65,103 @@ class TransactionTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: const Color(0xFFE11D48),
+            backgroundColor: palette.danger,
             foregroundColor: Colors.white,
             icon: AppIcons.delete,
             label: 'Delete',
-            borderRadius: const BorderRadius.horizontal(
-              right: Radius.circular(14),
-            ),
+            borderRadius: BorderRadius.horizontal(right: actionRadius),
           ),
         ],
       ),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: EdgeInsets.symmetric(horizontal: sw * 0.04, vertical: 12),
-        decoration: BoxDecoration(
-          color: tileBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.0),
+        margin:
+            embedded ? EdgeInsets.zero : EdgeInsets.only(bottom: context.rs(8)),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.rs(16),
+          vertical: context.rs(12),
         ),
+        decoration:
+            embedded
+                ? null
+                : BoxDecoration(
+                  color: palette.surface,
+                  borderRadius: BorderRadius.circular(context.rs(16)),
+                  border: Border.all(color: palette.border),
+                ),
         child: Row(
           children: [
-            // Category icon
             Container(
-              width: 42,
-              height: 42,
+              width: context.rs(42),
+              height: context.rs(42),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(context.rs(12)),
               ),
               child: Icon(
                 IconData(categoryIconCode, fontFamily: 'MaterialIcons'),
                 color: color,
-                size: 20,
+                size: context.rs(20),
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Description
+            SizedBox(width: context.rs(12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     categoryName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Inter',
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: titleColor,
+                      fontSize: context.rs(14),
+                      color: palette.textPrimary,
                     ),
                   ),
-                  if (transaction.notes != null &&
-                      transaction.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                  if (transaction.notes?.isNotEmpty ?? false) ...[
+                    SizedBox(height: context.rs(2)),
                     Text(
                       transaction.notes!,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        color: subtitleColor,
-                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: context.rs(12),
+                        color: palette.textSecondary,
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
-
-            // Amount + time
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${isExpense || isTransfer ? '-' : '+'}${transaction.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: amountColor,
-                  ),
+            SizedBox(width: context.rs(8)),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isExpense || isTransfer ? '-' : '+'}${transaction.amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: context.rs(15),
+                        color: amountColor,
+                      ),
+                    ),
+                    SizedBox(height: context.rs(2)),
+                    Text(
+                      embedded
+                          ? relativeDayLabel(transaction.date)
+                          : DateFormat('h:mm a').format(transaction.date),
+                      style: TextStyle(
+                        fontSize: context.rs(11),
+                        color: palette.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('h:mm a').format(transaction.date),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11,
-                    color: metaColor,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -172,7 +173,7 @@ class TransactionTile extends StatelessWidget {
     try {
       return Color(int.parse(hex.length == 6 ? 'FF$hex' : hex, radix: 16));
     } catch (_) {
-      return Colors.grey;
+      return const Color(0xFF78909C);
     }
   }
 }

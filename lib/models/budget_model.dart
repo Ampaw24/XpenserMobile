@@ -1,3 +1,4 @@
+import 'package:expenser/models/budget_period.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 part 'budget_model.g.dart';
@@ -43,6 +44,10 @@ class BudgetModel extends HiveObject {
   @HiveField(12)
   final DateTime? endDate;
 
+  /// Set when the user closes the budget early; spending after it isn't counted.
+  @HiveField(13)
+  final DateTime? closedAt;
+
   BudgetModel({
     required this.id,
     required this.categoryId,
@@ -57,7 +62,23 @@ class BudgetModel extends HiveObject {
     this.notes,
     this.startDate,
     this.endDate,
+    this.closedAt,
   });
+
+  BudgetPeriodType get periodType => BudgetPeriodType.fromValue(period);
+
+  /// Saved dates when present; budgets created before dates were stored fall
+  /// back to their period starting in the month they were created for.
+  BudgetDateRange get dateRange {
+    if (startDate != null && endDate != null) {
+      return BudgetDateRange(startDate!, endDate!);
+    }
+    final type =
+        periodType == BudgetPeriodType.custom
+            ? BudgetPeriodType.monthly
+            : periodType;
+    return BudgetDateRange.forPeriod(type, DateTime(year, month));
+  }
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -73,6 +94,7 @@ class BudgetModel extends HiveObject {
     'notes': notes,
     'startDate': startDate?.toIso8601String(),
     'endDate': endDate?.toIso8601String(),
+    'closedAt': closedAt?.toIso8601String(),
   };
 
   factory BudgetModel.fromMap(Map<String, dynamic> map) => BudgetModel(
@@ -87,12 +109,18 @@ class BudgetModel extends HiveObject {
     period: map['period'] as String?,
     planId: map['planId'] as String?,
     notes: map['notes'] as String?,
-    startDate: map['startDate'] != null
-        ? DateTime.parse(map['startDate'] as String)
-        : null,
-    endDate: map['endDate'] != null
-        ? DateTime.parse(map['endDate'] as String)
-        : null,
+    startDate:
+        map['startDate'] != null
+            ? DateTime.parse(map['startDate'] as String)
+            : null,
+    endDate:
+        map['endDate'] != null
+            ? DateTime.parse(map['endDate'] as String)
+            : null,
+    closedAt:
+        map['closedAt'] != null
+            ? DateTime.parse(map['closedAt'] as String)
+            : null,
   );
 
   BudgetModel copyWith({
@@ -109,6 +137,8 @@ class BudgetModel extends HiveObject {
     String? notes,
     DateTime? startDate,
     DateTime? endDate,
+    DateTime? closedAt,
+    bool clearClosedAt = false,
   }) {
     return BudgetModel(
       id: id ?? this.id,
@@ -124,6 +154,7 @@ class BudgetModel extends HiveObject {
       notes: notes ?? this.notes,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      closedAt: clearClosedAt ? null : (closedAt ?? this.closedAt),
     );
   }
 }

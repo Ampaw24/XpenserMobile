@@ -1,180 +1,379 @@
+import 'dart:async';
+
 import 'package:expenser/core/providers/sync_version_provider.dart';
 import 'package:expenser/data/repositories/budget_repository.dart';
 import 'package:expenser/data/repositories/transaction_repository.dart';
 import 'package:expenser/models/budget_model.dart';
+import 'package:expenser/models/budget_period.dart';
+import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/transaction_type.dart';
-import 'package:expenser/services/firebase_user_data_service.dart';
+import 'package:expenser/services/sync/budget_sync_service.dart';
+import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/viewmodels/transaction_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
-/// Groups all category allocations belonging to one wizard creation.
+/// All category allocations created together in one wizard run.
 class BudgetPlan {
-  final String planId;
-  final String? accountId;
-  final String period;
-  final String? notes;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final List<BudgetModel> allocations;
-
   const BudgetPlan({
     required this.planId,
     required this.accountId,
     required this.period,
     required this.notes,
-    required this.startDate,
-    required this.endDate,
+    required this.range,
+    required this.currency,
     required this.allocations,
+    required this.spentByBudgetId,
+    this.closedAt,
   });
 
-  double get totalLimit =>
-      allocations.fold(0, (sum, b) => sum + b.limitAmount);
+  final String planId;
+  final String? accountId;
+  final BudgetPeriodType period;
+  final String? notes;
+  final BudgetDateRange range;
+  final String currency;
+  final List<BudgetModel> allocations;
 
-  double totalSpent(Map<String, double> spent) =>
-      allocations.fold(0, (sum, b) => sum + (spent[b.categoryId] ?? 0));
+  /// When the user closed the plan early; null while it runs to its end date.
+  final DateTime? closedAt;
 
-  double spentPercent(Map<String, double> spent) {
-    final limit = totalLimit;
-    if (limit <= 0) return 0;
-    return (totalSpent(spent) / limit).clamp(0.0, 1.0);
+  /// Spending within this plan's range and account, keyed by allocation id.
+  final Map<String, double> spentByBudgetId;
+
+  Set<String> get categoryIds => {for (final b in allocations) b.categoryId};
+
+  double get alertThreshold =>
+      allocations.isEmpty ? 0.8 : allocations.first.alertThreshold;
+
+  double get totalLimit => allocations.fold(0, (sum, b) => sum + b.limitAmount);
+
+  double get totalSpent =>
+      spentByBudgetId.values.fold(0, (sum, spent) => sum + spent);
+
+  double get remaining => totalLimit - totalSpent;
+
+  /// Spent ÷ limit, not clamped, so values above 1 mean over budget.
+  double get usage => totalLimit > 0 ? totalSpent / totalLimit : 0;
+
+  double spentFor(BudgetModel allocation) =>
+      spentByBudgetId[allocation.id] ?? 0;
+
+  double usageFor(BudgetModel allocation) =>
+      allocation.limitAmount > 0
+          ? spentFor(allocation) / allocation.limitAmount
+          : 0;
+
+  BudgetStatus status(DateTime now) =>
+      closedAt != null ? BudgetStatus.closed : range.statusAt(now);
+
+  bool isFinished(DateTime now) {
+    final s = status(now);
+    return s == BudgetStatus.ended || s == BudgetStatus.closed;
   }
+
+  /// The whole allocated amount has been spent.
+  bool get isFullyUsed => totalLimit > 0 && totalSpent >= totalLimit;
+
+  bool isUsedUp(BudgetModel allocation) =>
+      allocation.limitAmount > 0 &&
+      spentFor(allocation) >= allocation.limitAmount;
+
+  /// Last calendar day spending was tracked.
+  DateTime get lastTrackedDay =>
+      closedAt != null
+          ? DateTime(closedAt!.year, closedAt!.month, closedAt!.day)
+          : range.end;
+
+  /// Whether [t] counts against this plan.
+  bool covers(TransactionModel t) =>
+      t.type == TransactionType.expense &&
+      categoryIds.contains(t.categoryId) &&
+      (accountId == null || t.accountId == accountId) &&
+      _tracks(t.date);
+
+  bool _tracks(DateTime date) =>
+      range.contains(date) && (closedAt == null || date.isBefore(closedAt!));
+
+  bool _sameSetupAs(BudgetPlan other) =>
+      other.accountId == accountId &&
+      other.period == period &&
+      setEquals(other.categoryIds, categoryIds);
 }
 
 class BudgetState {
+  const BudgetState({this.budgets = const [], this.plans = const []});
+
   final List<BudgetModel> budgets;
-  final Map<String, double> spent;
+  final List<BudgetPlan> plans;
 
-  const BudgetState({this.budgets = const [], this.spent = const {}});
+  /// Running and not-yet-started plans, soonest first.
+  List<BudgetPlan> currentPlans(DateTime now) =>
+      plans.where((p) => !p.isFinished(now)).toList()
+        ..sort((a, b) => a.range.start.compareTo(b.range.start));
 
-  Map<String, double> get percentages {
-    final result = <String, double>{};
-    for (final b in budgets) {
-      final s = spent[b.categoryId] ?? 0;
-      result[b.categoryId] =
-          b.limitAmount > 0 ? (s / b.limitAmount).clamp(0.0, 1.0) : 0;
+  List<BudgetPlan> activePlans(DateTime now) =>
+      plans.where((p) => p.status(now) == BudgetStatus.active).toList();
+
+  /// Ended or closed plans, most recently finished first.
+  List<BudgetPlan> endedPlans(DateTime now) =>
+      plans.where((p) => p.isFinished(now)).toList()
+        ..sort((a, b) => b.lastTrackedDay.compareTo(a.lastTrackedDay));
+
+  BudgetPlan? planById(String planId) {
+    for (final plan in plans) {
+      if (plan.planId == planId) return plan;
     }
-    return result;
+    return null;
   }
 
-  /// Groups current-month budgets by their planId (or individual id as fallback).
-  List<BudgetPlan> get plans {
-    final now = DateTime.now();
-    final current = budgets
-        .where((b) => b.month == now.month && b.year == now.year)
-        .toList();
-
-    final grouped = <String, List<BudgetModel>>{};
-    for (final b in current) {
-      final key = b.planId ?? b.id;
-      grouped.putIfAbsent(key, () => []).add(b);
-    }
-
-    return grouped.entries.map((e) {
-      final first = e.value.first;
-      return BudgetPlan(
-        planId: e.key,
-        accountId: first.accountId,
-        period: first.period ?? 'monthly',
-        notes: first.notes,
-        startDate: first.startDate,
-        endDate: first.endDate,
-        allocations: e.value,
-      );
-    }).toList();
-  }
-
-  BudgetState copyWith({
-    List<BudgetModel>? budgets,
-    Map<String, double>? spent,
-  }) =>
-      BudgetState(budgets: budgets ?? this.budgets, spent: spent ?? this.spent);
+  /// True when a current plan already continues [ended]'s setup.
+  bool isRenewed(BudgetPlan ended, DateTime now) => currentPlans(now).any(
+    (p) =>
+        !p.range.start.isBefore(ended.lastTrackedDay) && p._sameSetupAs(ended),
+  );
 }
 
 class BudgetNotifier extends Notifier<BudgetState> {
   @override
   BudgetState build() {
     ref.watch(syncVersionProvider);
-    final now = DateTime.now();
+    // Recompute spending whenever transactions, account currencies or the
+    // fallback currency change.
+    ref.watch(transactionProvider.select((s) => s.transactions));
+    ref.watch(accountProvider.select((s) => s.accounts));
+    ref.watch(settingsProvider.select((s) => s.preferredCurrency));
+    return _compute();
+  }
+
+  BudgetState _compute() {
     final budgets = ref.read(budgetRepositoryProvider).getAll();
-    final from = DateTime(now.year, now.month, 1);
-    final to = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-    final txs = ref.read(transactionRepositoryProvider).getByDateRange(from, to);
-    final spent = <String, double>{};
-    for (final t in txs.where((t) => t.type == TransactionType.expense)) {
-      spent[t.categoryId] = (spent[t.categoryId] ?? 0) + t.amount;
+    final expensesByCategory = <String, List<TransactionModel>>{};
+    for (final t in ref.read(transactionRepositoryProvider).getAll()) {
+      if (t.type != TransactionType.expense) continue;
+      expensesByCategory.putIfAbsent(t.categoryId, () => []).add(t);
     }
-    return BudgetState(budgets: budgets, spent: spent);
+
+    final grouped = <String, List<BudgetModel>>{};
+    for (final b in budgets) {
+      grouped.putIfAbsent(b.planId ?? b.id, () => []).add(b);
+    }
+
+    final plans = [
+      for (final entry in grouped.entries)
+        _buildPlan(entry.key, entry.value, expensesByCategory),
+    ];
+    return BudgetState(budgets: budgets, plans: plans);
   }
 
-  void _load() {
+  BudgetPlan _buildPlan(
+    String planId,
+    List<BudgetModel> allocations,
+    Map<String, List<TransactionModel>> expensesByCategory,
+  ) {
+    final first = allocations.first;
+    final range = first.dateRange;
+    final accountId = first.accountId;
+    final closedAt = first.closedAt;
+    final spent = <String, double>{};
+    for (final b in allocations) {
+      var total = 0.0;
+      for (final t in expensesByCategory[b.categoryId] ?? const []) {
+        if (accountId != null && t.accountId != accountId) continue;
+        if (!range.contains(t.date)) continue;
+        if (closedAt != null && !t.date.isBefore(closedAt)) continue;
+        total += t.amount;
+      }
+      spent[b.id] = total;
+    }
+
+    return BudgetPlan(
+      planId: planId,
+      accountId: accountId,
+      period: first.periodType,
+      notes: first.notes,
+      range: range,
+      currency: _currencyFor(accountId),
+      allocations: allocations,
+      spentByBudgetId: spent,
+      closedAt: closedAt,
+    );
+  }
+
+  String _currencyFor(String? accountId) {
+    if (accountId != null) {
+      for (final a in ref.read(accountProvider).accounts) {
+        if (a.id == accountId) return a.currencyCode;
+      }
+    }
+    return ref.read(settingsProvider).preferredCurrency;
+  }
+
+  void _reload() => state = _compute();
+
+  /// Re-reads the offline copy after the server pushed changes into it.
+  void reloadFromCache() => _reload();
+
+  BudgetSyncService get _sync => ref.read(budgetSyncServiceProvider);
+
+  String? get _uid => ref.read(settingsProvider).uid;
+
+  List<BudgetModel> _allocationsOf(String planId) =>
+      state.budgets.where((b) => (b.planId ?? b.id) == planId).toList();
+
+  /// Creates or updates a plan. Allocations whose category already exists in
+  /// the plan keep their id, so alert history and sync records stay linked;
+  /// categories no longer present are removed.
+  Future<void> savePlan(String planId, List<BudgetModel> allocations) async {
+    final existing = {for (final b in _allocationsOf(planId)) b.categoryId: b};
+
+    for (final draft in allocations) {
+      final previous = existing.remove(draft.categoryId);
+      final budget =
+          previous == null
+              ? draft
+              : draft.copyWith(
+                id: previous.id,
+                createdAt: previous.createdAt,
+                closedAt: previous.closedAt,
+              );
+      await _sync.save(_uid, budget);
+    }
+    for (final removed in existing.values) {
+      await _sync.delete(_uid, removed.id);
+    }
+    _reload();
+  }
+
+  /// Stops the plan now: it moves to Ended and later spending isn't counted.
+  Future<void> closePlan(String planId) async {
+    final closedAt = DateTime.now();
+    for (final b in _allocationsOf(planId)) {
+      await _sync.save(_uid, b.copyWith(closedAt: closedAt));
+    }
+    _reload();
+  }
+
+  Future<void> reopenPlan(String planId) async {
+    for (final b in _allocationsOf(planId)) {
+      await _sync.save(_uid, b.copyWith(clearClosedAt: true));
+    }
+    _reload();
+  }
+
+  /// Deletes a plan and returns its allocations so the caller can undo.
+  Future<List<BudgetModel>> deletePlan(String planId) async {
+    final toDelete = _allocationsOf(planId);
+    for (final b in toDelete) {
+      await _sync.delete(_uid, b.id);
+    }
+    _reload();
+    return toDelete;
+  }
+
+  Future<void> restore(List<BudgetModel> allocations) async {
+    for (final b in allocations) {
+      await _sync.save(_uid, b.copyWith());
+    }
+    _reload();
+  }
+
+  /// Copies a finished plan into the period containing today (or the next
+  /// period, if it was closed before its own period ended).
+  /// Returns the new plan id, or null if [planId] doesn't exist.
+  Future<String?> renewPlan(String planId) async {
+    final plan = state.planById(planId);
+    if (plan == null) return null;
+
     final now = DateTime.now();
-    final budgets = ref.read(budgetRepositoryProvider).getAll();
-    state = state.copyWith(budgets: budgets);
-    _refreshSpent(now.month, now.year);
+    final range = plan.range.renewedFor(plan.period, now);
+    final newPlanId = const Uuid().v4();
+    final copies = [
+      for (final b in plan.allocations)
+        BudgetModel(
+          id: const Uuid().v4(),
+          categoryId: b.categoryId,
+          limitAmount: b.limitAmount,
+          month: range.start.month,
+          year: range.start.year,
+          alertThreshold: b.alertThreshold,
+          createdAt: now,
+          accountId: b.accountId,
+          period: plan.period.value,
+          planId: newPlanId,
+          notes: b.notes,
+          startDate: range.start,
+          endDate: range.end,
+        ),
+    ];
+    await savePlan(newPlanId, copies);
+    return newPlanId;
   }
-
-  void _refreshSpent(int month, int year) {
-    final txRepo = ref.read(transactionRepositoryProvider);
-    final from = DateTime(year, month, 1);
-    final to = DateTime(year, month + 1, 0, 23, 59, 59);
-    final txs = txRepo.getByDateRange(from, to);
-    final spent = <String, double>{};
-    for (final t in txs.where((t) => t.type == TransactionType.expense)) {
-      spent[t.categoryId] = (spent[t.categoryId] ?? 0) + t.amount;
-    }
-    state = state.copyWith(spent: spent);
-  }
-
-  void refresh() => _load();
 
   Future<void> addBudget(BudgetModel b) async {
-    await ref.read(budgetRepositoryProvider).add(b);
-    _load();
-    _mirror((svc, uid) => svc.saveBudget(uid, b));
-  }
-
-  Future<void> addPlan(List<BudgetModel> allocations) async {
-    for (final b in allocations) {
-      await ref.read(budgetRepositoryProvider).add(b);
-      _mirror((svc, uid) => svc.saveBudget(uid, b));
-    }
-    _load();
+    await _sync.save(_uid, b);
+    _reload();
   }
 
   Future<void> updateBudget(BudgetModel b) async {
-    await ref.read(budgetRepositoryProvider).update(b);
-    _load();
-    _mirror((svc, uid) => svc.saveBudget(uid, b));
+    await _sync.save(_uid, b);
+    _reload();
   }
 
   Future<void> deleteBudget(String id) async {
-    await ref.read(budgetRepositoryProvider).delete(id);
-    _load();
-    _mirror((svc, uid) => svc.deleteBudget(uid, id));
-  }
-
-  Future<void> deletePlan(String planId) async {
-    final toDelete = state.budgets
-        .where((b) => (b.planId ?? b.id) == planId)
-        .toList();
-    for (final b in toDelete) {
-      await ref.read(budgetRepositoryProvider).delete(b.id);
-      _mirror((svc, uid) => svc.deleteBudget(uid, b.id));
-    }
-    _load();
-  }
-
-  void _mirror(
-    Future<void> Function(FirebaseUserDataService svc, String uid) fn,
-  ) {
-    final uid = ref.read(settingsProvider).uid;
-    if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB budget: $e'));
+    await _sync.delete(_uid, id);
+    _reload();
   }
 }
 
 final budgetProvider = NotifierProvider<BudgetNotifier, BudgetState>(
   BudgetNotifier.new,
 );
+
+/// Expenses counted against one plan, newest first.
+final budgetPlanTransactionsProvider =
+    Provider.family<List<TransactionModel>, String>((ref, planId) {
+      final plan = ref.watch(budgetProvider).planById(planId);
+      if (plan == null) return const [];
+      return ref
+          .read(transactionRepositoryProvider)
+          .getAll()
+          .where(plan.covers)
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+    });
+
+/// Keeps the offline copy in step with Firebase while signed in: applies
+/// server changes as they arrive and re-sends pending changes on reconnect.
+final budgetLiveSyncProvider = Provider<void>((ref) {
+  final uid = ref.watch(settingsProvider.select((s) => s.uid));
+  if (uid == null) return;
+
+  final remote = ref.watch(budgetRemoteSourceProvider);
+  final sync = ref.watch(budgetSyncServiceProvider);
+  sync.flush(uid);
+
+  final subscriptions = <StreamSubscription<Object?>>[
+    remote
+        .watchBudgets(uid)
+        .asyncMap((budgets) => sync.applyRemote(uid, budgets))
+        .listen(
+          (_) => ref.read(budgetProvider.notifier).reloadFromCache(),
+          onError: (Object e) => debugPrint('Budget live sync: $e'),
+        ),
+    remote
+        .watchConnection()
+        .where((connected) => connected)
+        .listen(
+          (_) => sync.flush(uid),
+          onError: (Object e) => debugPrint('Budget connection: $e'),
+        ),
+  ];
+  ref.onDispose(() {
+    for (final subscription in subscriptions) {
+      subscription.cancel();
+    }
+  });
+});

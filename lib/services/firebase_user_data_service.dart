@@ -1,4 +1,6 @@
+import 'package:expenser/services/sync/budget_remote_source.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expenser/models/account_model.dart';
@@ -32,7 +34,7 @@ class SyncPayload {
       accounts.isEmpty && transactions.isEmpty && categories.isEmpty;
 }
 
-class FirebaseUserDataService {
+class FirebaseUserDataService implements BudgetRemoteSource {
   DatabaseReference _col(String uid, String collection) =>
       FirebaseDatabase.instance.ref('users/$uid/$collection');
 
@@ -107,11 +109,37 @@ class FirebaseUserDataService {
 
   // ─── Budgets ──────────────────────────────────────────────────────────────
 
+  @override
   Future<void> saveBudget(String uid, BudgetModel b) =>
       _col(uid, 'budgets').child(b.id).set(b.toMap());
 
+  @override
   Future<void> deleteBudget(String uid, String id) =>
       _col(uid, 'budgets').child(id).remove();
+
+  @override
+  Stream<List<BudgetModel>> watchBudgets(String uid) =>
+      _col(uid, 'budgets').onValue.map((event) {
+        final value = event.snapshot.value;
+        if (value is! Map) return const <BudgetModel>[];
+        final budgets = <BudgetModel>[];
+        for (final entry in value.values) {
+          try {
+            budgets.add(
+              BudgetModel.fromMap(Map<String, dynamic>.from(entry as Map)),
+            );
+          } catch (e) {
+            debugPrint('Skipping malformed budget record: $e');
+          }
+        }
+        return budgets;
+      });
+
+  @override
+  Stream<bool> watchConnection() => FirebaseDatabase.instance
+      .ref('.info/connected')
+      .onValue
+      .map((event) => event.snapshot.value == true);
 
   // ─── Savings Goals ────────────────────────────────────────────────────────
 

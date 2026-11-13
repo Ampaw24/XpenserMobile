@@ -1,3 +1,4 @@
+import 'package:expenser/services/auth/auth_result.dart';
 import 'package:expenser/services/auth/firebase_auth_service.dart';
 import 'package:expenser/services/auth/i_auth_service.dart';
 import 'package:expenser/services/notification/fcm_service.dart';
@@ -29,9 +30,16 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle() =>
+      _socialSignIn(_authService.signInWithGoogle);
+
+  Future<void> signInWithFacebook() =>
+      _socialSignIn(_authService.signInWithFacebook);
+
+  Future<void> _socialSignIn(Future<AuthResult> Function() signIn) async {
+    if (state.isLoading) return;
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final result = await _authService.signInWithGoogle();
+    final result = await signIn();
     if (result.cancelled) {
       state = state.copyWith(isLoading: false);
       return;

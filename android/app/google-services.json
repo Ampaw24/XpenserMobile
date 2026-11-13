@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "824715451215",
+    "firebase_url": "https://xpensermobile-cbde1-default-rtdb.firebaseio.com",
     "project_id": "xpensermobile-cbde1",
     "storage_bucket": "xpensermobile-cbde1.firebasestorage.app"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "824715451215-gk1spkeoh40m9cvqpr9ongqan2kr7fht.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.expenser",
+            "certificate_hash": "42f5c4db483bae8de201f6083568bdd960db76fc"
+          }
+        },
         {
           "client_id": "824715451215-at4ku807qgt0t8lek17ggjk2v5hc98ni.apps.googleusercontent.com",
           "client_type": 3

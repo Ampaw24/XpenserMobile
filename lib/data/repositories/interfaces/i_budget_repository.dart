@@ -7,4 +7,7 @@ abstract class IBudgetRepository {
   Future<void> add(BudgetModel budget);
   Future<void> update(BudgetModel budget);
   Future<void> delete(String id);
+
+  /// Makes the local copy match [budgets] exactly.
+  Future<void> replaceAll(List<BudgetModel> budgets);
 }

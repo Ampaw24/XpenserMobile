@@ -30,6 +30,8 @@ abstract final class AppBrand {
   static const Color textPrimaryLight = Color(0xFF0F172A);
   static const Color textSecondaryLight = Color(0xFF64748B);
   static const Color textMutedLight = Color(0xFF94A3B8);
+  static const Color surfaceMutedLight = Color(0xFFF1F4F3);
+  static const Color navBarLight = Color(0xFFFBFCFB);
 
   static const Color backgroundDark = Color(0xFF042F2E);
   static const Color surfaceDark = Color(0xFF073836);

@@ -16,3 +16,12 @@ enum AccountType {
   @HiveField(3)
   savings,
 }
+
+extension AccountTypeLabel on AccountType {
+  String get label => switch (this) {
+    AccountType.cash => 'Cash',
+    AccountType.bank => 'Bank',
+    AccountType.mobileMoney => 'Mobile Money',
+    AccountType.savings => 'Savings',
+  };
+}

@@ -1,6 +1,7 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,17 +47,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child:
-              _sent
-                  ? _SuccessView(email: _emailCtrl.text)
-                  : _FormView(
-                    formKey: _formKey,
-                    emailCtrl: _emailCtrl,
-                    onSubmit: _submit,
-                  ),
+      body: BrandWatermarkBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child:
+                _sent
+                    ? _SuccessView(email: _emailCtrl.text)
+                    : _FormView(
+                      formKey: _formKey,
+                      emailCtrl: _emailCtrl,
+                      onSubmit: _submit,
+                    ),
+          ),
         ),
       ),
     );

@@ -1,5 +1,12 @@
-import 'package:expenser/core/utils/theme/colors.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_field_label.dart';
+import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
+import 'package:expenser/core/utils/widgets/app_select_field.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/viewmodels/tax_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/sheet_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,102 +38,68 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(taxProvider);
     final notifier = ref.read(taxProvider.notifier);
+    final palette = context.palette;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      padding: EdgeInsets.fromLTRB(
+        context.rs(20),
+        0,
+        context.rs(20),
+        MediaQuery.viewInsetsOf(context).bottom + context.rs(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: AppColors.PRIMARY,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Tax Calculator',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Country selector chips
+          const SheetTitle('Tax Calculator'),
+          SizedBox(height: context.rs(20)),
+          const AppFieldLabel('Country'),
           Wrap(
-            spacing: 8,
+            spacing: context.rs(8),
+            runSpacing: context.rs(8),
             children:
                 TaxCountry.values.map((c) {
                   final selected = c == state.country;
                   return ChoiceChip(
                     label: Text(c.label),
                     selected: selected,
-                    selectedColor: AppColors.PRIMARY.withValues(alpha: 0.15),
-                    side: BorderSide(
-                      color:
-                          selected ? AppColors.PRIMARY : Colors.grey.shade300,
-                    ),
+                    showCheckmark: false,
+                    side: BorderSide.none,
+                    backgroundColor: palette.surfaceMuted,
+                    selectedColor: palette.accent.withValues(alpha: 0.14),
                     labelStyle: TextStyle(
-                      color: selected ? AppColors.PRIMARY : Colors.grey[700],
+                      color: selected ? palette.accent : palette.textSecondary,
                       fontWeight:
                           selected ? FontWeight.w600 : FontWeight.normal,
-                      fontSize: 12,
+                      fontSize: context.rs(12),
                     ),
                     onSelected: (_) => notifier.setCountry(c),
                   );
                 }).toList(),
           ),
-          const SizedBox(height: 16),
-          TextField(
+          SizedBox(height: context.rs(16)),
+          AppTextField(
             controller: _incomeCtrl,
+            label: 'Annual income (${state.country.currency})',
+            hint: '0.00',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: 'Annual Income (${state.country.currency})',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                borderSide: const BorderSide(color: AppColors.PRIMARY),
-              ),
-              prefixIcon: const Icon(Icons.attach_money_rounded),
-            ),
+            inputFormatters: [AppTextField.decimalFormatter],
             onChanged: (v) => notifier.calculate(double.tryParse(v) ?? 0.0),
           ),
           if (state.country == TaxCountry.usa) ...[
-            const SizedBox(height: 16),
-            InputDecorator(
-              decoration: InputDecoration(
-                labelText: 'Filing Status',
-                border: UnderlineInputBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                ),
-                prefixIcon: const Icon(Icons.person_rounded),
-              ),
-              child: DropdownButton<String>(
-                value: state.filingStatus,
-                isExpanded: true,
-                underline: const SizedBox(),
-                items:
-                    _usFilingStatuses
-                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                        .toList(),
-                onChanged: (v) {
-                  if (v != null) notifier.setFilingStatus(v);
-                },
-              ),
+            SizedBox(height: context.rs(16)),
+            AppSelectField<String>(
+              label: 'Filing status',
+              value: state.filingStatus,
+              prefixIcon: Icons.person_rounded,
+              options: [
+                for (final status in _usFilingStatuses)
+                  AppSelectOption(value: status, label: status),
+              ],
+              onChanged: notifier.setFilingStatus,
             ),
           ],
-          const SizedBox(height: 20),
+          SizedBox(height: context.rs(20)),
           Row(
             children: [
               Expanded(
@@ -135,22 +108,22 @@ class _TaxCalculatorScreenState extends ConsumerState<TaxCalculatorScreen> {
                   value:
                       '${state.country.currency} ${state.taxOwed.toStringAsFixed(2)}',
                   sub: '${state.effectiveRate.toStringAsFixed(1)}% effective',
-                  color: Colors.red,
+                  color: palette.danger,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: context.rs(12)),
               Expanded(
                 child: _ResultCard(
                   label: 'After-Tax',
                   value:
                       '${state.country.currency} ${state.afterTaxIncome.toStringAsFixed(2)}',
                   sub: 'Take-home',
-                  color: AppColors.PRIMARY,
+                  color: palette.accent,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: context.rs(8)),
         ],
       ),
     );
@@ -172,35 +145,42 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
+    final palette = context.palette;
+    return AppSurfaceCard(
+      color: color.withValues(alpha: 0.08),
+      borderColor: color.withValues(alpha: 0.2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 11,
+              color: palette.textSecondary,
+              fontSize: context.rs(11),
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+          SizedBox(height: context.rs(6)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: context.rs(15),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(sub, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+          SizedBox(height: context.rs(2)),
+          Text(
+            sub,
+            style: TextStyle(
+              color: palette.textMuted,
+              fontSize: context.rs(11),
+            ),
+          ),
         ],
       ),
     );

@@ -1,78 +1,61 @@
-import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
 import 'package:expenser/viewmodels/budget_viewmodel.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/views/budgets/widgets/budget_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expenser/views/home/widgets/section_header.dart';
 
 class BudgetProgressSection extends ConsumerWidget {
   const BudgetProgressSection({super.key});
 
+  static const _maxItems = 3;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final budgetState = ref.watch(budgetProvider);
+    final plans = ref.watch(budgetProvider).activePlans(DateTime.now());
     final categoryRepo = ref.read(categoryRepositoryProvider);
-    final now = DateTime.now();
-    final currentBudgets = budgetState.budgets
-        .where((b) => b.month == now.month && b.year == now.year)
-        .take(3)
-        .toList();
 
-    if (currentBudgets.isEmpty) return const SizedBox.shrink();
+    // Categories closest to (or over) their limit first.
+    final items = [
+      for (final plan in plans)
+        for (final allocation in plan.allocations)
+          (plan: plan, allocation: allocation),
+    ]..sort(
+      (a, b) => b.plan
+          .usageFor(b.allocation)
+          .compareTo(a.plan.usageFor(a.allocation)),
+    );
 
-    final titleColor = isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Budget Overview',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: titleColor,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/shell/budgets'),
-              child: const Text(
-                'See all',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13,
-                  color: AppBrand.tealPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
+        SectionHeader(
+          title: 'Budget Overview',
+          onSeeAll: () => context.go('/shell/budgets'),
         ),
-        const SizedBox(height: 12),
-        ...currentBudgets.map((b) {
-          final category = categoryRepo.getById(b.categoryId);
-          final spent = budgetState.spent[b.categoryId] ?? 0;
-          final pct = (spent / b.limitAmount).clamp(0.0, 1.0);
-          final Color barColor;
-          if (pct >= 1.0) {
-            barColor = const Color(0xFFE11D48);
-          } else if (pct >= b.alertThreshold) {
-            barColor = const Color(0xFFD97706);
-          } else {
-            barColor = AppBrand.tealPrimary;
-          }
-          return _BudgetCard(
-            categoryName: category?.name ?? 'Category',
-            spent: spent,
-            limit: b.limitAmount,
-            progress: pct,
-            barColor: barColor,
-          );
-        }),
+        SizedBox(height: context.rs(10)),
+        for (final (:plan, :allocation) in items.take(_maxItems))
+          _BudgetCard(
+            categoryName:
+                categoryRepo.getById(allocation.categoryId)?.name ?? 'Category',
+            amountLabel:
+                '${plan.currency} ${plan.spentFor(allocation).toStringAsFixed(0)}'
+                ' / ${allocation.limitAmount.toStringAsFixed(0)}',
+            usage: plan.usageFor(allocation),
+            barColor: budgetUsageColor(
+              context.palette,
+              usage: plan.usageFor(allocation),
+              warningAt: allocation.alertThreshold,
+              normal: context.palette.accent,
+            ),
+            onTap: () => context.push('/budgets/plan/${plan.planId}'),
+          ),
       ],
     );
   }
@@ -81,72 +64,68 @@ class BudgetProgressSection extends ConsumerWidget {
 class _BudgetCard extends StatelessWidget {
   const _BudgetCard({
     required this.categoryName,
-    required this.spent,
-    required this.limit,
-    required this.progress,
+    required this.amountLabel,
+    required this.usage,
     required this.barColor,
+    required this.onTap,
   });
 
   final String categoryName;
-  final double spent, limit, progress;
+  final String amountLabel;
+  final double usage;
   final Color barColor;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppBrand.surfaceDark : Colors.white;
-    final borderColor = isDark ? AppBrand.borderDark : AppBrand.borderLight;
-    final titleColor = isDark ? AppBrand.textPrimaryDark : AppBrand.textPrimaryLight;
-    final trackColor = isDark ? AppBrand.surfaceDarkElevated : const Color(0xFFF1F5F9);
+    final palette = context.palette;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: borderColor,
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                categoryName,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.rs(10)),
+      child: AppSurfaceCard(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    categoryName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: context.rs(14),
+                      fontWeight: FontWeight.w600,
+                      color: palette.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
-              Text(
-                '${spent.toStringAsFixed(0)} / ${limit.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: barColor,
+                SizedBox(width: context.rs(8)),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      amountLabel,
+                      style: TextStyle(
+                        fontSize: context.rs(13),
+                        fontWeight: FontWeight.w600,
+                        color: barColor,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: trackColor,
-              valueColor: AlwaysStoppedAnimation(barColor),
+              ],
             ),
-          ),
-        ],
+            SizedBox(height: context.rs(10)),
+            BudgetProgressBar(
+              usage: usage,
+              color: barColor,
+              height: context.rs(6),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:expenser/models/user_profile_model.dart';
@@ -10,13 +13,16 @@ class FirebaseAuthService implements IAuthService {
   FirebaseAuthService({
     FirebaseAuth? auth,
     GoogleSignIn? googleSignIn,
+    FacebookAuth? facebookAuth,
     UserProfileService? userProfileService,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _facebookAuth = facebookAuth ?? FacebookAuth.instance,
        _profileService = userProfileService ?? UserProfileService();
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
+  final FacebookAuth _facebookAuth;
   final UserProfileService _profileService;
 
   @override
@@ -30,23 +36,108 @@ class FirebaseAuthService implements IAuthService {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      final result = await _auth.signInWithCredential(credential);
-      final user = result.user!;
-
-      final candidate = _buildProfile(user, 'google');
-      final checked = await _profileService.checkOrCreate(candidate);
-
-      return AuthResult.success(
-        uid: user.uid,
-        userName: checked.profile.displayName,
-        email: checked.profile.email,
-        photoUrl: checked.profile.photoUrl,
-        isNewUser: checked.isNewUser,
-      );
+      return await _signInWithCredential(credential, 'google');
+    } on PlatformException catch (e) {
+      debugPrint('Google sign-in error: ${e.code} ${e.message}');
+      if (e.code == GoogleSignIn.kSignInCanceledError) {
+        return AuthResult.cancelled();
+      }
+      return AuthResult.failure(_googleErrorMessage(e));
     } on FirebaseAuthException catch (e) {
-      return AuthResult.failure(e.message ?? 'Google sign-in failed');
-    } catch (_) {
+      debugPrint('Google Firebase auth error: ${e.code} ${e.message}');
+      return AuthResult.failure(_firebaseErrorMessage(e, 'Google'));
+    } catch (e) {
+      debugPrint('Google sign-in error: $e');
       return AuthResult.failure('Google sign-in failed. Please try again.');
+    }
+  }
+
+  @override
+  Future<AuthResult> signInWithFacebook() async {
+    try {
+      final result = await _facebookAuth.login(
+        permissions: const ['email', 'public_profile'],
+      );
+      switch (result.status) {
+        case LoginStatus.cancelled:
+          return AuthResult.cancelled();
+        case LoginStatus.operationInProgress:
+          return AuthResult.failure('Facebook sign-in is already in progress.');
+        case LoginStatus.failed:
+          debugPrint('Facebook sign-in error: ${result.message}');
+          return AuthResult.failure(
+            'Facebook sign-in failed. Please try again.',
+          );
+        case LoginStatus.success:
+          final token = result.accessToken;
+          if (token == null) {
+            return AuthResult.failure(
+              'Facebook sign-in failed. Please try again.',
+            );
+          }
+          final credential = FacebookAuthProvider.credential(token.tokenString);
+          return await _signInWithCredential(credential, 'facebook');
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Facebook Firebase auth error: ${e.code} ${e.message}');
+      await _facebookAuth.logOut();
+      return AuthResult.failure(_firebaseErrorMessage(e, 'Facebook'));
+    } on MissingPluginException {
+      debugPrint(
+        'Facebook SDK unavailable: check facebook.appId in local.properties',
+      );
+      return AuthResult.failure(
+        'Facebook sign-in is not configured for this app build.',
+      );
+    } catch (e) {
+      debugPrint('Facebook sign-in error: $e');
+      return AuthResult.failure('Facebook sign-in failed. Please try again.');
+    }
+  }
+
+  Future<AuthResult> _signInWithCredential(
+    AuthCredential credential,
+    String provider,
+  ) async {
+    final result = await _auth.signInWithCredential(credential);
+    final user = result.user!;
+
+    final candidate = _buildProfile(user, provider);
+    final checked = await _profileService.checkOrCreate(candidate);
+
+    return AuthResult.success(
+      uid: user.uid,
+      userName: checked.profile.displayName,
+      email: checked.profile.email,
+      photoUrl: checked.profile.photoUrl,
+      isNewUser: checked.isNewUser,
+    );
+  }
+
+  String _googleErrorMessage(PlatformException e) {
+    if (e.code == GoogleSignIn.kNetworkError) {
+      return 'No internet connection. Check your network and try again.';
+    }
+    final message = e.message ?? '';
+    if (message.contains('ApiException: 10')) {
+      return 'Google sign-in is not configured for this app build.';
+    }
+    return 'Google sign-in failed. Please try again.';
+  }
+
+  String _firebaseErrorMessage(FirebaseAuthException e, String providerName) {
+    switch (e.code) {
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with this email. '
+            'Sign in with the method you used before.';
+      case 'network-request-failed':
+        return 'No internet connection. Check your network and try again.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'operation-not-allowed':
+        return '$providerName sign-in is not enabled for this app.';
+      default:
+        return e.message ?? '$providerName sign-in failed';
     }
   }
 
@@ -111,7 +202,7 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    await Future.wait([_googleSignIn.signOut(), _facebookAuth.logOut()]);
     await _auth.signOut();
   }
 
