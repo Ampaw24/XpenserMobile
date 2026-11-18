@@ -1,8 +1,8 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_motion.dart';
-import 'package:expenser/views/shell/widgets/nav_tab_item.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/views/shell/widgets/nav_tab_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';

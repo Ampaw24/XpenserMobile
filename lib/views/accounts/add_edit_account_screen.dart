@@ -1,4 +1,5 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
@@ -38,7 +39,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
   AccountModel? _existing;
   AccountType _type = AccountType.cash;
   String _colorHex = 'FF4CAF50';
-  int _iconCodePoint = Icons.wallet_rounded.codePoint;
+  int _iconCodePoint = IconRegistry.defaultAccount.codePoint;
   String _currency = 'GHS';
   bool _isLoading = false;
 
@@ -53,15 +54,6 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     'FF00BCD4',
     'FF795548',
     'FF607D8B',
-  ];
-
-  static const _icons = [
-    Icons.wallet_rounded,
-    Icons.account_balance_rounded,
-    Icons.phone_android_rounded,
-    Icons.savings_rounded,
-    Icons.credit_card_rounded,
-    Icons.attach_money_rounded,
   ];
 
   static const _currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR'];
@@ -180,7 +172,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
         ),
         children: [
           AppIdentityPreview(
-            icon: IconData(_iconCodePoint, fontFamily: 'MaterialIcons'),
+            icon: IconRegistry.account(_iconCodePoint),
             color: color,
             name: _nameCtrl,
             placeholder: 'Account name',
@@ -255,7 +247,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
           SizedBox(height: context.rs(20)),
           const AppFieldLabel('Icon'),
           AppIconPicker(
-            options: _icons,
+            options: IconRegistry.accountOptions,
             selectedCodePoint: _iconCodePoint,
             color: color,
             onSelected: (code) => setState(() => _iconCodePoint = code),

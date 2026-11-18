@@ -1,8 +1,8 @@
 import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/user_avatar.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
-import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

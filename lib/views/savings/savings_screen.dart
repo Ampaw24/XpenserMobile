@@ -1,15 +1,16 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_empty_state.dart';
 import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:expenser/views/savings/widgets/add_savings_sheet.dart';
 import 'package:expenser/views/savings/widgets/savings_commit_bar.dart';
-import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -139,11 +140,7 @@ class _SavingsGoalCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(context.rs(14)),
                   ),
                   child: Icon(
-                    IconData(
-                      goal.iconCodePoint,
-                      fontFamily: 'HgiStrokeRounded',
-                      fontPackage: 'hugeicons',
-                    ),
+                    IconRegistry.savingsGoal(goal.iconCodePoint),
                     color: goalColor,
                     size: context.rs(22),
                   ),

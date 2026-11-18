@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:expenser/core/router/app_router.dart';
 import 'package:expenser/models/notification_record.dart';
 import 'package:expenser/services/notification/notification_channel.dart';
 import 'package:expenser/services/user_profile_service.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
-import 'package:expenser/core/router/app_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

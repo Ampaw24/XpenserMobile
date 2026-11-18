@@ -1,15 +1,16 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_amount_input.dart';
 import 'package:expenser/core/utils/widgets/app_form_layout.dart';
-import 'package:expenser/core/utils/widgets/category_picker_grid.dart';
 import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
 import 'package:expenser/core/utils/widgets/app_primary_button.dart';
 import 'package:expenser/core/utils/widgets/app_section_title.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/category_picker_grid.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/transaction_model.dart';
@@ -163,7 +164,7 @@ class _AddEditTransactionScreenState
             value: account.id,
             label: account.name,
             subtitle: account.currencyCode,
-            icon: IconData(account.iconCodePoint, fontFamily: 'MaterialIcons'),
+            icon: IconRegistry.account(account.iconCodePoint),
             color: colorFromHex(account.colorHex, fallback: palette.accent),
           ),
       ],

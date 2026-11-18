@@ -1,4 +1,5 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
@@ -28,7 +29,6 @@ import 'package:expenser/views/savings/widgets/savings_plan_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -51,7 +51,7 @@ class _AddEditSavingsGoalScreenState
 
   DateTime _targetDate = DateTime.now().add(const Duration(days: 30));
   String _colorHex = 'FF4CAF50';
-  int _iconCodePoint = HugeIcons.strokeRoundedSavings.codePoint;
+  int _iconCodePoint = IconRegistry.defaultSavingsGoal.codePoint;
   RecurringFrequency? _savingsFrequency;
   bool _remindersOn = false;
   DateTime? _reminderAt;
@@ -74,17 +74,6 @@ class _AddEditSavingsGoalScreenState
     'FF00BCD4',
     'FFFF5722',
     'FF607D8B',
-  ];
-
-  static const _icons = [
-    HugeIcons.strokeRoundedSavings,
-    HugeIcons.strokeRoundedHome01,
-    HugeIcons.strokeRoundedAirplane01,
-    HugeIcons.strokeRoundedCar01,
-    HugeIcons.strokeRoundedSchool01,
-    HugeIcons.strokeRoundedSmartPhone01,
-    HugeIcons.strokeRoundedFavourite,
-    HugeIcons.strokeRoundedStar,
   ];
 
   @override
@@ -286,10 +275,7 @@ class _AddEditSavingsGoalScreenState
   Widget build(BuildContext context) {
     final palette = context.palette;
     final color = colorFromHex(_colorHex, fallback: palette.accent);
-    final icon = _icons.firstWhere(
-      (i) => i.codePoint == _iconCodePoint,
-      orElse: () => _icons.first,
-    );
+    final icon = IconRegistry.savingsGoal(_iconCodePoint);
     final dateLabel = DateFormat.yMMMd().format(_targetDate);
     final amountKeyboard = const TextInputType.numberWithOptions(decimal: true);
     final fieldGap = SizedBox(height: context.rs(16));
@@ -407,7 +393,7 @@ class _AddEditSavingsGoalScreenState
           SizedBox(height: context.rs(20)),
           const AppFieldLabel('Icon'),
           AppIconPicker(
-            options: _icons,
+            options: IconRegistry.savingsGoalOptions,
             selectedCodePoint: _iconCodePoint,
             color: color,
             onSelected: (code) => setState(() => _iconCodePoint = code),

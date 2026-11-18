@@ -1,9 +1,9 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/utils/formatters/money.dart';
 import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/overdraft_check.dart';
 import 'package:expenser/models/transaction_model.dart';
-import 'package:expenser/core/utils/formatters/money.dart';
 import 'package:flutter/material.dart';
 
 /// Asks before saving [updated] would leave [account] below zero. Lets the

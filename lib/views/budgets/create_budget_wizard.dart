@@ -1,11 +1,14 @@
+import 'package:expenser/core/constants/icon_registry.dart';
+import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/theme/input_decorations.dart';
 import 'package:expenser/core/utils/widgets/app_field_label.dart';
+import 'package:expenser/core/utils/widgets/app_primary_button.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
 import 'package:expenser/core/utils/widgets/app_text_field.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
-import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/models/budget_model.dart';
 import 'package:expenser/models/budget_period.dart';
 import 'package:expenser/models/category_model.dart';
@@ -13,8 +16,6 @@ import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:expenser/viewmodels/budget_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
-import 'package:expenser/core/utils/widgets/app_primary_button.dart';
-import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -311,7 +312,7 @@ class _CategoryIcon extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Icon(
-        IconData(category.iconCodePoint, fontFamily: 'MaterialIcons'),
+        IconRegistry.material(category.iconCodePoint),
         color: color,
         size: diameter * 0.5,
       ),
@@ -958,7 +959,7 @@ class _AccountOption extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              IconData(iconCodePoint, fontFamily: 'MaterialIcons'),
+              IconRegistry.account(iconCodePoint),
               color: isSelected ? color : palette.textMuted,
               size: context.rs(18),
             ),

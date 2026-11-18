@@ -1,11 +1,11 @@
+import 'package:expenser/models/user_profile_model.dart';
+import 'package:expenser/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:expenser/models/user_profile_model.dart';
-import 'package:expenser/services/user_profile_service.dart';
 import 'auth_result.dart';
 import 'i_auth_service.dart';
 

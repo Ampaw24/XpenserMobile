@@ -1,8 +1,8 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

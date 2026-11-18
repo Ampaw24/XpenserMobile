@@ -1,4 +1,3 @@
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/account_type.dart';
 import 'package:expenser/models/app_settings_model.dart';
@@ -10,6 +9,7 @@ import 'package:expenser/models/recurring_rule_model.dart';
 import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/transaction_type.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HiveService {
   static const String transactions = 'transactions';

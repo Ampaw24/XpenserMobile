@@ -1,7 +1,8 @@
-import 'package:expenser/core/utils/responsive/responsive.dart';
-import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/core/utils/formatters/date_labels.dart';
+import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/models/consolidated_balance.dart';
+import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/viewmodels/consolidated_balance_viewmodel.dart';
 import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
@@ -12,7 +13,6 @@ import 'package:expenser/views/home/widgets/quick_actions_row.dart';
 import 'package:expenser/views/home/widgets/recent_transactions_section.dart';
 import 'package:expenser/views/home/widgets/section_header.dart';
 import 'package:expenser/views/home/widgets/spending_chart.dart';
-import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

@@ -1,10 +1,10 @@
 import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/core/utils/formatters/money.dart';
-import 'package:expenser/models/savings_plan.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/models/savings_goal_model.dart';
+import 'package:expenser/models/savings_plan.dart';
 import 'package:expenser/models/savings_reminder_schedule.dart';
 import 'package:flutter/material.dart';
 

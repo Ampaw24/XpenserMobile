@@ -1,3 +1,4 @@
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
@@ -46,9 +47,9 @@ class BudgetAllocationRow extends ConsumerWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            category != null
-                ? IconData(category.iconCodePoint, fontFamily: 'MaterialIcons')
-                : Icons.category_rounded,
+            IconRegistry.material(
+              category?.iconCodePoint ?? IconRegistry.defaultCategory.codePoint,
+            ),
             color: categoryColor,
             size: context.rs(15),
           ),

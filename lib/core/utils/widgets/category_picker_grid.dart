@@ -1,3 +1,4 @@
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
@@ -46,10 +47,7 @@ class CategoryPickerGrid extends StatelessWidget {
                 width: tileWidth,
                 child: _CategoryTile(
                   name: category.name,
-                  icon: IconData(
-                    category.iconCodePoint,
-                    fontFamily: 'MaterialIcons',
-                  ),
+                  icon: IconRegistry.material(category.iconCodePoint),
                   color: colorFromHex(
                     category.colorHex,
                     fallback: palette.textMuted,

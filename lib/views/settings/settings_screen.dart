@@ -1,24 +1,24 @@
+import 'package:expenser/core/constants/countries.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
 import 'package:expenser/core/utils/widgets/app_page_header.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/core/utils/widgets/user_avatar.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:expenser/viewmodels/consolidated_balance_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:expenser/views/converters/currency_converter_screen.dart';
+import 'package:expenser/views/profile/widgets/locale_pickers.dart';
 // import 'package:expenser/views/converters/tax_calculator_screen.dart';
 import 'package:expenser/views/settings/widgets/setting_item.dart';
-import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
-import 'package:expenser/core/constants/countries.dart';
-import 'package:expenser/views/profile/widgets/locale_pickers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

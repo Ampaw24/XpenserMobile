@@ -1,4 +1,5 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
@@ -98,7 +99,7 @@ class TransactionTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(context.rs(12)),
               ),
               child: Icon(
-                IconData(categoryIconCode, fontFamily: 'MaterialIcons'),
+                IconRegistry.material(categoryIconCode),
                 color: color,
                 size: context.rs(20),
               ),

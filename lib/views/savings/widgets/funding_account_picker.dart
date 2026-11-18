@@ -1,3 +1,4 @@
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
@@ -38,7 +39,7 @@ Future<String?> pickFundingAccount(
           value: account.id,
           label: account.name,
           subtitle: account.currencyCode,
-          icon: IconData(account.iconCodePoint, fontFamily: 'MaterialIcons'),
+          icon: IconRegistry.account(account.iconCodePoint),
           color: colorFromHex(account.colorHex, fallback: palette.accent),
         ),
     ],

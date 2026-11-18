@@ -1,5 +1,5 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:expenser/models/user_profile_model.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final userProfileServiceProvider = Provider<UserProfileService>(

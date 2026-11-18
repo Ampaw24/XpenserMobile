@@ -1,13 +1,14 @@
+import 'package:expenser/core/constants/icon_registry.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_empty_state.dart';
 import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_page_header.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
+import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/account_type.dart';
 import 'package:expenser/viewmodels/account_viewmodel.dart';
-import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -129,7 +130,7 @@ class _AccountTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(context.rs(14)),
               ),
               child: Icon(
-                IconData(account.iconCodePoint, fontFamily: 'MaterialIcons'),
+                IconRegistry.account(account.iconCodePoint),
                 color: color,
                 size: context.rs(22),
               ),

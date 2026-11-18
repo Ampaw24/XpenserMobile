@@ -29,7 +29,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final isDark = ref.watch(settingsProvider.select((s) => s.isDarkMode));
-    return MaterialApp.router(
+   return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Xpenser',
       theme: AppTheme.light,

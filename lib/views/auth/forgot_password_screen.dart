@@ -1,8 +1,8 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
 import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
-import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
+import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
