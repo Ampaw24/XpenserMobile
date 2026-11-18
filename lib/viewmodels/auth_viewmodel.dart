@@ -1,9 +1,11 @@
+import 'package:expenser/data/repositories/notification_repository.dart';
 import 'package:expenser/services/auth/auth_result.dart';
 import 'package:expenser/services/auth/firebase_auth_service.dart';
 import 'package:expenser/services/auth/i_auth_service.dart';
 import 'package:expenser/services/notification/fcm_service.dart';
 import 'package:expenser/services/notification/savings_reminder_service.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AuthState {
@@ -49,17 +51,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(
-          true,
-          userName: result.userName!,
-          uid: result.uid,
-          photoUrl: result.photoUrl,
-          isNewUser: result.isNewUser,
-        );
-    await ref.read(fcmServiceProvider).initialize(result.uid!);
-    state = const AuthState();
+    await _completeSignIn(result);
   }
 
   Future<void> login(String email, String password) async {
@@ -69,16 +61,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
-    await ref
-        .read(settingsProvider.notifier)
-        .setLoggedIn(
-          true,
-          userName: result.userName!,
-          uid: result.uid,
-          isNewUser: result.isNewUser,
-        );
-    await ref.read(fcmServiceProvider).initialize(result.uid!);
-    state = const AuthState();
+    await _completeSignIn(result);
   }
 
   Future<void> register(String name, String email, String password) async {
@@ -92,16 +75,44 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: result.error);
       return;
     }
+    await _completeSignIn(result);
+  }
+
+  Future<void> _completeSignIn(AuthResult result) async {
     await ref
         .read(settingsProvider.notifier)
         .setLoggedIn(
           true,
           userName: result.userName!,
           uid: result.uid,
+          photoUrl: result.photoUrl,
           isNewUser: result.isNewUser,
+          countryCode: result.countryCode,
+          currencyCode: result.currencyCode,
         );
     await ref.read(fcmServiceProvider).initialize(result.uid!);
+    if (!result.isNewUser) _warnIfLocaleMissing(result.uid!);
     state = const AuthState();
+  }
+
+  /// Existing accounts created before country and currency were required
+  /// get a one-off notification; the setup screen then blocks the app.
+  void _warnIfLocaleMissing(String uid) {
+    if (ref.read(settingsProvider).hasLocale) return;
+    final id = 'profile-locale-missing-$uid';
+    if (ref.read(notificationRepositoryProvider).exists(id)) return;
+    ref
+        .read(fcmServiceProvider)
+        .showLocalNotification(
+          id: id,
+          type: 'account',
+          route: '/shell/dashboard',
+          title: 'Add your country and currency',
+          body:
+              'Your account is missing your country and currency. '
+              'Add them to keep using Xpenser.',
+        )
+        .catchError((Object e) => debugPrint('Locale reminder failed: $e'));
   }
 
   Future<void> logout() async {

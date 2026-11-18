@@ -111,6 +111,8 @@ class FirebaseAuthService implements IAuthService {
       email: checked.profile.email,
       photoUrl: checked.profile.photoUrl,
       isNewUser: checked.isNewUser,
+      countryCode: checked.profile.countryCode,
+      currencyCode: checked.profile.currencyCode,
     );
   }
 
@@ -161,6 +163,8 @@ class FirebaseAuthService implements IAuthService {
         userName: checked.profile.displayName,
         email: checked.profile.email,
         isNewUser: checked.isNewUser,
+        countryCode: checked.profile.countryCode,
+        currencyCode: checked.profile.currencyCode,
       );
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(e.message ?? 'Login failed');
@@ -192,6 +196,8 @@ class FirebaseAuthService implements IAuthService {
         userName: checked.profile.displayName,
         email: checked.profile.email,
         isNewUser: checked.isNewUser,
+        countryCode: checked.profile.countryCode,
+        currencyCode: checked.profile.currencyCode,
       );
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(e.message ?? 'Registration failed');

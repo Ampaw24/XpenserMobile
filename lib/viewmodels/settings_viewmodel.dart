@@ -13,6 +13,8 @@ import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/services/data_bootstrap_service.dart';
 import 'package:expenser/services/firebase_user_data_service.dart';
+import 'package:expenser/services/user_profile_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SettingsNotifier extends Notifier<AppSettingsModel> {
@@ -34,6 +36,60 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
   void setCurrency(String code) {
     state = state.copyWith(preferredCurrency: code);
     _save();
+    _mirrorLocale(currencyCode: code);
+  }
+
+  void setCountry(String code) {
+    state = state.copyWith(countryCode: code);
+    _save();
+    _mirrorLocale(countryCode: code);
+  }
+
+  /// Saves the country and currency asked for after sign-in. Starter data
+  /// for a new user is created here, so its "Cash" account uses the
+  /// chosen currency.
+  Future<void> completeProfile({
+    required String countryCode,
+    required String currencyCode,
+  }) async {
+    if (ref.read(accountRepositoryProvider).getAll().isEmpty) {
+      await _seedDefaults(currencyCode);
+    }
+    // Published last: the router leaves the setup screen on this change.
+    state = state.copyWith(
+      countryCode: countryCode,
+      preferredCurrency: currencyCode,
+    );
+    await _save();
+    _mirrorLocale(countryCode: countryCode, currencyCode: currencyCode);
+  }
+
+  /// For sessions restored without signing in: adopts country and currency
+  /// already saved on the profile (e.g. from another device). Returns
+  /// whether they were found.
+  Future<bool> restoreProfileLocale() async {
+    final uid = state.uid;
+    if (uid == null) return false;
+    final profile = await ref
+        .read(userProfileServiceProvider)
+        .get(uid)
+        .timeout(const Duration(seconds: 10));
+    if (profile == null || !profile.hasLocale) return false;
+    await completeProfile(
+      countryCode: profile.countryCode!,
+      currencyCode: profile.currencyCode!,
+    );
+    return true;
+  }
+
+  /// Best effort: the local copy is the source of truth while offline.
+  void _mirrorLocale({String? countryCode, String? currencyCode}) {
+    final uid = state.uid;
+    if (uid == null) return;
+    ref
+        .read(userProfileServiceProvider)
+        .updateLocale(uid, countryCode: countryCode, currencyCode: currencyCode)
+        .catchError((Object e) => debugPrint('Profile locale sync: $e'));
   }
 
   void toggleNotifications() {
@@ -62,6 +118,8 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
     String? uid,
     String? photoUrl,
     bool isNewUser = false,
+    String? countryCode,
+    String? currencyCode,
   }) async {
     if (!value) {
       await _clearUserData();
@@ -78,13 +136,19 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
       return;
     }
 
-    // Persist login state + user info to Hive settings
-    state = state.copyWith(
+    // Persist login state + user info to Hive settings. Country and currency
+    // come from the profile in the same update, so users who have them never
+    // see the setup screen.
+    final hasLocale = countryCode != null && currencyCode != null;
+    final next = state.copyWith(
       isLoggedIn: true,
       userName: userName ?? state.userName,
       uid: uid ?? state.uid,
       userAvatarPath: photoUrl ?? state.userAvatarPath,
+      preferredCurrency: hasLocale ? currencyCode : null,
     );
+    next.countryCode = hasLocale ? countryCode : null;
+    state = next;
     await _save();
 
     final firebaseService = ref.read(firebaseUserDataServiceProvider);
@@ -102,16 +166,22 @@ class SettingsNotifier extends Notifier<AppSettingsModel> {
     // New user (or returning user with empty RTDB) — wipe any stale local data
     // before seeding so a shared device never leaks a previous user's records.
     await _clearUserData();
-    await ref
-        .read(dataBootstrapServiceProvider)
-        .seedIfNeeded(state.preferredCurrency);
+    _bumpSyncVersion();
+    // Without a currency yet, seeding waits for [completeProfile].
+    if (state.hasLocale) await _seedDefaults(state.preferredCurrency);
+  }
+
+  Future<void> _seedDefaults(String currency) async {
+    await ref.read(dataBootstrapServiceProvider).seedIfNeeded(currency);
     _bumpSyncVersion();
 
     // Upload the freshly seeded defaults to RTDB so they exist on next device
+    final uid = state.uid;
     if (uid != null) {
       final accounts = ref.read(accountRepositoryProvider).getAll();
       final categories = ref.read(categoryRepositoryProvider).getAll();
-      firebaseService
+      ref
+          .read(firebaseUserDataServiceProvider)
           .seedToRTDB(uid, accounts: accounts, categories: categories)
           .catchError((e) => null);
     }

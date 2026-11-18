@@ -1,5 +1,10 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:expenser/models/user_profile_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final userProfileServiceProvider = Provider<UserProfileService>(
+  (ref) => UserProfileService(),
+);
 
 class UserProfileService {
   DatabaseReference _profileRef(String uid) =>
@@ -29,6 +34,16 @@ class UserProfileService {
       return (profile: candidate, isNewUser: true);
     }
   }
+
+  /// Writes whichever of country and currency are given.
+  Future<void> updateLocale(
+    String uid, {
+    String? countryCode,
+    String? currencyCode,
+  }) => _profileRef(uid).update({
+    if (countryCode != null) 'country': countryCode,
+    if (currencyCode != null) 'currency': currencyCode,
+  });
 
   Future<void> updateFcmToken(String uid, String token) async {
     await _profileRef(uid).update({'fcmToken': token});

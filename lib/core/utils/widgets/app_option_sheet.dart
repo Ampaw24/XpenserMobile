@@ -23,12 +23,14 @@ class AppSelectOption<T> {
 }
 
 /// Bottom-sheet single-select replacing dropdown menus app-wide.
-/// Resolves to the chosen value, or null if dismissed.
+/// Resolves to the chosen value, or null if dismissed. Set [searchable] for
+/// long lists; it filters by label and subtitle.
 Future<T?> showAppOptionSheet<T>(
   BuildContext context, {
   required String title,
   required List<AppSelectOption<T>> options,
   T? selected,
+  bool searchable = false,
 }) {
   return showModalBottomSheet<T>(
     context: context,
@@ -36,24 +38,50 @@ Future<T?> showAppOptionSheet<T>(
     isScrollControlled: true,
     showDragHandle: true,
     builder:
-        (_) =>
-            _OptionSheet<T>(title: title, options: options, selected: selected),
+        (_) => _OptionSheet<T>(
+          title: title,
+          options: options,
+          selected: selected,
+          searchable: searchable,
+        ),
   );
 }
 
-class _OptionSheet<T> extends StatelessWidget {
+class _OptionSheet<T> extends StatefulWidget {
   const _OptionSheet({
     required this.title,
     required this.options,
     required this.selected,
+    required this.searchable,
   });
 
   final String title;
   final List<AppSelectOption<T>> options;
   final T? selected;
+  final bool searchable;
+
+  @override
+  State<_OptionSheet<T>> createState() => _OptionSheetState<T>();
+}
+
+class _OptionSheetState<T> extends State<_OptionSheet<T>> {
+  String _query = '';
+
+  List<AppSelectOption<T>> get _visible {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return widget.options;
+    return widget.options
+        .where(
+          (o) =>
+              o.label.toLowerCase().contains(query) ||
+              (o.subtitle?.toLowerCase().contains(query) ?? false),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final options = _visible;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: context.screenSize.height * 0.7),
       child: Padding(
@@ -61,14 +89,38 @@ class _OptionSheet<T> extends StatelessWidget {
           context.contentGutter,
           0,
           context.contentGutter,
-          context.rs(16),
+          context.rs(16) + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SheetTitle(title),
+            SheetTitle(widget.title),
             SizedBox(height: context.rs(12)),
+            if (widget.searchable) ...[
+              TextField(
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Search',
+                  prefixIcon: Icon(Icons.search_rounded, size: context.rs(20)),
+                ),
+                onChanged: (value) => setState(() => _query = value),
+              ),
+              SizedBox(height: context.rs(12)),
+            ],
+            if (options.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: context.rs(24)),
+                child: Text(
+                  'No matches',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: context.rs(14),
+                    color: context.palette.textSecondary,
+                  ),
+                ),
+              ),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
@@ -78,7 +130,7 @@ class _OptionSheet<T> extends StatelessWidget {
                   final option = options[index];
                   return _OptionTile(
                     option: option,
-                    isSelected: option.value == selected,
+                    isSelected: option.value == widget.selected,
                     onTap: () => Navigator.of(context).pop(option.value),
                   );
                 },

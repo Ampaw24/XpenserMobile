@@ -31,6 +31,11 @@ class AppSettingsModel extends HiveObject {
   @HiveField(8)
   String? uid;
 
+  /// ISO 3166-1 alpha-2. Null until the signed-in user has set their
+  /// country (and currency); the app asks before anything else.
+  @HiveField(9)
+  String? countryCode;
+
   AppSettingsModel({
     this.isDarkMode = false,
     this.preferredCurrency = 'GHS',
@@ -41,7 +46,10 @@ class AppSettingsModel extends HiveObject {
     this.isFirstLaunch = true,
     this.isLoggedIn = false,
     this.uid,
+    this.countryCode,
   });
+
+  bool get hasLocale => countryCode != null;
 
   factory AppSettingsModel.defaults() => AppSettingsModel();
 
@@ -55,6 +63,7 @@ class AppSettingsModel extends HiveObject {
     bool? isFirstLaunch,
     bool? isLoggedIn,
     String? uid,
+    String? countryCode,
   }) {
     return AppSettingsModel(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -66,6 +75,7 @@ class AppSettingsModel extends HiveObject {
       isFirstLaunch: isFirstLaunch ?? this.isFirstLaunch,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
       uid: uid ?? this.uid,
+      countryCode: countryCode ?? this.countryCode,
     );
   }
 }

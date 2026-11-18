@@ -12,14 +12,23 @@ class RouteGuard {
     '/onboarding',
   ];
 
+  static const profileSetupPath = '/profile-setup';
+
   String? redirect(String path) {
     if (path == '/splash') return null;
 
     if (_settings.isFirstLaunch && path != '/onboarding') return '/onboarding';
 
-    if (!_settings.isLoggedIn && !_authPaths.contains(path)) return '/login';
+    if (!_settings.isLoggedIn) {
+      return _authPaths.contains(path) ? null : '/login';
+    }
 
-    if (_settings.isLoggedIn && _authPaths.contains(path)) {
+    // Country and currency come before every feature.
+    if (!_settings.hasLocale) {
+      return path == profileSetupPath ? null : profileSetupPath;
+    }
+
+    if (_authPaths.contains(path) || path == profileSetupPath) {
       return '/shell/dashboard';
     }
 

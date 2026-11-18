@@ -14,6 +14,8 @@ import 'package:expenser/views/converters/currency_converter_screen.dart';
 // import 'package:expenser/views/converters/tax_calculator_screen.dart';
 import 'package:expenser/views/settings/widgets/setting_item.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
+import 'package:expenser/core/constants/countries.dart';
+import 'package:expenser/views/profile/widgets/locale_pickers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +80,14 @@ class SettingsScreen extends ConsumerWidget {
                                     .read(settingsProvider.notifier)
                                     .toggleDarkMode(),
                       ),
+                    ),
+                    SettingItem(
+                      icon: Icons.public_rounded,
+                      title: 'Country',
+                      subtitle:
+                          countryByCode(settings.countryCode)?.name ??
+                          'Not set',
+                      onTap: () => _showCountryPicker(context, ref),
                     ),
                     SettingItem(
                       icon: Icons.currency_exchange_rounded,
@@ -159,17 +169,21 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _showCurrencyPicker(BuildContext context, WidgetRef ref) async {
-    const currencies = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR', 'JPY'];
-    final picked = await showAppOptionSheet<String>(
+    final picked = await pickCurrency(
       context,
-      title: 'Select currency',
       selected: ref.read(settingsProvider).preferredCurrency,
-      options: [
-        for (final code in currencies)
-          AppSelectOption(value: code, label: code),
-      ],
     );
     if (picked != null) ref.read(settingsProvider.notifier).setCurrency(picked);
+  }
+
+  Future<void> _showCountryPicker(BuildContext context, WidgetRef ref) async {
+    final picked = await pickCountry(
+      context,
+      selected: ref.read(settingsProvider).countryCode,
+    );
+    if (picked != null) {
+      ref.read(settingsProvider.notifier).setCountry(picked.code);
+    }
   }
 
   void _showConverter(BuildContext context) {

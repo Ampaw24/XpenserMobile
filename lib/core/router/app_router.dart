@@ -6,6 +6,7 @@ import 'package:expenser/views/auth/forgot_password_screen.dart';
 import 'package:expenser/views/auth/login_screen.dart';
 import 'package:expenser/views/auth/register_screen.dart';
 import 'package:expenser/views/onboarding/onboarding_screen.dart';
+import 'package:expenser/views/profile/profile_setup_screen.dart';
 import 'package:expenser/views/shell/app_shell.dart';
 import 'package:expenser/views/shell/widgets/animated_branch_container.dart';
 import 'package:expenser/views/splash/splash_screen.dart';
@@ -74,6 +75,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: RouteGuard.profileSetupPath,
+        pageBuilder:
+            (_, state) => AppPageTransitions.fadeThrough(
+              state,
+              const ProfileSetupScreen(),
+            ),
       ),
       StatefulShellRoute(
         pageBuilder:
