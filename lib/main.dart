@@ -22,6 +22,7 @@ void main() async {
   await HiveService.init();
   runApp(const ProviderScope(child: MyApp()));
 }
+
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
   @override

@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:expenser/core/constants/branding.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/core/utils/widgets/brand_wordmark.dart';
 import 'package:expenser/core/utils/widgets/reveal_transition.dart';
@@ -82,9 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     final error = ref.read(authProvider).errorMessage;
     if (error != null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(error)));
+      AppDialogs.showError(context, title: 'Sign In Failed', message: error);
     } else if (ref.read(settingsProvider).isLoggedIn) {
       context.go('/shell/dashboard');
     }

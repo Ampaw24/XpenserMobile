@@ -1,5 +1,4 @@
 enum CurrencyApiErrorType {
-  notConfigured,
   unauthorized,
   rateLimited,
   badRequest,
@@ -20,7 +19,7 @@ class CurrencyApiException implements Exception {
       'No internet connection. Check your network and try again.',
     CurrencyApiErrorType.rateLimited =>
       'Too many requests right now. Please try again shortly.',
-    CurrencyApiErrorType.notConfigured || CurrencyApiErrorType.unauthorized =>
+    CurrencyApiErrorType.unauthorized =>
       'Exchange rates are unavailable at the moment.',
     CurrencyApiErrorType.badRequest ||
     CurrencyApiErrorType.server ||

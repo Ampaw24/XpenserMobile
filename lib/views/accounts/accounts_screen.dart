@@ -1,6 +1,7 @@
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_empty_state.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_page_header.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
 import 'package:expenser/models/account_model.dart';
@@ -106,6 +107,16 @@ class _AccountTile extends StatelessWidget {
         ),
         child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
+      confirmDismiss:
+          (_) => AppDialogs.confirm(
+            context,
+            title: 'Delete "${account.name}"?',
+            message:
+                'All transactions linked to this account will remain, but the account connection will be removed.',
+            confirmText: 'Delete',
+            isDestructive: true,
+            icon: Icons.delete_outline_rounded,
+          ),
       onDismissed: (_) => onDelete(),
       child: AppSurfaceCard(
         onTap: onTap,

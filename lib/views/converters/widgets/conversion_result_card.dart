@@ -1,3 +1,4 @@
+import 'package:expenser/core/config/exchange_rate_api_config.dart';
 import 'package:expenser/core/utils/formatters/date_labels.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
@@ -93,11 +94,19 @@ class _FailureBody extends StatelessWidget {
           size: context.rs(28),
         ),
         SizedBox(height: context.rs(8)),
-        Text(
-          message ?? 'Could not load exchange rates.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: palette.onHero, fontSize: context.rs(14)),
-        ),
+        message != null
+            ? Center(
+              child: Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: palette.onHero,
+                  fontSize: context.rs(14),
+                ),
+              ),
+            )
+            : const SizedBox.shrink(),
+
         SizedBox(height: context.rs(12)),
         TextButton.icon(
           onPressed: onRetry,
@@ -202,6 +211,7 @@ class _RatesFooter extends StatelessWidget {
         state.isStale
             ? 'Offline · rates from $updatedLabel'
             : 'Mid-market rate · updated $updatedLabel';
+    final attributedLabel = '$label\n${ExchangeRateApiConfig.attributionLabel}';
 
     return Row(
       children: [
@@ -215,8 +225,8 @@ class _RatesFooter extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            label,
-            maxLines: 2,
+            attributedLabel,
+            maxLines: 3,
             style: TextStyle(
               color:
                   state.isStale ? palette.onHeroWarning : palette.onHeroMuted,

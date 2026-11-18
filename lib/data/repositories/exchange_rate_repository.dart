@@ -1,22 +1,22 @@
 import 'dart:convert';
 
-import 'package:expenser/core/config/fastforex_config.dart';
+import 'package:expenser/core/config/exchange_rate_api_config.dart';
 import 'package:expenser/data/datasources/hive_service.dart';
 import 'package:expenser/data/repositories/interfaces/i_exchange_rate_repository.dart';
 import 'package:expenser/models/exchange_rates.dart';
 import 'package:expenser/services/currency/currency_api_exception.dart';
-import 'package:expenser/services/currency/fastforex_api_client.dart';
+import 'package:expenser/services/currency/exchange_rate_api_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ExchangeRateRepository implements IExchangeRateRepository {
   ExchangeRateRepository({
-    required FastForexApiClient client,
+    required ExchangeRateApiClient client,
     required Box<String> cacheBox,
-    String base = FastForexConfig.rateBase,
-    Duration ttl = FastForexConfig.cacheTtl,
-    Duration minRefreshInterval = FastForexConfig.minRefreshInterval,
+    String base = ExchangeRateApiConfig.rateBase,
+    Duration ttl = ExchangeRateApiConfig.cacheTtl,
+    Duration minRefreshInterval = ExchangeRateApiConfig.minRefreshInterval,
     DateTime Function() clock = DateTime.now,
   }) : _client = client,
        _box = cacheBox,
@@ -25,7 +25,7 @@ class ExchangeRateRepository implements IExchangeRateRepository {
        _minRefreshInterval = minRefreshInterval,
        _clock = clock;
 
-  final FastForexApiClient _client;
+  final ExchangeRateApiClient _client;
   final Box<String> _box;
   final String _base;
   final Duration _ttl;
@@ -88,7 +88,7 @@ class ExchangeRateRepository implements IExchangeRateRepository {
 
 final exchangeRateRepositoryProvider = Provider<IExchangeRateRepository>(
   (ref) => ExchangeRateRepository(
-    client: ref.watch(fastForexApiClientProvider),
+    client: ref.watch(exchangeRateApiClientProvider),
     cacheBox: HiveService.box<String>(HiveService.exchangeRates),
   ),
 );

@@ -48,8 +48,7 @@ class NotificationHistoryNotifier extends Notifier<List<NotificationRecord>> {
     }
   }
 
-  int get unreadCount =>
-      ref.read(notificationRepositoryProvider).unreadCount;
+  int get unreadCount => ref.read(notificationRepositoryProvider).unreadCount;
 
   void _syncAllToFirebase() {
     final uid = ref.read(settingsProvider).uid;
@@ -65,8 +64,10 @@ class NotificationHistoryNotifier extends Notifier<List<NotificationRecord>> {
   ) {
     final uid = ref.read(settingsProvider).uid;
     if (uid == null) return;
-    fn(ref.read(firebaseUserDataServiceProvider), uid)
-        .catchError((e) => debugPrint('RTDB notification: $e'));
+    fn(
+      ref.read(firebaseUserDataServiceProvider),
+      uid,
+    ).catchError((e) => debugPrint('RTDB notification: $e'));
   }
 }
 

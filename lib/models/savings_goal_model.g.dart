@@ -25,13 +25,18 @@ class SavingsGoalModelAdapter extends TypeAdapter<SavingsGoalModel> {
       colorHex: fields[5] as String,
       iconCodePoint: fields[6] as int,
       createdAt: fields[7] as DateTime,
+      contributionAmount: fields[8] as double?,
+      savingsFrequency: fields[9] as RecurringFrequency?,
+      reminderAt: fields[10] as DateTime?,
+      lastContributionAt: fields[11] as DateTime?,
+      fundingAccountId: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SavingsGoalModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +52,17 @@ class SavingsGoalModelAdapter extends TypeAdapter<SavingsGoalModel> {
       ..writeByte(6)
       ..write(obj.iconCodePoint)
       ..writeByte(7)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.contributionAmount)
+      ..writeByte(9)
+      ..write(obj.savingsFrequency)
+      ..writeByte(10)
+      ..write(obj.reminderAt)
+      ..writeByte(11)
+      ..write(obj.lastContributionAt)
+      ..writeByte(12)
+      ..write(obj.fundingAccountId);
   }
 
   @override

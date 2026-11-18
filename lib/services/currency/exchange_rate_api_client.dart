@@ -1,35 +1,34 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:expenser/core/config/fastforex_config.dart';
+import 'package:expenser/core/config/exchange_rate_api_config.dart';
 import 'package:expenser/models/exchange_rates.dart';
 import 'package:expenser/services/currency/currency_api_exception.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
-/// Thin HTTP client for fastFOREX. Throws [CurrencyApiException] only.
-class FastForexApiClient {
-  FastForexApiClient({
+/// Thin HTTP client for ExchangeRate-API. Throws [CurrencyApiException] only.
+class ExchangeRateApiClient {
+  ExchangeRateApiClient({
     required http.Client httpClient,
-    String apiKey = FastForexConfig.apiKey,
-    String baseUrl = FastForexConfig.baseUrl,
-    Duration timeout = FastForexConfig.requestTimeout,
+    String baseUrl = ExchangeRateApiConfig.baseUrl,
+    Duration timeout = ExchangeRateApiConfig.requestTimeout,
     DateTime Function() clock = DateTime.now,
   }) : _http = httpClient,
-       _apiKey = apiKey,
        _baseUri = Uri.parse(baseUrl),
        _timeout = timeout,
        _clock = clock;
 
   final http.Client _http;
-  final String _apiKey;
   final Uri _baseUri;
   final Duration _timeout;
   final DateTime Function() _clock;
 
   Future<ExchangeRates> fetchAll({required String base}) async {
-    final json = await _get('/fetch-all', {'from': base});
+    final json = await _get('/v6/latest/${Uri.encodeComponent(base)}');
+    if (json['result'] != 'success') {
+      throw CurrencyApiException(_errorTypeForResult(json['error-type']));
+    }
     try {
       return ExchangeRates.fromApiJson(json, fetchedAt: _clock());
     } on FormatException {
@@ -37,34 +36,17 @@ class FastForexApiClient {
     }
   }
 
-  Future<Map<String, dynamic>> _get(
-    String path,
-    Map<String, String> query,
-  ) async {
-    if (_apiKey.isEmpty) {
-      debugPrint(
-        'API_URL_KEY is not set. Run with --dart-define-from-file=.env '
-        '(full restart required; hot reload does not apply dart-defines).',
-      );
-      throw const CurrencyApiException(CurrencyApiErrorType.notConfigured);
-    }
+  Future<Map<String, dynamic>> _get(String path) async {
     final basePath =
         _baseUri.path.endsWith('/')
             ? _baseUri.path.substring(0, _baseUri.path.length - 1)
             : _baseUri.path;
-    final uri = _baseUri.replace(
-      path: '$basePath$path',
-      queryParameters: query,
-    );
+    final uri = _baseUri.replace(path: '$basePath$path');
 
     final http.Response response;
     try {
-      // Key goes in a header, not the URL, so it never lands in URL logs.
       response = await _http
-          .get(
-            uri,
-            headers: {'X-API-Key': _apiKey, 'Accept': 'application/json'},
-          )
+          .get(uri, headers: {'Accept': 'application/json'})
           .timeout(_timeout);
     } on TimeoutException {
       throw const CurrencyApiException(CurrencyApiErrorType.network);
@@ -74,7 +56,10 @@ class FastForexApiClient {
 
     final status = response.statusCode;
     if (status != 200) {
-      throw CurrencyApiException(_errorTypeFor(status), statusCode: status);
+      throw CurrencyApiException(
+        _errorTypeForStatus(status),
+        statusCode: status,
+      );
     }
 
     try {
@@ -86,16 +71,25 @@ class FastForexApiClient {
     throw const CurrencyApiException(CurrencyApiErrorType.invalidResponse);
   }
 
-  static CurrencyApiErrorType _errorTypeFor(int status) => switch (status) {
-    401 || 403 => CurrencyApiErrorType.unauthorized,
-    429 => CurrencyApiErrorType.rateLimited,
-    >= 400 && < 500 => CurrencyApiErrorType.badRequest,
-    _ => CurrencyApiErrorType.server,
-  };
+  static CurrencyApiErrorType _errorTypeForStatus(int status) =>
+      switch (status) {
+        401 || 403 => CurrencyApiErrorType.unauthorized,
+        429 => CurrencyApiErrorType.rateLimited,
+        >= 400 && < 500 => CurrencyApiErrorType.badRequest,
+        _ => CurrencyApiErrorType.server,
+      };
+
+  static CurrencyApiErrorType _errorTypeForResult(Object? errorType) =>
+      switch (errorType) {
+        'unsupported-code' ||
+        'malformed-request' => CurrencyApiErrorType.badRequest,
+        null => CurrencyApiErrorType.invalidResponse,
+        _ => CurrencyApiErrorType.server,
+      };
 }
 
-final fastForexApiClientProvider = Provider<FastForexApiClient>((ref) {
+final exchangeRateApiClientProvider = Provider<ExchangeRateApiClient>((ref) {
   final httpClient = http.Client();
   ref.onDispose(httpClient.close);
-  return FastForexApiClient(httpClient: httpClient);
+  return ExchangeRateApiClient(httpClient: httpClient);
 });

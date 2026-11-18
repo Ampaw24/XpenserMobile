@@ -5,6 +5,19 @@ part 'transaction_model.g.dart';
 
 @HiveType(typeId: 0)
 class TransactionModel extends HiveObject {
+  /// Category id stored on transfers, which move money between the user's
+  /// own accounts and are never categorised as income or spending.
+  static const String transferCategoryId = 'transfer';
+
+  /// How this transaction changes the balance of [targetAccountId].
+  double balanceEffectOn(String targetAccountId) => switch (type) {
+    TransactionType.income => accountId == targetAccountId ? amount : 0,
+    TransactionType.expense => accountId == targetAccountId ? -amount : 0,
+    TransactionType.transfer =>
+      (toAccountId == targetAccountId ? amount : 0) -
+          (accountId == targetAccountId ? amount : 0),
+  };
+
   @HiveField(0)
   final String id;
 

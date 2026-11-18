@@ -3,6 +3,7 @@ import 'package:expenser/core/utils/extensions/color_extensions.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_color_picker.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_field_label.dart';
 import 'package:expenser/core/utils/widgets/app_form_layout.dart';
 import 'package:expenser/core/utils/widgets/app_icon_picker.dart';
@@ -147,10 +148,10 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save the account. Please try again.'),
-        ),
+      AppDialogs.showError(
+        context,
+        title: 'Could Not Save Account',
+        message: 'Please verify the details and try again.',
       );
     }
   }

@@ -2,6 +2,7 @@ import 'package:expenser/services/auth/auth_result.dart';
 import 'package:expenser/services/auth/firebase_auth_service.dart';
 import 'package:expenser/services/auth/i_auth_service.dart';
 import 'package:expenser/services/notification/fcm_service.dart';
+import 'package:expenser/services/notification/savings_reminder_service.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -107,6 +108,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       ref.read(fcmServiceProvider).dispose();
+      await ref.read(savingsReminderServiceProvider).cancelAll();
       await _authService.signOut();
       await ref.read(settingsProvider.notifier).setLoggedIn(false);
       state = const AuthState();

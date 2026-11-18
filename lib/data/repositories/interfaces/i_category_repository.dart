@@ -10,4 +10,8 @@ abstract class ICategoryRepository {
   Future<void> delete(String id);
   bool get isEmpty;
   Future<void> seedDefaults();
+
+  /// Creates the system "Savings" expense category if missing.
+  /// Returns it only when it was just created, so callers can sync it.
+  Future<CategoryModel?> ensureSavingsCategory();
 }

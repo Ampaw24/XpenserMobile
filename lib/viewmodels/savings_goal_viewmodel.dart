@@ -1,10 +1,19 @@
 import 'package:expenser/core/providers/sync_version_provider.dart';
+import 'package:expenser/data/repositories/category_repository.dart';
 import 'package:expenser/data/repositories/savings_goal_repository.dart';
+import 'package:expenser/models/account_model.dart';
+import 'package:expenser/models/category_model.dart';
 import 'package:expenser/models/savings_goal_model.dart';
+import 'package:expenser/models/transaction_model.dart';
+import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/services/firebase_user_data_service.dart';
+import 'package:expenser/viewmodels/account_viewmodel.dart';
+import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/viewmodels/transaction_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 class SavingsGoalNotifier extends Notifier<List<SavingsGoalModel>> {
   @override
@@ -35,14 +44,53 @@ class SavingsGoalNotifier extends Notifier<List<SavingsGoalModel>> {
     _mirror((svc, uid) => svc.deleteSavingsGoal(uid, id));
   }
 
-  Future<void> addContribution(String goalId, double amount) async {
+  /// The expense a contribution records against [account], for previewing
+  /// (e.g. the overdraft check) before [commitContribution].
+  TransactionModel contributionTransaction({
+    required SavingsGoalModel goal,
+    required double amount,
+    required AccountModel account,
+  }) {
+    final now = DateTime.now();
+    return TransactionModel(
+      id: const Uuid().v4(),
+      amount: amount,
+      type: TransactionType.expense,
+      categoryId: CategoryModel.savingsId,
+      accountId: account.id,
+      date: now,
+      notes: 'Savings: ${goal.name}',
+      createdAt: now,
+    );
+  }
+
+  /// Records [transaction] as spending from its account, then adds its
+  /// amount to [goalId]'s saved total.
+  Future<void> commitContribution(
+    String goalId,
+    TransactionModel transaction,
+  ) async {
     final repo = ref.read(savingsGoalRepositoryProvider);
     final goal = repo.getById(goalId);
-    if (goal == null) return;
-    final updated = goal.copyWith(savedAmount: goal.savedAmount + amount);
+    if (goal == null) throw StateError('Savings goal $goalId not found');
+
+    final createdCategory =
+        await ref.read(categoryRepositoryProvider).ensureSavingsCategory();
+    if (createdCategory != null) {
+      _mirror((svc, uid) => svc.saveCategory(uid, createdCategory));
+    }
+    await ref.read(transactionProvider.notifier).addTransaction(transaction);
+
+    final updated = goal.copyWith(
+      savedAmount: goal.savedAmount + transaction.amount,
+      lastContributionAt: transaction.date,
+      fundingAccountId: transaction.accountId,
+    );
     await repo.update(updated);
     refresh();
     _mirror((svc, uid) => svc.saveSavingsGoal(uid, updated));
+    ref.read(accountProvider.notifier).refresh();
+    ref.read(insightsProvider.notifier).refresh();
   }
 
   void _mirror(

@@ -1,5 +1,6 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/viewmodels/auth_viewmodel.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
     ref.read(authProvider.notifier).forgotPassword(_emailCtrl.text.trim());
     final error = ref.read(authProvider).errorMessage;
-    if (error == null) setState(() => _sent = true);
+    if (error == null) {
+      setState(() => _sent = true);
+    } else {
+      AppDialogs.showError(context, title: 'Reset Failed', message: error);
+    }
   }
 
   @override

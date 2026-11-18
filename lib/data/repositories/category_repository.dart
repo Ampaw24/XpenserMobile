@@ -35,6 +35,21 @@ class CategoryRepository implements ICategoryRepository {
   bool get isEmpty => _box.isEmpty;
 
   @override
+  Future<CategoryModel?> ensureSavingsCategory() async {
+    if (_box.containsKey(CategoryModel.savingsId)) return null;
+    final category = CategoryModel(
+      id: CategoryModel.savingsId,
+      name: 'Savings',
+      iconCodePoint: Icons.savings_rounded.codePoint,
+      colorHex: 'FF4CAF50',
+      transactionType: TransactionType.expense,
+      isDefault: true,
+    );
+    await _box.put(category.id, category);
+    return category;
+  }
+
+  @override
   Future<void> seedDefaults() async {
     const uuid = Uuid();
     final expenseCategories = [

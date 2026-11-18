@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:expenser/models/notification_record.dart';
+import 'package:expenser/services/notification/notification_channel.dart';
 import 'package:expenser/services/user_profile_service.dart';
 import 'package:expenser/viewmodels/notification_history_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
@@ -14,14 +15,6 @@ import 'package:uuid/uuid.dart';
 
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService(ref));
 
-/// Android notification channel used for all app notifications.
-const _channel = AndroidNotificationChannel(
-  'xpenser_general',
-  'Xpenser Notifications',
-  description: 'Budget alerts, savings updates and reminders',
-  importance: Importance.high,
-);
-
 class FcmService {
   FcmService(this._ref);
 
@@ -33,10 +26,11 @@ class FcmService {
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _openedSub;
   StreamSubscription<String>? _tokenRefreshSub;
+  Future<void>? _localInit;
 
   /// Call once after a successful login.
   Future<void> initialize(String uid) async {
-    await _initLocalNotifications();
+    await ensureLocalNotificationsReady();
     await _requestPermission();
     await _registerToken(uid);
 
@@ -63,6 +57,11 @@ class FcmService {
     _tokenRefreshSub?.cancel();
   }
 
+  /// Sets up local notifications once per app run. Safe to call before
+  /// [initialize], e.g. when scheduling reminders on a restored session.
+  Future<void> ensureLocalNotificationsReady() =>
+      _localInit ??= _initLocalNotifications();
+
   // ---------------------------------------------------------------------------
 
   Future<void> _initLocalNotifications() async {
@@ -87,7 +86,7 @@ class FcmService {
     await android?.requestNotificationsPermission();
 
     // Create the channel (no-op if it already exists).
-    await android?.createNotificationChannel(_channel);
+    await android?.createNotificationChannel(appNotificationChannel);
   }
 
   Future<void> _requestPermission() async {
@@ -134,17 +133,7 @@ class FcmService {
       notification.hashCode,
       title,
       body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channel.id,
-          _channel.name,
-          channelDescription: _channel.description,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
-        ),
-        iOS: const DarwinNotificationDetails(),
-      ),
+      appNotificationDetails(),
       payload: route,
     );
 
@@ -186,17 +175,7 @@ class FcmService {
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channel.id,
-          _channel.name,
-          channelDescription: _channel.description,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
-        ),
-        iOS: const DarwinNotificationDetails(),
-      ),
+      appNotificationDetails(),
       payload: route,
     );
 

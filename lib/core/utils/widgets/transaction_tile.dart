@@ -142,7 +142,7 @@ class TransactionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${isExpense || isTransfer ? '-' : '+'}${transaction.amount.toStringAsFixed(2)}',
+                      '${isExpense ? '-' : (isTransfer ? '' : '+')}${transaction.amount.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: context.rs(15),

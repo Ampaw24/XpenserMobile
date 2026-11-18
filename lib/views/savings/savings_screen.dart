@@ -2,9 +2,13 @@ import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_empty_state.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
 import 'package:expenser/models/savings_goal_model.dart';
 import 'package:expenser/viewmodels/savings_goal_viewmodel.dart';
+import 'package:expenser/viewmodels/settings_viewmodel.dart';
+import 'package:expenser/views/savings/widgets/add_savings_sheet.dart';
+import 'package:expenser/views/savings/widgets/savings_commit_bar.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +20,9 @@ class SavingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goals = ref.watch(savingsGoalProvider);
+    final currency = ref.watch(
+      settingsProvider.select((s) => s.preferredCurrency),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +55,9 @@ class SavingsScreen extends ConsumerWidget {
                       final goal = goals[i];
                       return _SavingsGoalCard(
                         goal: goal,
+                        currency: currency,
                         onTap: () => context.push('/savings/${goal.id}/edit'),
+                        onAdd: () => showAddSavingsSheet(context, goal),
                         onDelete:
                             () => ref
                                 .read(savingsGoalProvider.notifier)
@@ -70,20 +79,23 @@ class SavingsScreen extends ConsumerWidget {
 class _SavingsGoalCard extends StatelessWidget {
   const _SavingsGoalCard({
     required this.goal,
+    required this.currency,
     required this.onTap,
+    required this.onAdd,
     required this.onDelete,
   });
 
   final SavingsGoalModel goal;
   final VoidCallback onTap;
+  final VoidCallback onAdd;
   final VoidCallback onDelete;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
     final goalColor = _hexToColor(goal.colorHex, palette.accent);
-    final isCompleted = goal.progressPercent >= 1;
-    final progressColor = isCompleted ? palette.success : goalColor;
+    final progressColor = goal.isCompleted ? palette.success : goalColor;
     final daysLeft = goal.targetDate.difference(DateTime.now()).inDays;
     final metaStyle = TextStyle(
       fontSize: context.rs(12),
@@ -102,6 +114,16 @@ class _SavingsGoalCard extends StatelessWidget {
         ),
         child: Icon(AppIcons.delete, color: Colors.white, size: context.rs(22)),
       ),
+      confirmDismiss:
+          (_) => AppDialogs.confirm(
+            context,
+            title: 'Delete "${goal.name}"?',
+            message:
+                'Are you sure you want to delete this savings goal? This action cannot be undone.',
+            confirmText: 'Delete',
+            isDestructive: true,
+            icon: AppIcons.delete,
+          ),
       onDismissed: (_) => onDelete(),
       child: AppSurfaceCard(
         onTap: onTap,
@@ -197,6 +219,13 @@ class _SavingsGoalCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            Divider(height: context.rs(24)),
+            SavingsCommitBar(
+              goal: goal,
+              color: goalColor,
+              currency: currency,
+              onAdd: onAdd,
             ),
           ],
         ),

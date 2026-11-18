@@ -2,7 +2,6 @@ import 'package:expenser/core/providers/sync_version_provider.dart';
 import 'package:expenser/data/repositories/account_repository.dart';
 import 'package:expenser/data/repositories/transaction_repository.dart';
 import 'package:expenser/models/account_model.dart';
-import 'package:expenser/models/transaction_type.dart';
 import 'package:expenser/services/firebase_user_data_service.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:flutter/foundation.dart';
@@ -38,19 +37,7 @@ class AccountNotifier extends Notifier<AccountState> {
   double _computeBalance(String accountId, double initial) {
     final txRepo = ref.read(transactionRepositoryProvider);
     final txs = txRepo.getByAccount(accountId);
-    double balance = initial;
-    for (final t in txs) {
-      if (t.type == TransactionType.income && t.accountId == accountId) {
-        balance += t.amount;
-      } else if (t.type == TransactionType.expense &&
-          t.accountId == accountId) {
-        balance -= t.amount;
-      } else if (t.type == TransactionType.transfer) {
-        if (t.accountId == accountId) balance -= t.amount;
-        if (t.toAccountId == accountId) balance += t.amount;
-      }
-    }
-    return balance;
+    return txs.fold(initial, (sum, t) => sum + t.balanceEffectOn(accountId));
   }
 
   void refresh() {

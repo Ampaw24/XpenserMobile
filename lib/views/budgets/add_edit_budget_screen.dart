@@ -2,6 +2,7 @@ import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_amount_input.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_form_layout.dart';
 import 'package:expenser/core/utils/widgets/app_primary_button.dart';
 import 'package:expenser/core/utils/widgets/app_section_title.dart';
@@ -117,10 +118,10 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save the budget. Please try again.'),
-        ),
+      AppDialogs.showError(
+        context,
+        title: 'Could Not Save Budget',
+        message: 'An error occurred while saving the budget. Please try again.',
       );
     }
   }

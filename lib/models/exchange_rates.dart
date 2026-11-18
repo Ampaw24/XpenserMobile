@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Mid-market rates for one base currency, as returned by `/fetch-all`.
+/// Daily mid-market rates for one base currency.
 class ExchangeRates extends Equatable {
   const ExchangeRates({
     required this.base,
@@ -31,21 +31,24 @@ class ExchangeRates extends Equatable {
     return toRate / fromRate;
   }
 
-  /// Parses a fastFOREX `/fetch-all` response body.
+  /// Parses an ExchangeRate-API `/v6/latest/{base}` response body.
   factory ExchangeRates.fromApiJson(
     Map<String, dynamic> json, {
     required DateTime fetchedAt,
   }) {
-    final base = json['base'];
-    final results = json['results'];
-    final updated = json['updated'];
-    if (base is! String || results is! Map || updated is! String) {
-      throw const FormatException('Unexpected fetch-all response shape');
+    final base = json['base_code'];
+    final rates = json['rates'];
+    final updatedUnixSeconds = json['time_last_update_unix'];
+    if (base is! String || rates is! Map || updatedUnixSeconds is! int) {
+      throw const FormatException('Unexpected latest-rates response shape');
     }
     return ExchangeRates(
       base: base,
-      rates: _parseRates(results),
-      updatedAt: DateTime.parse(updated).toUtc(),
+      rates: _parseRates(rates),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        updatedUnixSeconds * 1000,
+        isUtc: true,
+      ),
       fetchedAt: fetchedAt.toUtc(),
     );
   }

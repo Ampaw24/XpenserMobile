@@ -4,26 +4,27 @@ import 'dart:io';
 import 'package:expenser/data/repositories/exchange_rate_repository.dart';
 import 'package:expenser/models/exchange_rates.dart';
 import 'package:expenser/services/currency/currency_api_exception.dart';
-import 'package:expenser/services/currency/fastforex_api_client.dart';
+import 'package:expenser/services/currency/exchange_rate_api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+// 2026-11-13T09:00:00Z
+const _updatedUnixSeconds = 1794560400;
+
 const _body = {
-  'base': 'USD',
-  'results': {'EUR': 0.9, 'GHS': 15.0, 'USD': 1},
-  'updated': '2026-11-13T09:00:00Z',
-  'ms': 4,
+  'result': 'success',
+  'base_code': 'USD',
+  'rates': {'EUR': 0.9, 'GHS': 15.0, 'USD': 1},
+  'time_last_update_unix': _updatedUnixSeconds,
 };
 
-FastForexApiClient _client(
+ExchangeRateApiClient _client(
   MockClientHandler handler, {
-  String apiKey = 'test-key',
   DateTime Function()? clock,
-}) => FastForexApiClient(
+}) => ExchangeRateApiClient(
   httpClient: MockClient(handler),
-  apiKey: apiKey,
   baseUrl: 'https://api.example.test',
   clock: clock ?? DateTime.now,
 );
@@ -56,8 +57,8 @@ void main() {
     });
   });
 
-  group('FastForexApiClient', () {
-    test('sends key as header and parses fetch-all', () async {
+  group('ExchangeRateApiClient', () {
+    test('requests latest rates for the base and parses them', () async {
       late http.Request sent;
       final client = _client((request) {
         sent = request;
@@ -66,22 +67,36 @@ void main() {
 
       final rates = await client.fetchAll(base: 'USD');
 
-      expect(sent.url.path, '/fetch-all');
-      expect(sent.url.queryParameters, {'from': 'USD'});
-      expect(sent.url.query, isNot(contains('test-key')));
-      expect(sent.headers['X-API-Key'], 'test-key');
+      expect(sent.url.path, '/v6/latest/USD');
+      expect(sent.url.query, isEmpty);
+      expect(rates.base, 'USD');
       expect(rates.rates['GHS'], 15.0);
       expect(rates.updatedAt, DateTime.utc(2026, 11, 13, 9));
     });
 
-    test('fails fast without an API key', () {
+    test('maps an unsupported-code result to badRequest', () {
       final client = _client(
-        (_) => fail('should not call network'),
-        apiKey: '',
+        (_) async => http.Response(
+          jsonEncode({'result': 'error', 'error-type': 'unsupported-code'}),
+          200,
+        ),
       );
       expect(
         client.fetchAll(base: 'USD'),
-        throwsA(_apiError(CurrencyApiErrorType.notConfigured)),
+        throwsA(_apiError(CurrencyApiErrorType.badRequest)),
+      );
+    });
+
+    test('maps a success body with a missing field to invalidResponse', () {
+      final client = _client(
+        (_) async => http.Response(
+          jsonEncode({'result': 'success', 'base_code': 'USD'}),
+          200,
+        ),
+      );
+      expect(
+        client.fetchAll(base: 'USD'),
+        throwsA(_apiError(CurrencyApiErrorType.invalidResponse)),
       );
     });
 
@@ -152,7 +167,7 @@ void main() {
     test('serves cache within TTL without a network call', () async {
       final repo = repository();
       await repo.getRates();
-      now = now.add(const Duration(minutes: 30));
+      now = now.add(const Duration(hours: 5));
       final result = await repo.getRates();
       expect(calls, 1);
       expect(result.isStale, isFalse);
@@ -161,7 +176,7 @@ void main() {
     test('refetches after TTL expires', () async {
       final repo = repository();
       await repo.getRates();
-      now = now.add(const Duration(hours: 2));
+      now = now.add(const Duration(hours: 7));
       await repo.getRates();
       expect(calls, 2);
     });
@@ -169,7 +184,7 @@ void main() {
     test('falls back to stale cache when refresh fails', () async {
       final repo = repository();
       await repo.getRates();
-      now = now.add(const Duration(hours: 2));
+      now = now.add(const Duration(hours: 7));
       fail = true;
       final result = await repo.getRates();
       expect(result.isStale, isTrue);
@@ -189,7 +204,7 @@ void main() {
       await repo.getRates();
       await repo.getRates(forceRefresh: true);
       expect(calls, 1);
-      now = now.add(const Duration(minutes: 2));
+      now = now.add(const Duration(minutes: 16));
       await repo.getRates(forceRefresh: true);
       expect(calls, 2);
     });

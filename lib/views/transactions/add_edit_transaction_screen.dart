@@ -14,10 +14,12 @@ import 'package:expenser/data/repositories/category_repository.dart';
 import 'package:expenser/models/account_model.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/models/transaction_type.dart';
+import 'package:expenser/models/transfer_validation.dart';
 import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:expenser/viewmodels/insights_viewmodel.dart';
 import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:expenser/viewmodels/transaction_viewmodel.dart';
+import 'package:expenser/views/transactions/widgets/overdraft_confirmation.dart';
 import 'package:expenser/views/transactions/widgets/transaction_detail_rows.dart';
 import 'package:expenser/views/transactions/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
@@ -48,12 +50,14 @@ class _AddEditTransactionScreenState
   TransactionModel? _existing;
   String? _selectedCategoryId;
   String? _selectedAccountId;
+  String? _toAccountId;
   DateTime _date = DateTime.now();
   String? _amountError;
   bool _showCategoryError = false;
   bool _isLoading = false;
 
   bool get _isEditing => widget.transactionId != null;
+  bool get _isTransfer => _type == TransactionType.transfer;
 
   @override
   void initState() {
@@ -77,6 +81,7 @@ class _AddEditTransactionScreenState
       _type = tx.type;
       _selectedCategoryId = tx.categoryId;
       _selectedAccountId = tx.accountId;
+      _toAccountId = tx.toAccountId;
       _date = tx.date;
     });
   }
@@ -101,6 +106,14 @@ class _AddEditTransactionScreenState
     return accounts.first;
   }
 
+  /// Transfer destinations are always chosen explicitly, never defaulted.
+  AccountModel? _resolveToAccount(List<AccountModel> accounts) {
+    for (final account in accounts) {
+      if (account.id == _toAccountId) return account;
+    }
+    return null;
+  }
+
   void _onTypeChanged(TransactionType type) {
     if (type == _type) return;
     setState(() {
@@ -121,19 +134,31 @@ class _AddEditTransactionScreenState
     });
   }
 
-  Future<void> _pickAccount(List<AccountModel> accounts) async {
+  Future<void> _pickAccount(
+    List<AccountModel> accounts, {
+    bool destination = false,
+  }) async {
     FocusScope.of(context).unfocus();
     if (accounts.isEmpty) {
       context.push('/accounts/add');
       return;
     }
+    final sourceId = _resolveAccount(accounts)?.id;
+    final choices =
+        destination
+            ? accounts.where((a) => a.id != sourceId).toList()
+            : accounts;
+    if (choices.isEmpty) {
+      _showMessage('Add another account to transfer money into.');
+      return;
+    }
     final palette = context.palette;
     final id = await showAppOptionSheet<String>(
       context,
-      title: 'Select account',
-      selected: _resolveAccount(accounts)?.id,
+      title: destination ? 'Transfer to' : 'Select account',
+      selected: destination ? _toAccountId : sourceId,
       options: [
-        for (final account in accounts)
+        for (final account in choices)
           AppSelectOption(
             value: account.id,
             label: account.name,
@@ -143,7 +168,14 @@ class _AddEditTransactionScreenState
           ),
       ],
     );
-    if (id != null && mounted) setState(() => _selectedAccountId = id);
+    if (id == null || !mounted) return;
+    setState(() {
+      if (destination) {
+        _toAccountId = id;
+      } else {
+        _selectedAccountId = id;
+      }
+    });
   }
 
   Future<void> _pickDate() async {
@@ -162,29 +194,42 @@ class _AddEditTransactionScreenState
     FocusScope.of(context).unfocus();
 
     final amount = double.tryParse(_amountCtrl.text);
-    final account = _resolveAccount(ref.read(accountProvider).accounts);
+    final accounts = ref.read(accountProvider).accounts;
+    final account = _resolveAccount(accounts);
+    final isTransfer = _isTransfer;
     final amountError =
         amount == null || amount <= 0 ? 'Enter an amount above zero' : null;
+    final missingCategory = !isTransfer && _selectedCategoryId == null;
     setState(() {
       _amountError = amountError;
-      _showCategoryError = _selectedCategoryId == null;
+      _showCategoryError = missingCategory;
     });
-    if (amountError != null || _selectedCategoryId == null) return;
+    if (amountError != null || missingCategory) return;
     if (account == null) {
       _showMessage('Select an account');
       return;
     }
+    final toAccount = isTransfer ? _resolveToAccount(accounts) : null;
+    if (isTransfer) {
+      final transferError = validateTransfer(from: account, to: toAccount);
+      if (transferError != null) {
+        _showMessage(transferError.message);
+        return;
+      }
+    }
 
-    setState(() => _isLoading = true);
     final notes = _notesCtrl.text.trim();
     final existing = _existing;
     final tx = TransactionModel(
       id: existing?.id ?? const Uuid().v4(),
       amount: amount!,
       type: _type,
-      categoryId: _selectedCategoryId!,
+      categoryId:
+          isTransfer
+              ? TransactionModel.transferCategoryId
+              : _selectedCategoryId!,
       accountId: account.id,
-      toAccountId: existing?.toAccountId,
+      toAccountId: toAccount?.id,
       date: _date,
       notes: notes.isEmpty ? null : notes,
       tags: existing?.tags,
@@ -192,6 +237,17 @@ class _AddEditTransactionScreenState
       recurringRuleId: existing?.recurringRuleId,
       createdAt: existing?.createdAt ?? DateTime.now(),
     );
+
+    final proceed = await confirmOverdraftIfNeeded(
+      context,
+      account: account,
+      currentBalance: ref.read(accountProvider).balances[account.id],
+      updated: tx,
+      previous: existing,
+    );
+    if (!proceed) return;
+    if (!mounted) return;
+    setState(() => _isLoading = true);
 
     try {
       final notifier = ref.read(transactionProvider.notifier);
@@ -222,6 +278,8 @@ class _AddEditTransactionScreenState
     final categories = ref.read(categoryRepositoryProvider).getByType(_type);
     final accounts = ref.watch(accountProvider).accounts;
     final account = _resolveAccount(accounts);
+    final toAccount = _resolveToAccount(accounts);
+    final isTransfer = _isTransfer;
     final preferredCurrency = ref.watch(
       settingsProvider.select((s) => s.preferredCurrency),
     );
@@ -256,17 +314,19 @@ class _AddEditTransactionScreenState
             onChanged: _onAmountChanged,
           ),
           SizedBox(height: context.rs(24)),
-          AppSectionTitle(
-            'Category',
-            trailing: _showCategoryError ? 'Pick a category' : null,
-          ),
-          SizedBox(height: context.rs(12)),
-          CategoryPickerGrid(
-            categories: categories,
-            selectedId: _selectedCategoryId,
-            onSelected: _onCategorySelected,
-          ),
-          SizedBox(height: context.rs(28)),
+          if (!isTransfer) ...[
+            AppSectionTitle(
+              'Category',
+              trailing: _showCategoryError ? 'Pick a category' : null,
+            ),
+            SizedBox(height: context.rs(12)),
+            CategoryPickerGrid(
+              categories: categories,
+              selectedId: _selectedCategoryId,
+              onSelected: _onCategorySelected,
+            ),
+            SizedBox(height: context.rs(28)),
+          ],
           const AppSectionTitle('Details'),
           SizedBox(height: context.rs(12)),
           AppSurfaceCard(
@@ -275,7 +335,7 @@ class _AddEditTransactionScreenState
               children: [
                 TransactionDetailRow(
                   icon: AppIcons.wallet,
-                  title: 'Account',
+                  title: isTransfer ? 'From' : 'Account',
                   value:
                       accounts.isEmpty
                           ? 'Add account'
@@ -284,6 +344,17 @@ class _AddEditTransactionScreenState
                   onTap: () => _pickAccount(accounts),
                 ),
                 const _RowDivider(),
+                if (isTransfer) ...[
+                  TransactionDetailRow(
+                    icon: AppIcons.transfer,
+                    iconColor: typeColor,
+                    title: 'To',
+                    value: toAccount?.name ?? 'Select',
+                    valueColor: toAccount == null ? palette.accent : null,
+                    onTap: () => _pickAccount(accounts, destination: true),
+                  ),
+                  const _RowDivider(),
+                ],
                 TransactionDetailRow(
                   icon: AppIcons.calendar,
                   iconColor: palette.info,

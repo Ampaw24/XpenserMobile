@@ -1,33 +1,18 @@
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/viewmodels/budget_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-Future<bool> confirmBudgetDelete(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder:
-        (dialogContext) => AlertDialog(
-          title: const Text('Delete this budget?'),
-          content: const Text(
-            'All its category limits will be removed. '
-            'Your transactions are not affected.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(dialogContext).colorScheme.error,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
+Future<bool> confirmBudgetDelete(BuildContext context) {
+  return AppDialogs.confirm(
+    context,
+    title: 'Delete this budget?',
+    message:
+        'All its category limits will be removed. '
+        'Your transactions are not affected.',
+    confirmText: 'Delete',
+    isDestructive: true,
   );
-  return confirmed ?? false;
 }
 
 /// Deletes the plan and offers Undo. Grab [messenger] before any navigation
@@ -53,29 +38,16 @@ Future<void> deleteBudgetWithUndo({
     );
 }
 
-Future<bool> confirmBudgetClose(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder:
-        (dialogContext) => AlertDialog(
-          title: const Text('Close this budget?'),
-          content: const Text(
-            'It moves to Ended and new spending will no longer count '
-            'against it. You can reopen it later.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Close budget'),
-            ),
-          ],
-        ),
+Future<bool> confirmBudgetClose(BuildContext context) {
+  return AppDialogs.confirm(
+    context,
+    title: 'Close this budget?',
+    message:
+        'It moves to Ended and new spending will no longer count '
+        'against it. You can reopen it later.',
+    confirmText: 'Close budget',
+    icon: Icons.archive_outlined,
   );
-  return confirmed ?? false;
 }
 
 /// Closes the plan after confirmation and offers Undo.

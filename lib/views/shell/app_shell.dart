@@ -1,5 +1,6 @@
 import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/services/notification/budget_alert_service.dart';
+import 'package:expenser/services/notification/savings_reminder_service.dart';
 import 'package:expenser/viewmodels/budget_viewmodel.dart';
 import 'package:expenser/views/shell/widgets/bottom_nav_bar.dart';
 import 'package:expenser/views/shell/widgets/nav_tab_item.dart';
@@ -32,6 +33,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(budgetLiveSyncProvider);
     ref.watch(budgetAlertsProvider);
+    ref.watch(savingsRemindersProvider);
     return Scaffold(
       body: shell,
       bottomNavigationBar: BottomNavBar(

@@ -5,6 +5,10 @@ part 'category_model.g.dart';
 
 @HiveType(typeId: 2)
 class CategoryModel extends HiveObject {
+  /// Fixed id, so every device creates the same category for savings
+  /// contributions instead of duplicates.
+  static const String savingsId = 'savings';
+
   @HiveField(0)
   final String id;
 

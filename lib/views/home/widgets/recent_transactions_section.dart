@@ -1,4 +1,7 @@
 import 'package:expenser/core/constants/app_icons.dart';
+import 'package:expenser/core/utils/formatters/transaction_display.dart';
+import 'package:expenser/viewmodels/account_viewmodel.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/transaction_tile.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
@@ -89,16 +92,32 @@ class RecentTransactionsSection extends ConsumerWidget {
 
   Widget _buildTile(BuildContext context, WidgetRef ref, TransactionModel t) {
     final category = ref.read(categoryRepositoryProvider).getById(t.categoryId);
+    final display = transactionDisplay(
+      t,
+      category: category,
+      accounts: ref.read(accountProvider).accounts,
+    );
     return TransactionTile(
       transaction: t,
       embedded: true,
-      categoryName: category?.name ?? 'Unknown',
-      categoryColor: category?.colorHex ?? 'FF78909C',
-      categoryIconCode:
-          category?.iconCodePoint ?? Icons.category_rounded.codePoint,
+      categoryName: display.title,
+      categoryColor: display.colorHex,
+      categoryIconCode: display.iconCodePoint,
       onEdit: () => context.push('/transactions/${t.id}/edit'),
-      onDelete:
-          () => ref.read(transactionProvider.notifier).deleteTransaction(t.id),
+      onDelete: () async {
+        final confirmed = await AppDialogs.confirm(
+          context,
+          title: 'Delete Transaction?',
+          message:
+              'Are you sure you want to delete this "${display.title}" transaction?',
+          confirmText: 'Delete',
+          isDestructive: true,
+          icon: AppIcons.delete,
+        );
+        if (confirmed) {
+          ref.read(transactionProvider.notifier).deleteTransaction(t.id);
+        }
+      },
     );
   }
 }

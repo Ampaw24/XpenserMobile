@@ -30,6 +30,7 @@ class AppIcons {
   static const IconData show = HugeIcons.strokeRoundedView;
   static const IconData hide = HugeIcons.strokeRoundedViewOff;
   static const IconData wallet = HugeIcons.strokeRoundedWallet02;
+  static const IconData warning = HugeIcons.strokeRoundedAlert02;
 
   // ── Time of day ───────────────────────────────────────────────────────────
   static const IconData morning = HugeIcons.strokeRoundedSun03;

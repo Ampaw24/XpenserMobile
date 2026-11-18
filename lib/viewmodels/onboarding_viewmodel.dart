@@ -16,11 +16,12 @@ final onboardingProvider = Provider<List<OnboardingModel>>(
           "Convert currencies instantly with real-time\nexchange rates. Perfect for international\ntravelers and global spending tracking.",
       imagePath: Imageconstants.currencyConvertor,
     ),
-    OnboardingModel(
-      title: "Smart VAT Calculator",
-      description:
-          "Automatically calculate VAT and taxes\non your purchases. Generate detailed\nreports for business and personal use.",
-      imagePath: Imageconstants.taxImage,
-    ),
+    // Hidden while the tax calculator is disabled.
+    // OnboardingModel(
+    //   title: "Smart VAT Calculator",
+    //   description:
+    //       "Automatically calculate VAT and taxes\non your purchases. Generate detailed\nreports for business and personal use.",
+    //   imagePath: Imageconstants.taxImage,
+    // ),
   ],
 );

@@ -1,5 +1,6 @@
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_option_sheet.dart';
 import 'package:expenser/core/utils/widgets/app_page_header.dart';
 import 'package:expenser/core/utils/widgets/app_surface_card.dart';
@@ -10,7 +11,7 @@ import 'package:expenser/viewmodels/settings_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:expenser/views/converters/currency_converter_screen.dart';
-import 'package:expenser/views/converters/tax_calculator_screen.dart';
+// import 'package:expenser/views/converters/tax_calculator_screen.dart';
 import 'package:expenser/views/settings/widgets/setting_item.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:flutter/material.dart';
@@ -91,12 +92,14 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: 'Convert between currencies',
                       onTap: () => _showConverter(context),
                     ),
-                    SettingItem(
-                      icon: Icons.calculate_rounded,
-                      title: 'Tax Calculator',
-                      subtitle: 'Calculate your tax',
-                      onTap: () => _showTaxCalc(context),
-                    ),
+                    // Tax calculator disabled until tax bands are verified
+                    // and the Ghana bracket calculation is fixed.
+                    // SettingItem(
+                    //   icon: Icons.calculate_rounded,
+                    //   title: 'Tax Calculator',
+                    //   subtitle: 'Calculate your tax',
+                    //   onTap: () => _showTaxCalc(context),
+                    // ),
                     SettingItem(
                       icon: Icons.savings_rounded,
                       title: 'Savings Goals',
@@ -117,11 +120,25 @@ class SettingsScreen extends ConsumerWidget {
                                   .read(settingsProvider.notifier)
                                   .toggleNotifications(),
                     ),
+
+                    // SettingItem(
+                    //   icon: Icons.palette_outlined,
+                    //   title: 'Dialog Animations Showcase',
+                    //   subtitle: 'Preview animated feedback dialogs',
+                    //   onTap: () => _showDialogShowcase(context),
+                    // ),
                     SettingItem(
                       icon: Icons.help_rounded,
                       title: 'Help & Support',
                       subtitle: 'Get help and contact us',
-                      onTap: () {},
+                      onTap:
+                          () => AppDialogs.showInfo(
+                            context,
+                            title: 'Xpenser Support',
+                            message:
+                                'For assistance or feedback, reach out to our support team at support@xpenser.app.',
+                            buttonText: 'Got it',
+                          ),
                     ),
                     SizedBox(height: context.rs(8)),
                     SettingItem(
@@ -163,44 +180,127 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showTaxCalc(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const TaxCalculatorScreen(),
+  // void _showTaxCalc(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     builder: (_) => const TaxCalculatorScreen(),
+  //   );
+  // }
+
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out of your account?',
+      confirmText: 'Sign Out',
+      cancelText: 'Stay',
+      isDestructive: true,
+      icon: Icons.logout_rounded,
     );
+
+    if (confirmed && context.mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(authProvider.notifier).logout();
+      });
+    }
   }
 
-  void _confirmLogout(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final palette = dialogContext.palette;
-        return AlertDialog(
-          title: const Text('Sign Out'),
-          content: const Text('Are you sure you want to sign out?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              style: TextButton.styleFrom(
-                foregroundColor: palette.textSecondary,
-              ),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ref.read(authProvider.notifier).logout();
-                });
-              },
-              style: TextButton.styleFrom(foregroundColor: palette.danger),
-              child: const Text('Sign Out'),
-            ),
-          ],
-        );
-      },
+  Future<void> _showDialogShowcase(BuildContext context) async {
+    final option = await showAppOptionSheet<String>(
+      context,
+      title: 'Preview Animated Dialogs',
+      options: const [
+        AppSelectOption(
+          value: 'success',
+          label: 'Success Dialog',
+          subtitle: 'Animated checkmark & celebration glow',
+          icon: Icons.check_circle_outline_rounded,
+        ),
+        AppSelectOption(
+          value: 'confirm',
+          label: 'Confirmation Dialog',
+          subtitle: 'Destructive / warning action prompt',
+          icon: Icons.help_outline_rounded,
+        ),
+        AppSelectOption(
+          value: 'warning',
+          label: 'Warning Dialog',
+          subtitle: 'Cautionary notice with alert animation',
+          icon: Icons.warning_amber_rounded,
+        ),
+        AppSelectOption(
+          value: 'error',
+          label: 'Error / Failed Dialog',
+          subtitle: 'Animated cross & subtle shake feedback',
+          icon: Icons.error_outline_rounded,
+        ),
+        AppSelectOption(
+          value: 'info',
+          label: 'Informational Dialog',
+          subtitle: 'Clean announcement with brand accent',
+          icon: Icons.info_outline_rounded,
+        ),
+      ],
     );
+
+    if (option == null || !context.mounted) return;
+
+    switch (option) {
+      case 'success':
+        await AppDialogs.showSuccess(
+          context,
+          title: 'Payment Completed!',
+          message:
+              'Your transaction of GHS 250.00 to Groceries was recorded successfully.',
+          buttonText: 'Awesome',
+        );
+        break;
+      case 'confirm':
+        final confirmed = await AppDialogs.confirm(
+          context,
+          title: 'Delete Category Limit?',
+          message:
+              'This action cannot be undone. All future transactions in this category will be unbudgeted.',
+          confirmText: 'Delete',
+          cancelText: 'Cancel',
+          isDestructive: true,
+        );
+        if (context.mounted && confirmed) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Action confirmed!')));
+        }
+        break;
+      case 'warning':
+        await AppDialogs.showWarning(
+          context,
+          title: 'Budget Threshold Reached',
+          message:
+              'You have utilized 92% of your Dining Out monthly budget. Only GHS 80.00 remains.',
+          buttonText: 'View Details',
+        );
+        break;
+      case 'error':
+        await AppDialogs.showError(
+          context,
+          title: 'Connection Error',
+          message:
+              'Unable to sync your latest transactions with the cloud server. Please check your internet connection.',
+          buttonText: 'Try Again',
+          secondaryButtonText: 'Cancel',
+        );
+        break;
+      case 'info':
+        await AppDialogs.showInfo(
+          context,
+          title: 'Exchange Rates Updated',
+          message:
+              'Daily exchange rates have been synced from ExchangeRate-API for all active currencies.',
+          buttonText: 'Got It',
+        );
+        break;
+    }
   }
 }
 

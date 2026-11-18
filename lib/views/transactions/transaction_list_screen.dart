@@ -2,10 +2,12 @@ import 'package:expenser/core/constants/app_icons.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
 import 'package:expenser/core/utils/theme/app_palette.dart';
 import 'package:expenser/core/utils/widgets/app_empty_state.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_page_header.dart';
 import 'package:expenser/core/utils/widgets/transaction_tile.dart';
 import 'package:expenser/data/repositories/category_repository.dart';
-import 'package:expenser/models/category_model.dart';
+import 'package:expenser/core/utils/formatters/transaction_display.dart';
+import 'package:expenser/viewmodels/account_viewmodel.dart';
 import 'package:expenser/models/transaction_model.dart';
 import 'package:expenser/viewmodels/transaction_viewmodel.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
@@ -126,6 +128,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   ) {
     final palette = context.palette;
     final categoryRepo = ref.read(categoryRepositoryProvider);
+    final accounts = ref.read(accountProvider).accounts;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,24 +146,40 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
           ),
         ),
         for (final t in transactions)
-          _buildTile(t, categoryRepo.getById(t.categoryId)),
+          _buildTile(
+            t,
+            transactionDisplay(
+              t,
+              category: categoryRepo.getById(t.categoryId),
+              accounts: accounts,
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildTile(TransactionModel t, CategoryModel? category) {
+  Widget _buildTile(TransactionModel t, TransactionDisplay display) {
     return TransactionTile(
       transaction: t,
-      categoryName: category?.name ?? 'Unknown',
-      categoryColor: category?.colorHex ?? 'FF78909C',
-      categoryIconCode:
-          category?.iconCodePoint ?? Icons.category_rounded.codePoint,
+      categoryName: display.title,
+      categoryColor: display.colorHex,
+      categoryIconCode: display.iconCodePoint,
       onEdit: () => context.push('/transactions/${t.id}/edit'),
       onDelete: () => _delete(t.id),
     );
   }
 
   Future<void> _delete(String id) async {
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Delete Transaction?',
+      message: 'Are you sure you want to delete this transaction record?',
+      confirmText: 'Delete',
+      isDestructive: true,
+      icon: AppIcons.delete,
+    );
+    if (!confirmed || !mounted) return;
+
     final messenger = ScaffoldMessenger.of(context);
     final notifier = ref.read(transactionProvider.notifier);
     final deleted = await notifier.deleteTransaction(id);

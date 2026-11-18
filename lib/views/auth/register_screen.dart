@@ -1,5 +1,6 @@
 import 'package:expenser/core/constants/branding.dart';
 import 'package:expenser/core/utils/responsive/responsive.dart';
+import 'package:expenser/core/utils/widgets/app_feedback_dialog.dart';
 import 'package:expenser/core/utils/widgets/app_text_field.dart';
 import 'package:expenser/core/utils/widgets/brand_watermark_background.dart';
 import 'package:expenser/core/utils/theme/buttons.dart';
@@ -41,7 +42,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
     if (mounted) {
       final error = ref.read(authProvider).errorMessage;
-      if (error == null) context.go('/shell/dashboard');
+      if (error != null) {
+        AppDialogs.showError(
+          context,
+          title: 'Registration Failed',
+          message: error,
+        );
+      } else {
+        context.go('/shell/dashboard');
+      }
     }
   }
 

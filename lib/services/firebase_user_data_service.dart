@@ -165,9 +165,11 @@ class FirebaseUserDataService implements BudgetRemoteSource {
   Future<List<NotificationRecord>> fetchNotifications(String uid) async {
     final snap = await _col(uid, 'notifications').get();
     if (!snap.exists || snap.value == null) return [];
-    return (snap.value as Map)
-        .values
-        .map((v) => NotificationRecord.fromMap(Map<String, dynamic>.from(v as Map)))
+    return (snap.value as Map).values
+        .map(
+          (v) =>
+              NotificationRecord.fromMap(Map<String, dynamic>.from(v as Map)),
+        )
         .toList();
   }
 }
